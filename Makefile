@@ -6,6 +6,9 @@ export SOURCE_DIR=src
 export EBIN_DIR=ebin
 TEST_DIR=test
 
+# Override this with path to ej to use Erjang
+export EJ=erl
+
 # Needed by Erjang
 export ERL_ROOT=$(ERL_TOP)
 
