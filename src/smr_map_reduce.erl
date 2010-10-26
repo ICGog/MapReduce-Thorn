@@ -1,4 +1,6 @@
--module(map_reduce).
+
+-module(smr_map_reduce).
+
 -export([map_reduce/4]).
 
 map_reduce(Map, Reduce, Acc, Input) ->
