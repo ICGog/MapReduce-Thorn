@@ -1,4 +1,6 @@
+
 -module(smr_worker).
+
 -behaviour(gen_server).
 
 -export([start_link/1, do_job/5]).
@@ -17,8 +19,8 @@ start_link(Node) ->
                      gen_server:enter_loop(?MODULE, [], State)
              end)}.
 
-do_job(Worker, Job, JobType, Fun, Input) ->
-    gen_server:cast(Worker, {do_job, Job, JobType, Fun, Input}).
+do_job(Worker, JobPid, JobType, Fun, Input) ->
+    gen_server:cast(Worker, {do_job, JobPid, JobType, Fun, Input}).
 
 %------------------------------------------------------------------------------
 % Handlers
@@ -27,19 +29,23 @@ do_job(Worker, Job, JobType, Fun, Input) ->
 init([]) ->
     {ok, none}.
 
-handle_call(_Request, _From, State) -> {stop, unexpected_call, State}.
+handle_call(Call, _From, State) ->
+    {stop, {unexpected_call, Call}, State}.
 
-handle_cast({do_job, Job, map, MapFun, MapInput}, State) ->
-    smr_job:result(Job, self(), lists:flatmap(MapFun, MapInput)),
+handle_cast({do_job, JobPid, map, MapFun, MapInput}, State) ->
+    smr_job:result(JobPid, self(), lists:flatmap(MapFun, MapInput)),
     {noreply, State};
-handle_cast({do_job, Job, reduce, ReduceFun, ReduceInput}, State) ->
-    smr_job:result(Job, self(),
+handle_cast({do_job, JobPid, reduce, ReduceFun, ReduceInput}, State) ->
+    smr_job:result(JobPid, self(),
                    lists:map(fun (KV = {K, _}) -> {K, ReduceFun(KV)} end,
                              ReduceInput)),
     {noreply, State}.
 
-handle_info(_Message, State) -> {stop, unexpected_message, State}.
+handle_info(Msg, State) ->
+    {stop, {unexpected_message, Msg}, State}.
 
-code_change(_OldVsn, State, _Extra) -> {ok, State}.
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
 
-terminate(_Reason, _State) -> ok.
+terminate(_Reason, _State) ->
+    ok.

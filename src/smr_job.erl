@@ -54,8 +54,8 @@ handle_cast({result, Worker, Result}, State0) ->
         {ongoing, State3}      -> {noreply, State3}
     end.
 
-handle_info(_Message, State) ->
-    {stop, unexpected_message, State}.
+handle_info(Msg, State) ->
+    {stop, {unexpected_message, Msg}, State}.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.

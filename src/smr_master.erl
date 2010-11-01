@@ -1,8 +1,11 @@
+
 -module(smr_master).
+
 -behavior(gen_server).
 
--export([map_reduce/4, job_result/3, allocate_workers/1]).
--export([start_link/0, spawn_worker/2, shutdown_worker/2, print_workers/1]).
+-export([start_link/0, spawn_worker/2, shutdown_worker/2, get_worker_nodes/1,
+         map_reduce/4]).
+-export([job_result/3, allocate_workers/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
@@ -20,7 +23,8 @@
 % API
 %------------------------------------------------------------------------------
 
-start_link() -> gen_server:start_link(?MODULE, [], []).
+start_link() ->
+    gen_server:start_link(?MODULE, [], []).
 
 spawn_worker(Pid, Node) -> 
     gen_server:call(Pid, {spawn_worker, Node}, infinity).
@@ -28,22 +32,28 @@ spawn_worker(Pid, Node) ->
 shutdown_worker(Pid, Node) -> 
     gen_server:call(Pid, {shutdown_worker, Node}, infinity).
 
-print_workers(Pid) -> gen_server:call(Pid, print_workers, infinity).
-
-job_result(Pid, JobPid, Result) -> 
-    gen_server:cast(Pid, {job_result, JobPid, Result}).
-
-allocate_workers(Pid) ->
-    gen_server:call(Pid, allocate_workers, infinity).
+get_worker_nodes(Pid) -> gen_server:call(Pid, get_worker_nodes, infinity).
 
 map_reduce(Pid, Map, Reduce, Input) -> 
     gen_server:call(Pid, {map_reduce, Map, Reduce, Input}, infinity).
 
 %------------------------------------------------------------------------------
+% Internal API
+%------------------------------------------------------------------------------
+
+job_result(Pid, JobPid, Result) ->
+    gen_server:cast(Pid, {job_result, JobPid, Result}).
+
+allocate_workers(Pid) ->
+    gen_server:call(Pid, allocate_workers, infinity).
+
+%------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([]) -> process_flag(trap_exit, true), {ok, #state{}}.
+init([]) ->
+    process_flag(trap_exit, true),
+    {ok, #state{}}.
 
 handle_call({spawn_worker, WorkerNode}, _From,
             State = #state{workers = Workers}) ->
@@ -66,7 +76,7 @@ handle_call({shutdown_worker, WorkerNode}, _From,
         error      -> {reply, {error, not_registered}, State}
     end;
 
-handle_call(print_workers, _From, State) ->
+handle_call(get_worker_nodes, _From, State) ->
     {reply, dict:fetch_keys(State#state.workers), State};
 
 handle_call(allocate_workers, _From, State = #state{workers = Workers}) ->
@@ -92,8 +102,11 @@ handle_info({'EXIT', JobPid, normal},
             State = #state{jobs = Jobs}) ->
     {noreply, State#state{jobs = dict:erase(JobPid, Jobs)}};
     
-handle_info(_Message, State) -> {stop, unexpected_message, State}.
+handle_info(Msg, State) ->
+    {stop, {unexpected_message, Msg}, State}.
 
-code_change(_OldVsn, State, _Extra) -> {ok, State}.
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
 
-terminate(_Reason, _State) -> ok.
+terminate(_Reason, _State) ->
+    ok.
