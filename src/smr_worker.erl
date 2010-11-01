@@ -1,13 +1,21 @@
 -module(smr_worker).
 -behaviour(gen_server).
 
--export([do_job/5]).
+-export([start_link/1, do_job/5]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
 %------------------------------------------------------------------------------
 % API
 %------------------------------------------------------------------------------
+
+start_link(Node) ->
+    {ok, proc_lib:spawn_link(
+             Node,
+             fun () ->
+                     {ok, State} = ?MODULE:init([]),
+                     gen_server:enter_loop(?MODULE, [], State)
+             end)}.
 
 do_job(Worker, Job, JobType, Fun, Input) ->
     gen_server:cast(Worker, {do_job, Job, JobType, Fun, Input}).

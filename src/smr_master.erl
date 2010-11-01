@@ -1,7 +1,7 @@
 -module(smr_master).
 -behavior(gen_server).
 
--export([map_reduce/4, job_result/3, allocate/1]).
+-export([map_reduce/4, job_result/3, allocate_workers/1]).
 -export([start_link/0, spawn_worker/2, shutdown_worker/2, print_workers/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
@@ -33,8 +33,8 @@ print_workers(Pid) -> gen_server:call(Pid, print_workers, infinity).
 job_result(Pid, JobPid, Result) -> 
     gen_server:cast(Pid, {job_result, JobPid, Result}).
 
-allocate(Pid) ->
-    gen_server:call(Pid, allocate, infinity).
+allocate_workers(Pid) ->
+    gen_server:call(Pid, allocate_workers, infinity).
 
 map_reduce(Pid, Map, Reduce, Input) -> 
     gen_server:call(Pid, {map_reduce, Map, Reduce, Input}, infinity).
@@ -51,12 +51,7 @@ handle_call({spawn_worker, WorkerNode}, _From,
         {ok, _Val} ->
              {reply, {error, already_registered}, State};
         error ->
-             WorkerPid = proc_lib:spawn_link(
-                 WorkerNode,
-                 fun () ->
-                         {ok, WorkerState} = smr_worker:init([]),
-                         gen_server:enter_loop(smr_worker, [], WorkerState)
-                 end),
+             {ok, WorkerPid} = smr_worker:start_link(WorkerNode),
              NewWorkers = dict:store(WorkerNode, #worker{node = WorkerNode,
                                                          pid = WorkerPid},
                                      Workers),
@@ -74,7 +69,7 @@ handle_call({shutdown_worker, WorkerNode}, _From,
 handle_call(print_workers, _From, State) ->
     {reply, dict:fetch_keys(State#state.workers), State};
 
-handle_call(allocate, _From, State = #state{workers = Workers}) ->
+handle_call(allocate_workers, _From, State = #state{workers = Workers}) ->
     {reply, dict:fold(fun (_, #worker{pid = Pid}, Acc) -> [Pid | Acc] end,
                       [], Workers),
      State};
