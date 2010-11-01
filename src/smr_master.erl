@@ -1,11 +1,13 @@
 -module(smr_master).
 -behavior(gen_server).
 
+-export([map_reduce/4]).
 -export([start_link/0, spawn_worker/2, shutdown_worker/2, print_workers/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
--record(state, {workers = dict:new()}).
+-record(state, {workers = dict:new(),
+                masters = dict:new()}).
 
 -record(worker, {node_name,
                  node_pid,
@@ -27,6 +29,9 @@ shutdown_worker(Pid, Node) ->
 
 print_workers(Pid) -> gen_server:call(Pid, print_workers, infinity).
 
+map_reduce(Pid, Map, Reduce, Input) -> 
+    gen_server:cast(Pid, {map_reduce, Map, Reduce, Input}, infinity).
+
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
@@ -39,10 +44,11 @@ handle_call({spawn_worker, WorkerNode}, _From,
         {ok, _Val} ->
              {reply, {error, already_registered}, State};
         error ->
+             Self = self(),
              WorkerPid = proc_lib:spawn_link(
                  WorkerNode,
                  fun () ->
-                         {ok, WorkerState} = smr_worker:init([]),
+                         {ok, WorkerState} = smr_worker:init(Self),
                          gen_server:enter_loop(smr_worker, [], WorkerState,
                                                infinity)
                  end),
@@ -66,8 +72,14 @@ handle_call(print_workers, _From, State) ->
     {reply, dict:fetch_keys(State#state.workers), State}.
 
 handle_cast(_Request, State) -> {stop, unexpected_cast, State}.
+%handle_cast({map_reduce, Map, Reduce, Input}, State) ->
+%    Self = self(),
+%    proc_lib:spawn_link(fun () ->
+%            {ok, JobState} = smr_job:init(Self),
+%gen_server:e
+%    {stop, unexpected_cast, State}.
 
-handle_info(Message, State) -> {stop, unexpected_message, State}.
+handle_info(_Message, State) -> {stop, unexpected_message, State}.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
