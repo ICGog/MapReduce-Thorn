@@ -1,18 +1,17 @@
 -module(smr_master).
 -behavior(gen_server).
 
--export([start_link/0, register_worker/2, unregister_worker/2, 
-         print_workers/1]).
+-export([start_link/0, spawn_worker/2, shutdown_worker/2, print_workers/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
--record(state, {workers :: gb_tree()}).
+-record(state, {workers = dict:new()}).
 
--record(worker_node, {node_name :: nonempty_string(),
-                      node_pid :: pid(),
-                      num_executing :: non_neg_integer(),
-                      num_failed :: non_neg_integer(),
-                      num_succ :: non_neg_integer()}).
+-record(worker, {node_name,
+                 node_pid,
+                 num_executing = 0,
+                 num_failed = 0,
+                 num_succ = 0}).
 
 %------------------------------------------------------------------------------
 % API
@@ -20,11 +19,11 @@
 
 start_link() -> gen_server:start_link(?MODULE, [], []).
 
-register_worker(Pid, Worker) -> 
-    gen_server:call(Pid, {register_worker, Worker}, infinity).
+spawn_worker(Pid, Node) -> 
+    gen_server:call(Pid, {spawn_worker, Node}, infinity).
 
-unregister_worker(Pid, Worker) -> 
-    gen_server:call(Pid, {unregister_worker, Worker}, infinity).
+shutdown_worker(Pid, Node) -> 
+    gen_server:call(Pid, {shutdown_worker, Node}, infinity).
 
 print_workers(Pid) -> gen_server:call(Pid, print_workers, infinity).
 
@@ -32,55 +31,45 @@ print_workers(Pid) -> gen_server:call(Pid, print_workers, infinity).
 % Handlers
 %------------------------------------------------------------------------------
 
-init([]) -> {ok, #state{workers = gb_trees:empty()}}.
+init([]) -> {ok, #state{}}.
 
-handle_call({register_worker, WorkerNode}, _From, State) ->
-    case gb_trees:lookup(WorkerNode, State#state.workers) of
-        {value, _Val} -> {reply, worker_already_registered, State};
-        none          -> StartWorker = fun() ->
-                             {ok, WorkerState} = smr_worker:init([]),
-                             gen_server:enter_loop(
-                                                   smr_worker, 
-                                                   [], 
-                                                   WorkerState, 
-                                                   infinity)
-                         end,
-                         WorkerPid = proc_lib:spawn_link(
-                                                         WorkerNode, 
-                                                         StartWorker 
-                                                        ),
-                         NewNode = #worker_node{node_name = WorkerNode,
-                                                node_pid = WorkerPid,
-                                                num_executing = 0,
-                                                num_failed = 0,
-                                                num_succ = 0},
-                         NewState = State#state{
-                             workers = gb_trees:insert(
-                                                       WorkerNode, 
-                                                       NewNode, 
-                                                       State#state.workers)},
-                         {reply, worker_registered, NewState}
+handle_call({spawn_worker, WorkerNode}, _From,
+            State = #state{workers = Workers}) ->
+    case dict:find(WorkerNode, Workers) of
+        {ok, _Val} ->
+             {reply, {error, already_registered}, State};
+        error ->
+             WorkerPid = proc_lib:spawn_link(
+                 WorkerNode,
+                 fun () ->
+                         {ok, WorkerState} = smr_worker:init([]),
+                         gen_server:enter_loop(smr_worker, [], WorkerState,
+                                               infinity)
+                 end),
+             NewWorkers = dict:store(
+                 WorkerNode,
+                 #worker{node_name = WorkerNode,
+                         node_pid = WorkerPid},
+                 Workers),
+             {reply, ok, State#state{workers = NewWorkers}}
     end;
 
-handle_call({unregister_worker, Worker}, _From, State) ->
-    case gb_trees:lookup(Worker, State#state.workers) of
-        {value, _Val} -> {reply, 
-                          worker_unregistered, 
-                          State#state{workers = gb_trees:delete(
-                                                    Worker, 
-                                                    State#state.workers)}};
-        none          -> {reply, worker_not_registered, State}
+handle_call({shutdown_worker, WorkerNode}, _From,
+            State = #state{workers = Workers}) ->
+    case dict:find(WorkerNode, Workers) of
+        {ok, _Val} -> {reply, ok,
+                       State#state{workers = dict:erase(WorkerNode, Workers)}};
+        error      -> {reply, {error, not_registered}, State}
     end;
 
 handle_call(print_workers, _From, State) ->
-    {reply, gb_trees:keys(State#state.workers), State}.
+    {reply, dict:fetch_keys(State#state.workers), State}.
 
-handle_cast(_Request, _State) -> {}.
+handle_cast(_Request, State) -> {stop, unexpected_cast, State}.
 
-handle_info(Message, State) ->
-    error_logger:warning_msg("Unknown message received: ~p~n", [Message]),
-    {stop, unexpected_message, State}.
+handle_info(Message, State) -> {stop, unexpected_message, State}.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 terminate(_Reason, _State) -> ok.
+

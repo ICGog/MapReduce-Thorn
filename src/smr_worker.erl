@@ -11,14 +11,13 @@
 init(_Args) ->
     {ok, []}.
 
-handle_call(_Request, _From, _State) -> {}.
+handle_call(_Request, _From, State) -> {stop, unexpected_call, State}.
 
-handle_cast(_Request, _State) -> {}.
+handle_cast(_Request, State) -> {stop, unexpected_cast, State}.
 
-handle_info(Message, State) ->
-    error_logger:warning_msg("Unknown message received: ~p~n", [Message]),
-    {stop, unexpected_message, State}.
+handle_info(Message, State) -> {stop, unexpected_message, State}.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 terminate(_Reason, _State) -> ok.
+
