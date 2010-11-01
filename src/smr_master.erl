@@ -1,19 +1,20 @@
 -module(smr_master).
 -behavior(gen_server).
 
--export([map_reduce/4]).
+-export([map_reduce/4, job_result/3, allocate/1]).
 -export([start_link/0, spawn_worker/2, shutdown_worker/2, print_workers/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
--record(state, {workers = dict:new(),
-                masters = dict:new()}).
+-record(state, {workers = dict:new(), jobs = dict:new()}).
 
 -record(worker, {node_name,
                  node_pid,
                  num_executing = 0,
                  num_failed = 0,
                  num_succ = 0}).
+
+-record(job, {job_pid, from, map_fun, reduce_fun, input}).
 
 %------------------------------------------------------------------------------
 % API
@@ -29,14 +30,19 @@ shutdown_worker(Pid, Node) ->
 
 print_workers(Pid) -> gen_server:call(Pid, print_workers, infinity).
 
+job_result(Pid, JobPid, Result) -> 
+    gen_server:cast(Pid, {job_result, [JobPid, Result]}).
+
+allocate(Pid) -> gen_server:call(Pid, allocate, infinity).
+
 map_reduce(Pid, Map, Reduce, Input) -> 
-    gen_server:cast(Pid, {map_reduce, Map, Reduce, Input}, infinity).
+    gen_server:call(Pid, {map_reduce, [Map, Reduce, Input]}, infinity).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([]) -> {ok, #state{}}.
+init([]) -> process_flag(trap_exit, true), {ok, #state{}}.
 
 handle_call({spawn_worker, WorkerNode}, _From,
             State = #state{workers = Workers}) ->
@@ -69,16 +75,36 @@ handle_call({shutdown_worker, WorkerNode}, _From,
     end;
 
 handle_call(print_workers, _From, State) ->
-    {reply, dict:fetch_keys(State#state.workers), State}.
+    {reply, dict:fetch_keys(State#state.workers), State};
 
-handle_cast(_Request, State) -> {stop, unexpected_cast, State}.
-%handle_cast({map_reduce, Map, Reduce, Input}, State) ->
-%    Self = self(),
-%    proc_lib:spawn_link(fun () ->
-%            {ok, JobState} = smr_job:init(Self),
-%gen_server:e
-%    {stop, unexpected_cast, State}.
+handle_call({allocate}, _From, State = #state{workers = Workers}) ->
+    {reply, [Key || {Key, _Value} <- dict:to_list(Workers)], State};
 
+handle_call({map_reduce, [Map, Reduce, Input]}, From, 
+            State = #state{jobs = Jobs}) ->
+    Self = self(),
+    JobPid = proc_lib:spawn_link(fun () ->
+                {ok, JobState} = smr_job:init([Self, Map, Reduce, Input]),
+                gen_server:enter_loop(smr_job, [], JobState, infinity)
+                                 end),
+    {noreply, State#state{jobs = dict:store(
+                                            JobPid, 
+                                            #job{job_pid = JobPid,
+                                                 from = From,
+                                                 map_fun = Map,
+                                                 reduce_fun = Reduce,
+                                                 input = Input},
+                                            Jobs)}}.
+
+handle_cast({job_result, [JobPid, Result]}, 
+            State = #state{jobs = Jobs}) ->
+    gen_server:reply((dict:fetch(JobPid, Jobs))#job.from, Result),
+    {noreply, State}.
+
+handle_info({'EXIT', JobPid, job_done},
+            State = #state{jobs = Jobs}) ->
+    {noreply, State#state{jobs = dict:erase(JobPid, Jobs)}};
+    
 handle_info(_Message, State) -> {stop, unexpected_message, State}.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
