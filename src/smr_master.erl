@@ -10,13 +10,9 @@
         code_change/3]).
 
 -record(state, {workers = dict:new(), jobs = dict:new(), 
-                workers_pid = dict:new()}).
+                workers_pid = dict:new(), monitor_pid}).
 
--record(worker, {node,
-                 pid,
-                 num_executing = 0,
-                 num_failed = 0,
-                 num_succ = 0}).
+-record(worker, {node, pid}).
 
 -record(job, {pid, from, map_fun, reduce_fun, input}).
 
@@ -59,15 +55,18 @@ allocate_workers(Pid) ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, #state{}}.
+    {ok, MonitorPid} = smr_monitor:start_link(),
+    {ok, #state{monitor_pid = MonitorPid}}.
 
 handle_call({spawn_worker, WorkerNode}, _From,
-            State = #state{workers = Workers, workers_pid = WorkersPid}) ->
+            State = #state{workers = Workers, workers_pid = WorkersPid,
+                           monitor_pid = MonitorPid}) ->
     case dict:find(WorkerNode, Workers) of
         {ok, _Val} ->
              {reply, {error, already_registered}, State};
         error ->
              {ok, WorkerPid} = smr_worker:start_link(WorkerNode),
+             smr_monitor:register_worker(MonitorPid, WorkerNode),
              NewWorkers = dict:store(WorkerNode, #worker{node = WorkerNode,
                                                          pid = WorkerPid},
                                      Workers),
@@ -78,9 +77,11 @@ handle_call({spawn_worker, WorkerNode}, _From,
     end;
 
 handle_call({shutdown_worker, WorkerNode}, _From,
-            State = #state{workers = Workers, workers_pid = WorkersPid}) ->
+            State = #state{workers = Workers, workers_pid = WorkersPid,
+                           monitor_pid = MonitorPid}) ->
     case dict:find(WorkerNode, Workers) of
-        {ok, Val} -> {reply, ok,
+        {ok, Val} -> smr_monitor:unregister_worker(MonitorPid, WorkerNode),
+                     {reply, ok,
                       State#state{workers = dict:erase(WorkerNode, Workers),
                                   workers_pid = dict:erase(Val#worker.pid, 
                                                            WorkersPid)}};
