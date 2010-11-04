@@ -129,3 +129,4 @@ spare_worker(State = #state{spare_workers = [], master = Master}) ->
                      smr_master:allocate_workers(Master)});
 spare_worker(State = #state{spare_workers = [Worker | RestWorkers]}) ->
     {Worker, State#state{spare_workers = RestWorkers}}.
+
