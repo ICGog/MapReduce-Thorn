@@ -26,6 +26,7 @@
 start_link(Master, MapFun, ReduceFun, Input) ->
     {ok, Job} =
         gen_server:start_link(?MODULE, [Master, MapFun, ReduceFun, Input], []),
+    error_logger:info_msg("Job ~p started~n", [Job]),
     gen_server:cast(Job, start),
     {ok, Job}.
 
@@ -78,10 +79,12 @@ handle_phase_finished(State = #state{phase = reduce,
     {stop, normal, State}.
 
 set_phase(map, State = #state{input = Input}) ->
+    error_logger:info_msg("Map phase started~n"),
     send_jobs(Input, State#state{phase = map,
                                  input = undefined, % free
                                  result = dict:new()});
 set_phase(reduce, State = #state{input = Input}) ->
+    error_logger:info_msg("Reduce phase started~n"),
     send_jobs(Input, State#state{phase = reduce,
                                  input = undefined, % free
                                  result = []}).

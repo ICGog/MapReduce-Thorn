@@ -113,12 +113,15 @@ handle_cast({job_result, JobPid, Result}, State = #state{jobs = Jobs}) ->
     {noreply, State}.
 
 handle_info({'EXIT', JobPid, normal}, State = #state{jobs = Jobs}) ->
+    error_logger:info_msg("MapReduce job ~p ended~n", [JobPid]), 
     {noreply, State#state{jobs = dict:erase(JobPid, Jobs)}};
 
 % Catches a worker's exit and tries to restart it using exponential backoff.
 % Carefull, this catches all the EXIT messages.
 handle_info({'EXIT', WorkerPid, _Reason},
             State = #state{workers = Workers, workers_pid = WorkersPid}) ->
+    error_logger:error_msg("Worker ~p crashed~n", [dict:fetch(WorkerPid, 
+                                                              WorkersPid)]),
     NewWorkersPid = dict:erase(WorkerPid, WorkersPid),
     erlang:send_after(?MIN_BACKOFF_MS, self(), 
                       {restart_worker, dict:fetch(
@@ -153,6 +156,7 @@ terminate(_Reason, _State) ->
 
 restart_worker({ok, WorkerPid}, Worker, _Backoff,
         State = #state{workers = Workers, workers_pid = WorkersPid}) ->
+    error_logger:info_msg("Worker ~p restarted~n", [Worker#worker.node]),
     State#state{workers = dict:store(Worker#worker.node, 
                                      Worker#worker{pid = WorkerPid},
                                      Workers), 
