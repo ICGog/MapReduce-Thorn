@@ -69,28 +69,25 @@ terminate(_Reason, _State) ->
 %------------------------------------------------------------------------------
 
 handle_phase_finished(State = #state{phase = map, result = Result}) ->
-    %io:format("Map finished: ~p~n", [Result]),
     {noreply, set_phase(reduce, State#state{input = dict:to_list(Result)})};
 handle_phase_finished(State = #state{phase = reduce,
                               result = Result,
                               master = Master}) ->
-    %io:format("Reduce finished: ~p~n", [Result]),
     smr_master:job_result(Master, self(), Result),
     {stop, normal, State}.
 
 set_phase(map, State = #state{input = Input}) ->
-    error_logger:info_msg("Map phase started~n"),
+    error_logger:info_msg("Job ~p: map phase started~n", [self()]),
     send_jobs(Input, State#state{phase = map,
                                  input = undefined, % free
                                  result = dict:new()});
 set_phase(reduce, State = #state{input = Input}) ->
-    error_logger:info_msg("Reduce phase started~n"),
+    error_logger:info_msg("Job ~p: reduce phase started~n", [self()]),
     send_jobs(Input, State#state{phase = reduce,
                                  input = undefined, % free
                                  result = []}).
 
 agregate_result(Result, State = #state{phase = map, result = Dict}) ->
-    %io:format("Map result: ~p~n", [Result]),
     State#state{result =
         lists:foldl(fun ({K, V}, DictAcc) ->
                             case dict:is_key(K, DictAcc) of
@@ -99,7 +96,6 @@ agregate_result(Result, State = #state{phase = map, result = Dict}) ->
                             end
                     end, Dict, Result)};
 agregate_result(Result, State = #state{phase = reduce, result = List}) ->
-    %io:format("Reduce result: ~p~n", [Result]),
     State#state{result = Result ++ List}.
 
 remove_ongoing(Worker, State = #state{ongoing = Ongoing0}) ->
