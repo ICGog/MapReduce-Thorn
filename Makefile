@@ -1,8 +1,9 @@
 
 # Main Makefile
 
-SMR_NODE=smr_master
-#SMR_WORKER_NODES=
+export SMR_NODE=smr_master
+SMR_WORKER_NODES=w1 w2 w3 w4 w5
+SMR_TEST_WORKER_NODES=test_w1 test_w2 test_w3 test_w4 test_w5
 
 export INCLUDE_DIR=include
 export SOURCE_DIR=src
@@ -30,11 +31,26 @@ compile: $(TARGETS)
 
 compile_tests: $(TEST_TARGETS)
 
+run: $(TARGETS)
+	$(MAKE) start_worker_nodes
+	$(EJ) $(EJ_OPTS)
+	$(MAKE) stop_worker_nodes
+
+all_tests: $(TARGETS) $(TEST_TARGETS)
+	$(MAKE) SMR_WORKER_NODES="$(SMR_TEST_WORKER_NODES)" start_worker_nodes
+	$(MAKE) -C $(TEST_DIR) test
+	$(MAKE) SMR_WORKER_NODES="$(SMR_TEST_WORKER_NODES)" stop_worker_nodes
+
+clean:
+	rm -f $(TARGETS)
+	$(MAKE) -C $(TEST_DIR) clean
+
 .PHONY: start_worker_nodes
-start_worker_nodes:
+start_worker_nodes: $(TARGETS)
 	for node in $(SMR_WORKER_NODES) ; do \
+	    echo ; \
 	    echo "Starting node $$node" ; \
-	    echo 'code:add_pathsa(["$(EBIN_DIR)"]).' | erl_call -sname $$node -s -e ; \
+	    echo 'code:add_pathsa(["$(EBIN_DIR)"]), code:add_pathsa(["$(TEST_DIR)"]).' | erl_call -sname $$node -s -e ; \
 	    done
 
 .PHONY: stop_worker_nodes
@@ -43,18 +59,6 @@ stop_worker_nodes:
 	    echo "Stopping node $$node" ; \
 	    erl_call -sname $$node -q ; \
 	    done
-
-run: $(TARGETS)
-	$(MAKE) start_worker_nodes
-	$(EJ) $(EJ_OPTS)
-	$(MAKE) stop_worker_nodes
-
-all_tests: $(TARGETS) $(TEST_TARGETS)
-	$(MAKE) -C $(TEST_DIR) test
-
-clean:
-	rm -f $(TARGETS)
-	$(MAKE) -C $(TEST_DIR) clean
 
 ##########################################################################
 ## Internal
@@ -68,4 +72,3 @@ $(TEST_TARGETS): $(TEST_DIR)
 .PHONY: $(TEST_DIR)
 $(TEST_DIR):
 	$(MAKE) -C $(TEST_DIR) compile
-

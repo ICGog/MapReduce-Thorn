@@ -7,7 +7,7 @@ MapReduce
 Example usage:
 
 
-SMR_WORKER_NODES="w1 w2 w3 w4 w5" make run
+make SMR_WORKER_NODES="w1 w2 w3 w4 w5" run
 
 
 {ok, Master} = smr_master:start_link(),
@@ -20,11 +20,11 @@ Input = [{abc, "Thus the MapReduce framework transforms a list of (key, value) p
          {xyz, "A common performance measurement of a network file system is the amount of time needed to satisfy service requests. In conventional systems, this time consists of a disk-access time and a small amount of CPU-processing time. But in a network file system, a remote access has additional overhead due to the distributed structure. This includes the time to deliver the request to a server, the time to deliver the response to the client, and for each direction, a CPU overhead of running the communication protocol software. The performance of a network file system can be viewed as one dimension of its transparency; to be fully equivalent, it would need to be comparable to that of a local disk."}].
 
 
-MapFun = fun ({Name, Document}) ->
-                 dict:to_list(lists:foldl(fun (Word, Dict) ->
-                                                  dict:update_counter(Word, 1, Dict)
-                                          end, dict:new(),
-                                          string:tokens(Document, " ")))
+MapFun = fun ({_Name, Document}) ->
+                  dict:to_list(lists:foldl(fun (Word, Dict) ->
+                                                   dict:update_counter(Word, 1, Dict)
+                                           end, dict:new(),
+                                           string:tokens(Document, " ")))
          end.
 
 ReduceFun = fun ({_Word, CountList}) -> lists:sum(CountList) end.

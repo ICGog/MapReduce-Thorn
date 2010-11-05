@@ -17,7 +17,7 @@
                 result}).
 
 -define(MAP_BATCH_SIZE, 1).
--define(REDUCE_BATCH_SIZE, 2).
+-define(REDUCE_BATCH_SIZE, 1).
 
 %------------------------------------------------------------------------------
 % API
