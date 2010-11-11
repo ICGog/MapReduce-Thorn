@@ -57,14 +57,14 @@ allocate_workers(Pid) ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, MonitorPid} = smr_monitor:start_link(),
+    {ok, MonitorPid} = smr_statistics:start_link(),
     {ok, #state{monitor_pid = MonitorPid}}.
 
 handle_call({spawn_worker, Node}, _From,
             State = #state{workers = Workers, monitor_pid = MonitorPid}) ->
     case dict:find(Node, Workers) of
         {ok, _Val} -> {reply, {error, already_registered}, State};
-        error      -> smr_monitor:register_worker(MonitorPid, Node),
+        error      -> smr_statistics:register_worker(MonitorPid, Node),
                       {reply, ok, restart_worker(Node, State)}
     end;
 
@@ -139,7 +139,7 @@ handle_other_exit(Pid, normal, State = #state{jobs = Jobs}) ->
 
 remove_worker(Node, State = #state{monitor_pid = MonitorPid,
                                    workers = Workers}) ->
-    smr_monitor:unregister_worker(MonitorPid, Node),
+    smr_statistics:unregister_worker(MonitorPid, Node),
     State#state{workers = dict:erase(Node, Workers)}.
 
 restart_worker(Node, State) ->
