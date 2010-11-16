@@ -85,10 +85,10 @@ handle_cast({batch_started, Node, JobType, JobId, Time, Size},
                      start_time = StartTime} = dict:fetch(Node, Workers),
     Worker1 = Worker#worker{num_exec = Exec + Size,
                             start_time = dict:store(JobId, Time, StartTime)},
-    case JobType of
-        map    -> NewWorker = Worker1#worker{num_map_jobs = NumMap};
-        reduce -> NewWorker = Worker1#worker{num_reduce_jobs = NumReduce}
-    end,
+    NewWorker = case JobType of
+                    map    -> Worker1#worker{num_map_jobs = NumMap};
+                    reduce -> Worker1#worker{num_reduce_jobs = NumReduce}
+                end,
     {noreply, State#state{workers = dict:store(Node, NewWorker, Workers)}};
 
 handle_cast({batch_ended, Node, JobId, Time, Size},
