@@ -12,7 +12,7 @@
 -record(state, {workers = dict:new(),
                 jobs = dict:new(),
                 workers_pid = dict:new(),
-                monitor_pid}).
+                stats_pid}).
 
 -record(worker, {node, pid}).
 
@@ -57,14 +57,14 @@ allocate_workers(Pid) ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, MonitorPid} = smr_statistics:start_link(),
-    {ok, #state{monitor_pid = MonitorPid}}.
+    {ok, StatsPid} = smr_statistics:start_link(),
+    {ok, #state{stats_pid = StatsPid}}.
 
 handle_call({spawn_worker, Node}, _From,
-            State = #state{workers = Workers, monitor_pid = MonitorPid}) ->
+            State = #state{workers = Workers, stats_pid = StatsPid}) ->
     case dict:find(Node, Workers) of
         {ok, _Val} -> {reply, {error, already_registered}, State};
-        error      -> smr_statistics:register_worker(MonitorPid, Node),
+        error      -> smr_statistics:register_worker(StatsPid, Node),
                       {reply, ok, restart_worker(Node, State)}
     end;
 
@@ -72,9 +72,8 @@ handle_call({shutdown_worker, Node}, _From,
             State = #state{workers_pid = WorkersPid, workers = Workers}) ->
     case dict:find(Node, Workers) of
         {ok, #worker{pid = Pid}} ->
-            {reply, ok,
-             remove_worker(Node, State#state{workers_pid =
-                                                 dict:erase(Pid, WorkersPid)})};
+            {reply, ok, State#state{workers = dict:erase(Node, Workers),
+                                    workers_pid = dict:erase(Pid, WorkersPid)}};
         error ->
             {reply, {error, not_registered}, State}
     end;
@@ -104,8 +103,14 @@ handle_cast({job_result, JobPid, Result}, State = #state{jobs = Jobs}) ->
     gen_server:reply((dict:fetch(JobPid, Jobs))#job.from, Result),
     {noreply, State}.
 
-handle_info({restart_worker, Node, BackOff}, State) ->
-    {noreply, restart_worker(Node, 2 * BackOff, State)};
+handle_info({restart_worker, Node, Backoff},
+            State = #state{workers = Workers}) ->
+    case Backoff =< ?MAX_BACKOFF_MS of
+        true  -> {noreply, restart_worker(Node, 2 * Backoff, State)};
+        false -> error_logger:info_msg("Reached maximum restart backoff time "
+                                       "for worker ~p~n", [Node]),
+                 {noreply, State#state{workers = dict:erase(Node, Workers)}}
+    end;
 
 handle_info({'EXIT', Pid, Reason}, State = #state{workers_pid = WorkersPid}) ->
     case dict:find(Pid, WorkersPid) of
@@ -126,30 +131,27 @@ terminate(_Reason, _State) ->
 % Internal
 %------------------------------------------------------------------------------
 
-handle_worker_exit(Pid, Node, Reason,
+handle_worker_exit(Pid, Node, _Reason,
                    State = #state{workers_pid = WorkersPid}) ->
-    NewState = State#state{workers_pid = dict:erase(Pid, WorkersPid)},
-    case Reason of normal -> {noreply, remove_worker(Node, NewState)};
-                   _      -> {noreply, restart_worker(Node, NewState)}
-    end.
+    error_logger:info_msg("Worker ~p crashed~n", [Node]),
+    {noreply,
+     restart_worker(Node,
+                    State#state{workers_pid = dict:erase(Pid, WorkersPid)})}.
 
 % TODO: We are assuming job pid
 handle_other_exit(Pid, normal, State = #state{jobs = Jobs}) ->
+    error_logger:info_msg("MapReduce job ~p ended~n", [Pid]),
     {noreply, State#state{jobs = dict:erase(Pid, Jobs)}}.
-
-remove_worker(Node, State = #state{monitor_pid = MonitorPid,
-                                   workers = Workers}) ->
-    smr_statistics:unregister_worker(MonitorPid, Node),
-    State#state{workers = dict:erase(Node, Workers)}.
 
 restart_worker(Node, State) ->
     restart_worker(Node, ?MIN_BACKOFF_MS, State).
 
 restart_worker(Node, BackOff, State = #state{workers = Workers,
                                              workers_pid = WorkersPid}) ->
-    %% TODO log me
+    error_logger:info_msg("Starting worker ~p~n", [Node]),
     case smr_worker:start_link(Node) of
         {ok, Pid} ->
+            error_logger:info_msg("Worker ~p started~n", [Node]),
             Worker = case dict:find(Node, Workers) of
                          {ok, W} -> W;
                          error   -> #worker{pid = Pid}
@@ -157,11 +159,10 @@ restart_worker(Node, BackOff, State = #state{workers = Workers,
             State#state{workers = dict:store(Node, Worker#worker{node = Node},
                                              Workers),
                         workers_pid = dict:store(Pid, Node, WorkersPid)};
-        _Error when BackOff > ?MAX_BACKOFF_MS ->
-            %% TODO log me
-            remove_worker(Node, State);
         _Error ->
-            %% TODO log me
+            error_logger:info_msg("Waiting for ~p before restarting worker "
+                                  "~p~n", [BackOff, Node]),
             erlang:send_after(BackOff, self(), {restart_worker, Node, BackOff}),
             State
     end.
+
