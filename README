@@ -10,7 +10,7 @@ Example usage:
 make SMR_WORKER_NODES="w1 w2 w3 w4 w5" run
 
 
-{ok, Master} = smr_master:start_link(),
+{ok, Master} = smr_master:start_link(false),
 [_ , Host] = string:tokens(atom_to_list(node()), "@"),
 [smr_master:spawn_worker(Master, list_to_atom(Node ++ "@" ++ Host)) ||
      Node <- ["w1", "w2", "w3", "w4", "w5"]].

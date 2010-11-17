@@ -6,7 +6,7 @@
 %------------------------------------------------------------------------------
 
 basic_whole_system_test() ->
-    {ok, Master} = smr_master:start_link(),
+    {ok, Master} = smr_master:start_link(false),
     [_ , Host] = string:tokens(atom_to_list(node()), "@"),
     [ok, ok, ok, ok, ok] =
         [smr_master:spawn_worker(Master, list_to_atom(Node ++ "@" ++ Host))

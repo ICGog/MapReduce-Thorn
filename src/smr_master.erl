@@ -3,7 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/0, spawn_worker/2, shutdown_worker/2, get_worker_nodes/1,
+-export([start_link/1, spawn_worker/2, shutdown_worker/2, get_worker_nodes/1,
          get_worker_pids/1, map_reduce/4]).
 -export([job_result/3, allocate_workers/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
@@ -25,8 +25,8 @@
 % API
 %------------------------------------------------------------------------------
 
-start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+start_link(EnableHttpApi) ->
+    gen_server:start_link(?MODULE, [EnableHttpApi], []).
 
 spawn_worker(Pid, Node) -> 
     gen_server:call(Pid, {spawn_worker, Node}, infinity).
@@ -55,9 +55,9 @@ allocate_workers(Pid) ->
 % Handlers
 %------------------------------------------------------------------------------
 
-init([]) ->
+init([EnableHttpApi]) ->
     process_flag(trap_exit, true),
-    {ok, StatsPid} = smr_statistics:start_link(),
+    {ok, StatsPid} = smr_statistics:start_link(EnableHttpApi),
     {ok, #state{stats_pid = StatsPid}}.
 
 handle_call({spawn_worker, Node}, _From,

@@ -2,14 +2,14 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, register_worker/2, unregister_worker/2,
+-export([start_link/1, register_worker/2, unregister_worker/2,
         worker_failed/2, worker_batch_started/6, worker_batch_ended/5,
         worker_batch_failed/3]).
 
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
--record(state, {workers = dict:new_dict()}).
+-record(state, {workers = dict:new()}).
 
 -record(worker, {node, 
                  num_exec = 0,
@@ -25,8 +25,9 @@
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+start_link(EnableHttpApi) ->
+    gen_server:start_link({local, smr_statistics}, ?MODULE,
+                          [EnableHttpApi], []).
 
 register_worker(Pid, Node) ->
     gen_server:cast(Pid, {register_worker, Node}).
@@ -51,8 +52,11 @@ worker_batch_ended(Pid, Node, JobId, Time, BatchSize) ->
 % Handlers
 %------------------------------------------------------------------------------
 
-init([]) ->
-    {ok, none}.
+init([EnableHttpApi]) ->
+    case EnableHttpApi of true  -> {ok, _} = smr_http:start();
+                          false -> ok
+    end,
+    {ok, #state{}}.
 
 handle_call(Request, _From, State) ->
     {stop, {unexpected_call, Request}, State}.

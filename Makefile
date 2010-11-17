@@ -9,6 +9,7 @@ export INCLUDE_DIR=include
 export SOURCE_DIR=src
 export EBIN_DIR=ebin
 TEST_DIR=test
+LOG_DIR=log
 
 # Override this with path to ej to use Erjang
 export EJ=erl
@@ -33,6 +34,7 @@ compile_tests: $(TEST_TARGETS)
 
 run: $(TARGETS)
 	$(MAKE) start_worker_nodes
+	mkdir -p $(LOG_DIR)
 	$(EJ) $(EJ_OPTS)
 	$(MAKE) stop_worker_nodes
 
@@ -43,6 +45,7 @@ all_tests: $(TARGETS) $(TEST_TARGETS)
 
 clean:
 	rm -f $(TARGETS)
+	rm -rf $(LOG_DIR)
 	$(MAKE) -C $(TEST_DIR) clean
 
 .PHONY: start_worker_nodes
