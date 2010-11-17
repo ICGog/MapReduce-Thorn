@@ -1,0 +1,6 @@
+{
+  import BYWORD;
+  ~!@eq(BYWORD.paw, 0)@!~  ;
+  BYWORD.paw := 1;
+  ~!@eq(BYWORD.paw, 1, BYWORD.hoopy)@!~  ;
+}

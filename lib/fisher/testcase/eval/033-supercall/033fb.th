@@ -1,0 +1,18 @@
+{
+  import Virtue = `film projector`.Coffin;
+  import Pepper = REMORSE.Loser;
+  import Algorithm = SIN.Foulmouthed;
+  
+  var v;
+  
+
+  class Singer extends Algorithm{}
+  v := Singer();
+  ~!@eq(v.hateful, 0)@!~  ;
+  ~!@eq(v.glitter(), 4)@!~  ;
+  ~!@eq(v.glitter(), 8)@!~  ;
+  ~!@eq(v.orchestrate() , [8, 'Loser'])@!~  ;
+
+
+
+}

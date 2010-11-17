@@ -1,0 +1,151 @@
+spawn client {
+body{
+  println("I'm the Thorn aspect of the client, and I'm running.");
+  import CHEEPER.*;
+  import HTML.*;
+  import XML.*;
+  import HTTP.*;
+
+  port = 4321;
+  HTTPSocketeer(port);
+  urlOfMe = "http://localhost:$port";
+  
+  var goon := true;
+  
+  sessions = table(sessionNumber){user; var lastSeenCheepRows;};
+  
+  fun hiddenSession(nSession) = hiddenInput("nSession", nSession);
+  
+  fun voteButton(nSession, number, sign, otherstuff:list) = 
+       form("$urlOfMe/$number/$sign", "get", 
+            [hiddenSession(nSession),
+             button("vote", "vote", "+" if sign else "-") ] @ otherstuff);
+
+
+  
+  fun cheepTableRow(nSession, {:chirp:{:text, number, philosopher:}, plusVotes, minusVotes:}) = 
+    [
+      number,
+      text,
+      philosopher,
+      voteButton(nSession, number, true, [plusVotes]), 
+      voteButton(nSession, number, false, [minusVotes]), 
+    ];
+  
+  fun mainPage(nSession, msg, cheepRows) {
+    sessions(nSession).lastSeenCheepRows := cheepRows;
+    hiddens = [
+       hiddenSession(nSession),
+       ];
+    topControls = form(urlOfMe, "get", [
+       hiddens...,
+       textInput("textbox"),
+       button("sendChirp", "sendChirp", "Chirp!"),
+       button("about", "about", "List chirps about..."),
+       ]);
+    topAndBottomControls = form(urlOfMe, "get", [
+       hiddens...,
+       button("show", "show", "List"),
+       ]);
+    line = [hr()];
+    message = ([msg, line...] if msg != null else []);
+    header = tr([
+      th({::}, b("Number")),
+      th({::}, b("Chirp")),
+      th({::}, b("Phil.")),
+      th({::}, b("Positives")),
+      th({::}, b("Negatives")),
+      ]);     
+    cheepstuff = [] if cheepRows == null
+       else [tableWithHeader({:border:1:}, 
+         header, 
+         %[ cheepTableRow(nSession, row) | for row <- cheepRows ])]
+       ;
+    bod = span({::}, 
+       [hiddens..., 
+        topControls, 
+        topAndBottomControls,
+        line ...,
+        message ...,
+        cheepstuff..., 
+        line ...,
+        topAndBottomControls]);
+    html(title("Cheeper!"), bod);
+  }
+  
+  fun logon!(req, name, pw) {
+     user = User(name, pw);
+     msg = server <-> register!(user);
+     nUser = "ses=" + sessions.len;
+     sessions(nUser) := {:user, lastSeenCheepRows:[]:};
+     page = mainPage(nUser, msg, []);
+     req.respond(OK, page,  {::});
+  }
+  
+  fun dunno!(req, params, path) {
+     req.respond(OK, "params=$params path=$path", {::});
+  }
+  
+  fun show!(req, nSession, n) {
+     {:user:} = sessions(nSession);
+     chirpRows = server <-> fullList(user);
+     page = mainPage(nSession, null, chirpRows);
+     req.respond(OK, page, {::});
+  }show!
+  
+  fun chirp!(req, nSession, textbox) {
+     {:user:} = sessions(nSession);
+     if (textbox.len > 0) {
+       response = server <-> chirp!(user, textbox);
+       chirpRows = server <-> fullList(user);
+       page = mainPage(nSession, response, chirpRows);
+       req.respond(OK, page, {::});
+     }
+     else {
+       chirpRows = server <-> fullList(user);
+       page = mainPage(nSession,"That's not a whole chirp!", chirpRows);
+       req.respond(OK, page, {::});
+     }
+  }chirp!
+  
+  fun about!(req, nSession, textbox) {
+    {:user:} = sessions(nSession);
+    rows = server <-> about(user, textbox);
+    page = mainPage(nSession, "Chirps about '$textbox'", rows);
+    req.respond(OK, page, {::});
+  }about!
+  
+  fun vote!(req, nSession, path) {
+    var response;
+    {:user:} = sessions(nSession);
+    if (path ~ "/([0-9]+)/([a-z]+)" / [.int(nChirp), trueOrFalse] ) {
+       sign = trueOrFalse == "true";
+       response := server <-> vote!(user, nChirp, sign);
+    }
+    else {
+       println("vote! doom: path = $path does not match.");
+       response := "Internal error (about $path not matching)";
+    }
+    lastSeenCheepRows = sessions(nSession).lastSeenCheepRows;
+    updated = server <-> rowsForNumbers(user, %[chirp.number | for {:chirp:} <- lastSeenCheepRows] );
+    page = mainPage(nSession, response, updated);
+    req.respond(OK, page, {::});
+  }vote!
+  
+  fun dealWith(req, {:name, pw, logon:}, path) = logon!(req, name, pw);
+    | dealWith(req, {:nSession, show:n:}, path) = show!(req, nSession, n);
+    | dealWith(req, {:nSession, textbox,sendChirp:},path) = chirp!(req, nSession, textbox);
+    | dealWith(req, {:nSession, textbox, about:}, path) = about!(req, nSession, textbox);
+    | dealWith(req, {:nSession, vote:}, path) = vote!(req, nSession, path);
+    | dealWith(req, params, path) = dunno!(req, params, path);
+
+
+  println("Grackle!  I am the client!");
+  while(goon) {
+    receive{
+      req && HTTPRequest("GET", params, path) => dealWith(req, params, path)
+    }receive
+  }while
+  
+}body
+}client;

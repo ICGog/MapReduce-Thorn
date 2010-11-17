@@ -1,0 +1,6 @@
+{
+
+  for (l <- command_line_args()(0).file.contents.split("\n")) {
+    if (l.contains?(command_line_args()(1))) println(l);
+  }
+}

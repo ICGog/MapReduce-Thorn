@@ -1,0 +1,35 @@
+{
+  t = table(a) {var b;};
+  fun it's(l) {
+    st = %sort( r %< r.a | for r <- t );
+    ~!@eq(st, l);
+    }
+  fun hey(a, b) {
+    t(a) := {: b :};
+    {: a, b :};
+    }
+
+  var f := hey(1,11);
+  var u := hey(2,22);
+  var r := hey(3,33);
+  it's([f,u,r]);
+  
+  var d := ‹a: 3, b: "by Azathoth's conscious museum!"›;
+  
+  ~!@bad(t.insNew(d))@!~  ;
+  t.ins(d);
+  it's([f,u,d]);
+   
+  var p := ‹a: 4, b: 44›;
+  t.insNew(p);
+  it's([f,u,d,p]);
+  
+  t.delOld(d);
+  it's([f,u,p]);
+  ~!@bad(t.delOld(r))@!~  ;
+  
+  
+
+  
+
+}

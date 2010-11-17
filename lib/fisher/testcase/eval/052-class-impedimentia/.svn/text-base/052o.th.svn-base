@@ -1,0 +1,22 @@
+//FAIL: Must override multiply-inherited def
+{
+  class Vampire {
+    def abandon() = 0;
+  }
+  class Jungle {
+    def abandon(x) = 1;
+  }
+  class `pseudo-realisable rowboat` extends Vampire, Jungle {
+    def abandon(x,y) = 2;
+  }
+  class Liar extends `pseudo-realisable rowboat`{
+    def abandon() = "0a";
+  }
+  class Leash {
+    def abandon(x) = "1a";
+  }
+  
+  class Husk extends Liar, Leash {
+  }
+  
+}

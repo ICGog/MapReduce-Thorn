@@ -1,0 +1,9 @@
+{
+  fun refrain(x) {
+    if (x ~ [y,z]) return y+z;
+    [[[x]]];
+    }
+
+  ~!@eq(refrain(0), [[[0]]])@!~  ;
+  ~!@eq(refrain([1,2]), 3)@!~  ;
+}

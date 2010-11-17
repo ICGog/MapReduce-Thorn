@@ -1,0 +1,28 @@
+{
+  class Rash {
+    var anyplace : int;
+  }
+  
+  r = Rash();
+  r.anyplace := 1;
+  ~!@bad(({r.anyplace := "fingers!";}))@!~  ;
+  r.anyplace := 2; 
+  ~!@bad(({r.anyplace += "the Enchanted Lute";}))@!~  ;  
+  
+  class Opera {
+    var anyplace : string := "Colorado";
+  }
+  
+  var o := Opera();
+  o.anyplace := "Alaska";
+  ~!@bad(({ o.anyplace := 1; }))@!~  ;
+  
+  fun painy1(x, badsome) {
+    ~!@bad(({x.anyplace := badsome; }))  ;    
+  }
+
+  painy1(r, "by Usar's horny tyrant");
+  painy1(o, 1);
+  
+}
+        

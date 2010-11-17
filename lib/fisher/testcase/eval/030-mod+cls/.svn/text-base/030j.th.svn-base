@@ -1,0 +1,16 @@
+{
+  // Thanks, Nick!
+  import PET.Neutrino;
+  n1 = Neutrino();
+  import own PIT = PET;
+  import PiMeson = PIT.Neutrino;
+  n2 = PiMeson();
+  ~!@assert(n1 :? Neutrino)@!~  ;
+  ~!@assert(!(n2 :? Neutrino))@!~  ;
+  ~!@assert(n2 :? PiMeson)@!~  ;
+  ~!@assert(!(n1 :? PiMeson))@!~  ;
+
+  import Glurd = PET.Neutrino;
+  ~!@assert(n1 :? Glurd)@!~  ;
+  ~!@assert(!(n2 :? Glurd))@!~  ;
+} 

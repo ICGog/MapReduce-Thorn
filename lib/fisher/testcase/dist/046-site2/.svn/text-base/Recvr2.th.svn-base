@@ -1,0 +1,25 @@
+spawn Recvr2 {
+body{
+  import NET.*;
+  protoy = object extends Protocol {
+     def encode(msg) = (throw "Not used";);
+     def decode(msg) {
+       println("Recvr2.decode -- woot! '$msg'");
+       "Deqq $msg";
+       }
+     def input() = UseLINE;
+  };
+  sock = ListenOn(PORT,protoy); 
+
+  ~!@testStartLatch();
+  
+  s = (recv{x => x};);
+  // protoy adds Deqq; protox in Sender2 adds Yow!
+  ~!@eq(s, "Deqq Yow! Voon")@!~  ;
+  
+  ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  
+}body
+}Recvr2;

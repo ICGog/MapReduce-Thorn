@@ -1,0 +1,253 @@
+options {
+  LOOKAHEAD = 1;
+  CHOICE_AMBIGUITY_CHECK = 4;
+  OTHER_AMBIGUITY_CHECK = 3;
+  STATIC = true; 
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = true;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = false;
+}
+
+PARSER_BEGIN(JsonParser)
+package fisher.parser.json;
+import java.util.*;
+import fisher.runtime.*;
+import static fisher.util.Bard.*;
+import fisher.util.FisherException;
+
+public class JsonParser {
+  
+  public static String internalize(String s) {
+    StringBuffer sb = new StringBuffer();
+    int slen = s.length() - 1; // Skip final quote
+    for(int i = 1; i < slen; i++) { // start from 1 to skip leading quote
+      char c = s.charAt(i);
+      if (c != '\\') sb.append(c);
+      else {
+        i++;
+        if (i >= slen ) {sb.append('\\'); break;}
+        char d = s.charAt(i);
+        switch(d) {
+          case '\"' : sb.append(d); break;
+          case '/' : sb.append(d); break;
+          case '\\' : sb.append(d); break;
+          case 'b' : sb.append("\b"); break;
+          case 'f' : sb.append("\f"); break;
+          case 'n' : sb.append("\n"); break;
+          case 'r' : sb.append("\r"); break;
+          case 't' : sb.append("\t"); break;
+          case 'u' : // precisely 4 hex digits
+               char d1 = '0'; 
+               char d2 = '0';
+               char d3 = '0';
+               char d4 = '0';
+               if (i+1 == slen) { // \ u
+               }
+               else if (i+2 == slen) { // \ ua
+                 d4 = s.charAt(i+1);   // 'a'
+                 i = slen;
+               }
+               else if (i+3 == slen) { // \ uab
+                 d3 = s.charAt(i+1);   // 'a'
+                 d4 = s.charAt(i+2);   // 'b'
+                 i = slen;
+               }
+               else if (i+4 == slen) { // \ uabc
+                 d2 = s.charAt(i+1);   // 'a'
+                 d3 = s.charAt(i+2);   // 'b'
+                 d4 = s.charAt(i+3);   // 'c'
+                 i = slen;
+               }
+               else {                  // \ uabcd -- like the spec says
+                 d1 = s.charAt(i+1);   // 'a'
+                 d2 = s.charAt(i+2);   // 'b'
+                 d3 = s.charAt(i+3);   // 'c'
+                 d4 = s.charAt(i+4);   // 'd'
+                 i += 4;
+               }
+               int n = Integer.parseInt("" + d1 + d2 + d3 + d4, 16);
+               // Now, add 1 or 2 chars, as proper for Unicode, to sb
+               char[] chars = Character.toChars(n);
+               sb.append(chars);
+               break;
+           default: sb.append(d); break;
+        }//switch
+      }// else
+    }//for
+    return sb.toString();
+  }//
+
+}
+
+PARSER_END(JsonParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN: 
+{
+  <PLUS: "+">
+| <MINUS: "-">
+| <DOT: ".">
+| <COMMA: ",">
+| <COLON: ":">
+| <TRUE : "true">
+| <FALSE: "false">
+| <NULL: "null">
+| <DIGITS: ( ["0" - "9"] )+ >
+| <E : "e" | "E">
+| <LBRACKET: "[">
+| <RBRACKET: "]">
+| <LBRACE: "{">
+| <RBRACE: "}">
+| <STRING : "\"" 
+   ( 
+      ~["\0"-"\u001f", "\"", "\\"]
+   |  "\\\""
+   |  "\\\\"
+   |  "\\/"
+   |  "\\b"
+   |  "\\f"
+   |  "\\n"
+   |  "\\r"
+   |  "\\t"
+   |  ("\\u" ["0"-"9", "a"-"f", "A"-"F"]["0"-"9", "a"-"f", "A"-"F"]["0"-"9", "a"-"f", "A"-"F"]["0"-"9", "a"-"f", "A"-"F"])
+   )* "\"">
+
+
+}
+
+Thing /*&*/value():
+  {
+    Token t;
+    Thing th;
+  }
+{
+   th = Stringle() {return th;}
+|  th = Number() {return th;}   
+|  <TRUE> {return BoolTh.True;}
+|  <FALSE> {return BoolTh.False;}
+|  <NULL> {return null;}
+|  th = Array() {return th;}
+|  th = Record() {return th;} 
+}//////////////////////value
+
+Thing /*&*/Stringle():
+  {
+    Token t;
+  }
+{
+  t = <STRING> { return StringTh.of(internalize(t.image));}
+}//////////////////////Stringle
+
+Thing /*&*/Record():
+  {
+    List<String> fieldNames = null;
+    List<Thing> stuff = null;
+    Thing th;
+    Thing fn;
+  }
+{
+  <LBRACE>
+  {  fieldNames = new ArrayList<String>();
+     stuff = new ArrayList<Thing>(); }
+  [
+     (fn = Stringle()  <COLON> th = value()) {fieldNames.add(fn.toString()); stuff.add(th);}
+     (
+       <COMMA>
+       (fn = Stringle()  <COLON> th = value()) {fieldNames.add(fn.toString()); stuff.add(th);}
+     )*
+  ]
+  <RBRACE>        
+  {
+    try {
+      return RecordTh.make(fisher.eval.Evaller.lastSyntax(), fieldNames, stuff);
+    }
+    catch (FisherException fe) {
+      return null;
+    }
+  }
+}//////////////////////Record
+
+Thing /*&*/Array():
+  {
+    List<Thing> els;
+    Thing th; 
+  }
+{
+  <LBRACKET>
+  {els = new ArrayList<Thing>();}
+  (
+    th = value() {els.add(th);}
+    (
+      <COMMA>
+      th = value() {els.add(th);}  
+    )*
+  )?
+  <RBRACKET>
+  {return ListTh.fromJavaList(els); }
+}//////////////////////Array
+
+
+Thing /*&*/Number():
+  { Token intt;
+    Token frac = null;
+    Token exp = null;
+    boolean negative = false;
+    boolean negExp = false;
+  }
+{
+  ( <MINUS> {negative = true;}
+  )?
+  intt = <DIGITS>
+  (<DOT> frac = <DIGITS> )?
+  (<E> 
+     (<PLUS>
+     |<MINUS> {negExp = true;}
+     )?
+     exp = <DIGITS> )?
+  {
+    if (frac == null && exp == null) {
+       long I = Long.parseLong(intt.image);
+       return IntTh.of(negative ? -I : I);
+    }
+    else {
+       String numstr = 
+         intt
+         + 
+         "." + (frac == null ? "0" : frac.image)
+         + 
+         "e" + (negExp ? "-" : "")
+             + (exp == null ? "0" : exp.image)
+         ;
+         double D = Double.parseDouble(numstr);
+         return FloatTh.of(negative ? -D : D);
+    }
+  }
+}//////////////////////Number
+
+Thing /*&*/JSON():
+  { 
+    Thing th;
+  }
+{
+  (
+    th = value()
+  )
+  {return th;}
+}//////////////////////JSON

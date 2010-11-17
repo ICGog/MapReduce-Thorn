@@ -1,0 +1,20 @@
+spawn client_02 {
+  body {
+    B = spawn B {
+      body {
+        while (true) {
+          recv {
+            x from y envelope e && it.securityInfo ~ +si checked {
+              for (st <- si) {
+                t = st.k;
+                if (t == "write_cap") {
+                  println("going to write $x");
+                }
+              }
+            }
+          }recv
+        }while
+      }body
+    }B;
+  }body
+}

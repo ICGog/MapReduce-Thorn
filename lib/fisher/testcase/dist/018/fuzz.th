@@ -1,0 +1,32 @@
+spawn fuzz {
+  var a1 := 0;
+  var a2 := 0;
+  var b1 := 0;
+  var b2 := 0;
+  
+  var phase := 1;
+  
+  
+  sync poke() {
+    {: a1, a2, b1, b2 :};
+  }
+  
+  sync go() {
+    phase += 1;
+  }
+  
+  body{
+    ~!@testStartLatch();
+    while(phase == 1) {
+      serve
+         before{ b1 += 1; }
+         after{ a1 += 1; }
+    }while
+         
+    while(phase == 2) {
+      serve
+         before{ b2 += 1; }
+         after{ a2 += 1; }
+    }while
+  }body
+}fuzz;

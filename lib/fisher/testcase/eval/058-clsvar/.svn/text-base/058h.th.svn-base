@@ -1,0 +1,6 @@
+{
+  class A(n:int, var w: int);
+  class B(n,w, j: bool) extends A(n,w);
+  ~!@bad(A(1, false))@!~  ;
+  ~!@bad(B(1, false, true))@!~  ;
+}

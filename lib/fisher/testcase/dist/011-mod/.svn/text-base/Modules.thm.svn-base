@@ -1,0 +1,15 @@
+module PREDESTINATION {
+  class Yankee(x){};
+  fun ride(x,y) = [x,y];
+}
+
+module LIBRARY {
+  import PREDESTINATION.*;
+  class Crustacean(x,y) extends Yankee(x){}
+  fun shatter(x,y,z) = [ride(x,y), z];
+}
+
+module MAVERICK {
+   var dent := 0;
+   fun defame() { dent += 1; dent; }
+}

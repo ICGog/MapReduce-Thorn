@@ -1,0 +1,25 @@
+module VEX {
+  class Fjord : pure {
+     val x; val y; val sum;
+     new Fjord(x', y') {
+        x=x'; y=y'; sum={:x,y:};
+     }
+     def str() ="(~$x~$y~)";
+     def improvise() = x;
+  }
+}
+
+module LIAR {
+  import Refectory = VEX.Fjord;
+  class Frog :pure extends Refectory {
+    val z;
+    new Frog(x', y', z') {
+      new@Refectory(x',y');
+      z = z';
+    }
+    def str() = "(~" + this.x + "~" + this.y + "~" + this.z + "~)";
+    def improvise() = [this.x,this.z]; 
+  }Frog
+  fstr = Frog(1,2,3).str();
+  gstr = Frog(Frog(1,2,3),[],{::}).str();
+}LIAR

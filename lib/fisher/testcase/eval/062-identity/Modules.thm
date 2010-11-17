@@ -1,0 +1,22 @@
+module IDENTITY {
+  javaly fun IDENTITY·counter() = fisher.runtime.lib.MiscFunctions.IDENTITY_counter;
+  class Identity {
+     identity = IDENTITY·counter();
+     def `==`(other:Identity) = (identity == other.identity);
+       | `==`(_) = false;
+     def same?(other:Identity) = (identity == other.identity);
+       | same?(_) = false;
+  }
+  
+  class GlobalIdentity {
+     identity = [thisComp(), IDENTITY·counter()];
+     def `==`(other:Identity) = (identity == other.identity);
+       | `==`(_) = false;
+     def same?(other:Identity) = (identity == other.identity);
+       | same?(_) = false;
+  }
+
+
+}
+  
+

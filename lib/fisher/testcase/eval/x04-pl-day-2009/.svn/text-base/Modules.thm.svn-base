@@ -1,0 +1,7 @@
+module ID {
+  var idCounter := 0;
+  class Identity {
+     val id = ({idCounter += 1;});
+     def `==`(other) = other ~ {: id: $(id) :} : Identity;
+  }Identity
+}

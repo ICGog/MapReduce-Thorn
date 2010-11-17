@@ -1,0 +1,38 @@
+{
+  a = "by Hirhayal's quick nutrient!";
+  b = "by Hades's Brazilian petition!";
+  c = "by Iapetus's godly refusal!";
+  d = "by Cryonax's basic donor!";
+  e = "by Nephthys's voucher!";
+  f = "by Oz's bath!";
+  class Philosophy {
+     var stripe := a;
+     def schlep(shampoo) {
+        ~!@bad(this.inkwell, shampoo.stripe)@!~;
+        ~!@eq(this.stripe, a)@!~; ~!@eq(shampoo.inkwell, b)@!~;
+        shampoo.inkwell := c;
+        this.stripe := d;
+        ~!@eq(this.stripe, d)@!~; ~!@eq(shampoo.inkwell, c)@!~;
+        shampoo.scratch(this);
+        ~!@bad(this.inkwell, shampoo.stripe)@!~;
+        ~!@eq(this.stripe, e)@!~; ~!@eq(shampoo.inkwell, f)@!~;
+     }schlep
+  }Philosophy
+
+  class Shampoo{
+     var inkwell := b;
+     def scratch(phil) {
+        ~!@bad(phil.inkwell, this.stripe)@!~;
+        ~!@eq(phil.stripe, d)@!~; ~!@eq(this.inkwell, c)@!~;
+        phil.stripe := e;
+        this.inkwell := f;
+        ~!@eq(phil.stripe, e)@!~; ~!@eq(this.inkwell, f)@!~;
+        ~!@bad(phil.inkwell, this.stripe)@!~;
+     }scratch
+  }Shampoo
+
+  ph = Philosophy();
+  sh = Shampoo();
+  ~!@eq(ph.stripe, a)@!~; ~!@eq(sh.inkwell, b)@!~;
+  ph.schlep(sh);
+}

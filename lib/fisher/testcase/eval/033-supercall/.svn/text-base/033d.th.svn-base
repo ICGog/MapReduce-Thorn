@@ -1,0 +1,38 @@
+// making a call as a superclass to a subclass def 
+{
+  class A {
+    var pencil := 0;
+    def reciprocate() = 1;
+    def manipulate() { 
+      pencil := pencil + this.reciprocate();
+      }
+  }A
+  
+  class B extends A {
+    var battery := 0;
+    def reciprocate() {
+      battery := battery + 1;
+      battery;
+    }
+  }B
+
+  a = A();
+  ~!@eq(a.pencil, 0)@!~  ;
+  ~!@eq(a.reciprocate(), 1)@!~  ;
+  ~!@eq(a.reciprocate(), 1)@!~  ;
+  a.manipulate();
+  ~!@eq(a.pencil, 1)@!~  ;
+  a.manipulate();
+  ~!@eq(a.pencil, 2)@!~  ;
+  a.manipulate();
+  ~!@eq(a.pencil, 3)@!~  ;
+
+  b = B();
+  ~!@eq(b.pencil, 0)@!~  ;
+  ~!@eq(b.reciprocate(), 1)@!~  ;
+  ~!@eq(b.reciprocate(), 2)@!~  ;
+  b.manipulate();
+  ~!@eq(b.pencil, 3)@!~  ;
+  b.manipulate();
+  ~!@eq(b.pencil, 7)@!~  ;
+}

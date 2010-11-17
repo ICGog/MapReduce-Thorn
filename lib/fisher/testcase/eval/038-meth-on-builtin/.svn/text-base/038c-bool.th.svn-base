@@ -1,0 +1,6 @@
+{
+  ~!@eq(true.str(),"true")@!~  ;
+  ~!@eq(false.str(),"false")@!~  ;
+  ~!@bad(true.num())@!~  ;
+
+}

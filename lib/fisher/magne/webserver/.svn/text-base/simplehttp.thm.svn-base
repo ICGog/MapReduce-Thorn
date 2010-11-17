@@ -1,0 +1,18 @@
+module simplehttp {  
+
+  javaly class SimpleHTTPServer = magne.SimpleHTTPServer {
+    new SimpleHTTPServer(port);
+
+    def stop() = stop;
+  }
+
+  javaly class SimpleHTTPRequest() = magne.SimpleHTTPRequest {
+    def method() = method;
+    def content() = content;
+    def path() = path;
+    def headers() = headers;
+    def query() = query;
+    def ip() = ip;
+    def respond(status, content, headers) = respond;
+  }  
+}

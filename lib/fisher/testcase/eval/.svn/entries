@@ -1,0 +1,244 @@
+10
+
+dir
+3731
+svn://dumbo.cs.purdue.edu/Thorn/fisher/testcase/eval
+svn://dumbo.cs.purdue.edu/Thorn
+
+
+
+2010-09-24T20:28:50.207239Z
+3721
+bard
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a723982a-6043-0410-9263-eafd0724ee76
+
+038-meth-on-builtin
+dir
+
+027-try
+dir
+
+x05-topsort
+dir
+
+021-for
+dir
+
+067-char
+dir
+
+072-math
+dir
+
+063-stupid-module
+dir
+
+035-range
+dir
+
+061-sandbox
+dir
+
+065-evil-diamonds
+dir
+
+expensive
+dir
+
+068-invoke
+dir
+
+059-oopsla
+dir
+
+028-records
+dir
+
+051-maprec
+dir
+
+041-null
+dir
+
+073-security
+dir
+
+x06-recipe
+dir
+
+029-simple-superclass
+dir
+
+026-return
+dir
+
+012-fun
+dir
+
+013-math
+dir
+
+030-mod+cls
+dir
+
+062-identity
+dir
+
+023-match
+dir
+
+025-match
+dir
+
+046-group
+dir
+
+064-mod-priv
+dir
+
+058-clsvar
+dir
+
+055-xml
+dir
+
+015-class
+dir
+
+052-class-impedimentia
+dir
+
+x08-complex-example
+dir
+
+071-json
+dir
+
+017-loop
+dir
+
+039-float
+dir
+
+042-it
+dir
+
+x07-html
+dir
+
+057-small
+dir
+
+054-pure
+dir
+
+044-map
+dir
+
+047-file
+dir
+
+x04-pl-day-2009
+dir
+
+040-table
+dir
+
+053-extend
+dir
+
+018-compare
+dir
+
+doom
+dir
+
+066-bytes
+dir
+
+049-val-class
+dir
+
+036-quantifiers
+dir
+
+070-module-bug
+dir
+
+019-if
+dir
+
+x09-capabilities
+dir
+
+x01
+dir
+
+031-ctor
+dir
+
+x02
+dir
+
+043-class-formals
+dir
+
+037-query
+dir
+
+014-list
+dir
+
+069-privatization
+dir
+
+050-parenstmt
+dir
+
+034-new-super
+dir
+
+045-ord
+dir
+
+x03-text
+dir
+
+033-supercall
+dir
+
+060-misc
+dir
+
+020-match-list
+dir
+
+048-id
+dir
+
+024-anon-obj
+dir
+
+032-string-interp
+dir
+
+016-class
+dir
+
+056-type-constraint
+dir
+

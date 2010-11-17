@@ -1,0 +1,12 @@
+{
+  if ([] ~ (it == [])?) {
+    ~!@hit()@!~  ;
+  }
+  else { ~!@hit()@!~ 0 ; }
+  
+  import FLASHLIGHT.harmless;
+  ~!@assert(harmless)@!~  ;
+
+  
+    
+}

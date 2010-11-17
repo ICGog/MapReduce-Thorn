@@ -1,0 +1,29 @@
+spawn bat {
+  var b := 0;
+  initially{ ~!@testStartLatch(); }
+  body{
+     {: bit, bat, bot :} = valof{recv{r && {:bit,bat,bot:} = {r;} timeout(300)  {{ ~!@hit()@!~ 0 ; }}}};
+     // phase 1
+     bot <<< "hao";
+     
+     //phase 2
+     bit <<< "jai";
+     bot <<< "jao";
+     
+     // phase 3 and 4
+     
+     recv{ "go3" => {}};
+     recv{ "go3" => {}};
+     
+     for(k <- 1 .. 10) {
+       recv{
+         3 prio 2 => {~!@phase(3, 3)  ;}
+       | x prio 1 => {~!@phase(4, x)  ;}
+       }recv
+     }
+     
+     
+     // finishing
+     bit <<< "donebat";
+  }body
+}bat;

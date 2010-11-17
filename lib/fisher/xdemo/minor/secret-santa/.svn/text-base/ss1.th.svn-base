@@ -1,0 +1,59 @@
+{
+  var people := [];
+
+  filename = "victims.ss";
+  for(line <- filename.file.contents.split("\n")){
+     if (line ~ "(\\w+)\\s+(\\w+)\\s+<(.*)>" / [personal, family, email]){
+       people := {:personal, family, email:} :: people;
+     }
+     else {
+       println("Enskippulating: $line");
+     }
+  }for  
+  
+  
+  ss = %table(fr = p){map var to := p;  | for p <- people};
+  tt = %table(fr = p){map var to := p;  | for p <- people}; // Inverse of ss.
+  
+  fun acceptable?() = 
+     ! %exists(fr.family == to.family | for {:fr, to:} <- ss.rows );
+  fun invariant?() = 
+     %all(ss[tt[p]] == p | for p <- people); 
+  fun pry({:personal, family, email:}) = email;
+  fun show(msg) {
+     println(" <<< $msg >>> ");
+     for(p <- people) {
+       println( pry(tt[p]) + " --> " + pry(p) + " --> " + pry(ss[p]) );
+     }
+  }show    
+
+  fun swap!(p,q) { 
+    if ( !invariant?()) {throw "Invariant failed before swap of $p and $q";}
+    pss = ss[p];
+    ptt = tt[p];
+    if (p == q) return;
+    ss[ptt] := q;
+    ss[qtt] := p;
+    tt[q] := ptt;
+    tt[p] := qtt;
+    if ( !invariant?()) {throw "Invariant failed after swap of $p and $q";}    
+  }swap!  
+  
+  fun personWithDifferentLastName({:family:}) = 
+      %[q | for q <- people, if q.family != family].rand; 
+  
+  var i := 0;
+  while (!acceptable?()) {
+     p = people.rand;
+     q = personWithDifferentLastName(p);
+     swap!(p,q);
+     i += 1;
+     if (i > 4*people.len) {
+       println("I've tried $i times; I give up.");
+     }
+  }while
+  
+  show("Final matching is...");
+  
+
+}

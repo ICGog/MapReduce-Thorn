@@ -1,0 +1,38 @@
+{
+  t = %table(k=i){sq = i*i; | for i <- 1 .. 5};
+  ~!@eq(
+    %sort(r %< r.k | for r <- t),
+    [ ‹k:1, sq: 1›,
+      ‹k:2, sq: 4›,
+      ‹k:3, sq: 9›,
+      ‹k:4, sq: 16›,
+      ‹k:5, sq: 25› ]
+    )@!~  ;
+
+   u = %table(a=i,b=j){ s=i+j; var p := i*j; map c = "$i$j"; | 
+         for i <- 1 .. 2, for j <- 3..4};
+  
+   ~!@eq(
+     %sort(r %< r.a %< r.b | for r <- u),
+     [
+       ‹a: 1, b: 3 ,s: 4, p: 3, c:  "13"›,
+       ‹a: 1, b: 4 ,s: 5, p: 4, c:  "14"›,
+       ‹a: 2, b: 3 ,s: 5, p: 6, c:  "23"›,
+       ‹a: 2, b: 4 ,s: 6, p: 8, c:  "24"›
+     ]
+   )@!~  ;
+         
+   v = %table(a=i, b=j) { s=i+j;  
+       | for i <- 1..4, for j <- i .. 4, if (i+j).prime?() };
+   ~!@eq(
+     %sort(r %< r.a %< r.b | for r <- v),
+     [
+       ‹a:1, b:1, s:2›,
+       ‹a:1, b:2, s:3›,
+       ‹a:1, b:4, s:5›,
+       ‹a:2, b:3, s:5›,
+       ‹a:3, b:4, s:7›
+     ]
+   )@!~  ;
+
+}

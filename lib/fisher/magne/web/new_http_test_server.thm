@@ -1,0 +1,98 @@
+/*
+ * Used in new_http_test.th to test http messages.
+ * It is placed here so it will be loaded by the shellscript.
+ */
+module newhttptestserver{
+  
+  component NewHttpTestServer(port:int){
+
+    import NET.*;
+    
+    var goon := true; 
+
+    fun listen(){
+      proto = object extends Protocol {
+        def encode(msg) = (throw "Not used";);
+        def decode(msg) = msg;
+        def input() = UseHTTP;
+      };
+
+      ListenOn(port, proto); 
+    }
+
+    HTTP_200 = {: code:200, meaning:"" :};
+    HTTP_400 = {: code:400, meaning:"" :};
+    HTTP_201 = {: code:201, meaning:"" :};
+    
+    // different pages
+    fun rootPage(req){
+      req.respond(HTTP_200, 
+                  "<html><head></head><body></body></html>",
+                  {: `cache-control`: "private, max-age=0", 
+                      `content-type`: "text/html; charset=UTF-8" :}
+                   );
+    }
+
+    fun parametersPage(req){
+      q = req.params().q;
+      req.respond(HTTP_200, "q=$q", {: :});
+    }
+
+    fun postPage(req){
+      if(req.verb() == "POST"){
+        req.respond(HTTP_201, req.content(), {::});
+      }
+      else{
+        req.respond(HTTP_400, "POST ERROR", {::});
+      }
+    }
+
+    fun putPage(req){
+      req.respond(HTTP_200, req.content(), {::});
+    }
+    
+    fun run(){
+        
+      matchResource = fn(req){
+        match(req.resource()){
+          "/" || "" => {
+            rootPage(req);
+          }
+          | "/parameters/" => {
+            parametersPage(req);
+          }
+          | "/post/" => {
+            postPage(req);
+          }
+          | "/put" =>{
+            putPage(req);
+          }
+          | x => {
+            println("Error: no page handler for: " + req.resource());
+            goon := false;
+          }
+        }
+      };
+
+      println("Running on http://localhost:$port");
+
+      while(goon) {
+        receive{
+          req => {
+            match(req){
+              {: verb:"go", comp: c :} => {c <<< "test";}
+              | {: verb: "stop" :} => {goon := false;}
+              | x => {matchResource(x);}
+            }
+          }
+        }
+      }
+    }
+    
+    body{
+      listen();
+      run();
+      println("Server shutdown...");
+    }
+  }
+}

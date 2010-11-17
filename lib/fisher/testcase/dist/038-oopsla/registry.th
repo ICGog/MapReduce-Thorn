@@ -1,0 +1,15 @@
+spawn Registry {
+  agencies = table(name){ad, comp;};
+  sync register(name, ad) from c {
+     agencies(name) := {: ad, comp: c :};
+     "Registered.";
+  }
+  sync agencyAdvertising(phrase) = 
+     %find(comp | for {:ad, comp:} <- agencies,
+                  if ad.matchRE?(phrase));
+  async stop() { done := true; }
+  var done := false;
+  body{
+    until(done) serve;
+  }body
+}Registry;

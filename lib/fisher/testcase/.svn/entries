@@ -1,0 +1,80 @@
+10
+
+dir
+3731
+svn://dumbo.cs.purdue.edu/Thorn/fisher/testcase
+svn://dumbo.cs.purdue.edu/Thorn
+
+
+
+2010-09-24T20:28:50.207239Z
+3721
+bard
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a723982a-6043-0410-9263-eafd0724ee76
+
+dist
+dir
+
+zz-known-failures
+dir
+
+eval
+dir
+
+README-testcases.txt
+file
+
+
+
+
+2010-10-11T21:47:27.613361Z
+0c1abd263ca56e96738e6458de56c5eb
+2009-12-09T15:27:43.288882Z
+3347
+bard
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+399
+
+modules
+dir
+
+parser
+dir
+
+test-results
+dir
+

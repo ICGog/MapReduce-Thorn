@@ -1,0 +1,19 @@
+{
+  t = table(k){ var v;};
+  fun it's(l) {
+     st = %sort( r %< r.k | for r <- t );
+     ~!@eq(st, l)  ;
+  }
+
+  it's([]);
+
+  t(1) := {: v:11 :};
+  r1 = ‹k:1, v:11›;
+  it's([r1]);
+  t(1) := {: v:22:};
+  r1b = ‹k:1, v:22›;
+  it's([r1b]);
+    
+  urf = table(user){val nickname; var password;};
+  
+}

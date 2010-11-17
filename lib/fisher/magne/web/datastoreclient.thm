@@ -1,0 +1,45 @@
+/**
+ * Client for datastore interaction.
+ */
+module webdatastore{
+
+  import web.settings;
+  
+  var server := site(settings().datastoreaddress);
+  
+  /**
+   * Sets the datastore address. 
+   *
+   * For testing purpose only. Note that in request handlers the module
+   * is reimported and therefore the datastore address should be set
+   * again!
+   */
+  fun datastore_set_address(address){
+    server := site(address);
+  }
+  
+  fun datastore_put(table_name, entity){
+    //println("datastoreput:" + settings().datastoreaddress);
+    key_ = server <-> put(table_name, entity);
+    return key_;
+  }
+  
+  fun datastore_get(table_name, key_){
+    return server <-> get(table_name, key_);
+  }
+
+  fun datastore_delete(table_name, key_){
+    return server <-> delete(table_name, key_);
+  }
+
+  fun datastore_query(table_name, query){
+    return server <-> execute(table_name, query);
+  }
+
+  fun flush(table_name){
+    entities = server <-> execute(table_name, {: :});
+    for(e <- entities){
+      server <-> delete(table_name, e.`key`);
+    }
+  }
+}

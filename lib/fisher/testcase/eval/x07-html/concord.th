@@ -1,0 +1,133 @@
+{
+  import XmlMod.*;
+  cordir = "testcase/eval/x07-html/";
+  
+  fun getCorpus() {
+    corpusFile = (cordir + "corpus.html").file();
+    if (! corpusFile.exists?) {
+      println("No corpus file");
+    }
+    corpus = parseXML(corpusFile.contents());
+    corpus;
+    }getCorpus
+
+  // The central data structure for recording information about words.
+  words = table(word) {
+    var n : int;
+    };
+
+  // Does a word get entered into the concordance?
+  // (Wordlike things do. Punctuation doens't. "'" and "--" are wordlike
+  // because I am lazy.)
+  fun concordable?(w) = w(0).matchRE?("[a-zA-Z'\\-]");
+
+  // Try to add a row to the table.
+  // Initialize its count ot zero.
+  fun addRow(w) {
+    if(concordable?(w)) {words(w) := {:n:0:};}
+  }
+
+  // The HTML anchor name we'll use for the n'th occurrence
+  // of word w.
+  fun anchor(w:string, n:int) = "$w-$n";
+  
+  // Imperative verb: compute the new number of times w has 
+  // appeared, and return it.  
+  fun number(w:string) {
+    if (words(w) ~ +{:n:}) {
+      newN = n+1;
+      words(w).n := newN;
+      newN;
+    }
+    else {
+      words(w) := {: n:1 :};
+      1;
+    }
+  }
+  
+  // Flattening function; ought to be in the library.
+  fun flattenAll(x : list) = %[ (flattenAll(y))... | for y <- x];
+    | flattenAll(z) = [z];
+  
+  // put a Y between each pair of elements of the first list.
+  fun listJoined([], Y) = [];
+    | listJoined([x],Y) = [x];
+    | listJoined([x,z...], Y) = [x, Y, listJoined(z,Y)...];
+  
+  // W, with an anchor to it if it ought to be anchored.
+  fun replacement(W) {
+    w = W.toLower();
+    if(concordable?(w)) {
+        Elem("a", {:name:anchor(w,number(w)):}, [W]);
+    }
+    else W;
+  }
+  
+  // Compute the concordancized HTML file.
+  
+  fun concor(Elem("body", attrs, children)) {
+      // We're treating the body node specially.
+      // We'll put the table at the front of the body.
+      // Fortunately, HTML has only one "body" node per file.
+      concKids = flattenAll(%[concor(child) | for child <- children]);
+      concTab = conctab();
+      Elem("body", attrs, 
+        flattenAll([concTab, concKids...] )
+        );
+      }
+    | concor(Elem(tag, attrs, children)) {
+        // Other tags are simply transparent
+        concKids = flattenAll(%[concor(child) | for child <- children]);
+        Elem(tag, attrs, concKids);  
+      }concor
+    | concor(s: string) {
+        // But text nodes need serious work -- that's where
+        // the words go!
+        import CHOP.chops;
+        ws = %[ w | for w <- chops(s) ];
+        anchoredWs = %[replacement(W) | for W <- ws ];
+        anchoredWs;
+      }concor
+   | concor(x) {
+       throw "What is $x???";
+     }concor
+
+  // Compute all of the n links to word w.
+  fun linksTo(w, n) = 
+    listJoined(
+      %[ Elem("a", {:href: "#" + anchor(w, i):}, "$i") | for i <- 1 .. n ]
+      ,
+      " "  // Spaces so the links aren't jammed together.
+      )
+    ;
+     
+  // Concordance table. 
+  // Columns for: word, number of occurrances, links to each of them.
+  // Currently, alphabetic by word.
+  fun conctab() {
+     ws = %sort(w %< w | for {:word:w:} <- words.keys());
+     rows = %[
+       Elem("tr", null, [
+         Elem("td", null, [w]),
+         Elem("td", null, n),
+         Elem("td", null, linksTo(w, n))
+         ])
+       | for w <- ws,
+         {:n:} = words(w)
+       ];
+     Elem("table", {:border: 1:}, [
+       rows...
+       ]);       
+  }
+
+  // Main program
+  corpus = getCorpus();
+  cc = concor(corpus);
+  outfile = (cordir + "out.html").file();
+  if (outfile.exists?) outfile.clear!;
+  outfile.writeln(cc);  
+
+  // testing  
+  ~!@eq(listJoined([1,2,3],0), [1,0,2,0,3])@!~  ;
+  ~!@eq(words("in").n, 63)@!~  ;
+}

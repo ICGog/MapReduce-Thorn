@@ -1,0 +1,48 @@
+module PROFILE {
+  fun sum([]) = 0;
+    | sum([x,y...]) = x + sum(y);
+class Profile(interests, pickiness) : pure {
+   # interests is  [{: topic:_:string, weight:_:int :}...],
+   def compatible?(other:Profile){
+     othInt = other.interests;
+     matchTotal = sum(%[weight 
+       | for {:topic, weight:} <- interests,
+         if %exists(true | for {:topic:$(topic):} <~ othInt)
+       ]);
+     matchTotal >= pickiness;
+   }compatible?
+}Profile
+}
+
+
+module WORKER {
+  component Worker() {
+    import PROFILE.Profile;
+    var goon := true;
+    var db;
+    sync have_a_DB(db') {db := db';}
+
+    async findMatchFor({:profile, name, picked:}, enve) {
+       customers = db <-> allCustomers();
+       first(
+         for {:profile: profile', name: name':} <~ customers,
+         if   profile.compatible?(profile') 
+           && profile'.compatible?(profile) 
+           && ! (name' in picked)
+         ){
+          # customers(name).picked := name' :: picked;
+          db <-> addPicked(name, name');
+          syncReply(enve, {: date: name' :});
+          }
+       else {
+          syncReply(enve, {: fail: "Sorry, you've dated everyone matching your profile":});
+       }
+       }findMatchFor
+
+    async quit() {goon := false;}
+
+    body{
+      while(goon) serve;
+    }
+  }Worker
+}

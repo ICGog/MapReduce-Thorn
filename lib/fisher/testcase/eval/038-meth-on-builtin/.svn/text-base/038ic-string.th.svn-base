@@ -1,0 +1,58 @@
+{
+  s = "weasels are my life";
+  ~!@eq(s.split(" "), ["weasels", "are", "my", "life"])@!~  ;
+  
+  t = '01234';
+  ~!@eq(t.sublen(0,0), "")@!~  ;
+  ~!@eq(t.sublen(0,1), "0")@!~  ;
+  ~!@eq(t.sublen(0,2), "01")@!~  ;
+  ~!@eq(t.sublen(0,3), "012")@!~  ;
+  ~!@eq(t.sublen(0,4), "0123")@!~  ;
+  ~!@eq(t.sublen(0,5), "01234")@!~  ;
+  ~!@eq(t.sublen(-5,0), "")@!~  ;
+  ~!@eq(t.sublen(-5,1), "0")@!~  ;
+  ~!@eq(t.sublen(-5,2), "01")@!~  ;
+  ~!@eq(t.sublen(-5,3), "012")@!~  ;
+  ~!@eq(t.sublen(-5,4), "0123")@!~  ;
+  ~!@eq(t.sublen(-5,5), "01234")@!~  ;
+
+  ~!@eq(t.sublen(1,0), "")@!~  ;
+  ~!@eq(t.sublen(1,1), "1")@!~  ;
+  ~!@eq(t.sublen(1,2), "12")@!~  ;
+  ~!@eq(t.sublen(1,3), "123")@!~  ;
+  ~!@eq(t.sublen(1,4), "1234")@!~  ;
+  ~!@eq(t.sublen(-4,0), "")@!~  ;
+  ~!@eq(t.sublen(-4,1), "1")@!~  ;
+  ~!@eq(t.sublen(-4,2), "12")@!~  ;
+  ~!@eq(t.sublen(-4,3), "123")@!~  ;
+  ~!@eq(t.sublen(-4,4), "1234")@!~  ;
+  
+  ~!@eq(t.sublen(2,0), "")@!~  ;
+  ~!@eq(t.sublen(2,1), "2")@!~  ;
+  ~!@eq(t.sublen(2,2), "23")@!~  ;
+  ~!@eq(t.sublen(2,3), "234")@!~  ;
+  ~!@eq(t.sublen(-3,0), "")@!~  ;
+  ~!@eq(t.sublen(-3,1), "2")@!~  ;
+  ~!@eq(t.sublen(-3,2), "23")@!~  ;
+  ~!@eq(t.sublen(-3,3), "234")@!~  ;
+
+  ~!@eq(t.sublen(3,0), "")@!~  ;
+  ~!@eq(t.sublen(3,1), "3")@!~  ;
+  ~!@eq(t.sublen(3,2), "34")@!~  ;
+  ~!@eq(t.sublen(-2,0), "")@!~  ;
+  ~!@eq(t.sublen(-2,1), "3")@!~  ;
+  ~!@eq(t.sublen(-2,2), "34")@!~  ;
+
+  ~!@eq(t.sublen(4,0), "")@!~  ;
+  ~!@eq(t.sublen(4,1), "4")@!~  ;
+  ~!@eq(t.sublen(-1,0), "")@!~  ;
+  ~!@eq(t.sublen(-1,1), "4")@!~  ;
+
+  ~!@eq(t.sublen(5,0), "")@!~  ;
+  ~!@eq(t.sublen(-1,0), "")@!~  ;
+  
+  ~!@eq(t.sublen(3, 15), "34")@!~  ;
+  
+  ~!@eq(" wud   ".trim(), "wud")@!~  ;
+
+}

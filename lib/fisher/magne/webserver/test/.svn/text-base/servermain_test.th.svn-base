@@ -1,0 +1,37 @@
+import unittest.*;
+import httpservermain.*;
+
+println("httpservermain test");
+
+fun should_parse_port_arg(){
+    aRecord = parseOption("--port=8080");
+    assertEquals(aRecord.option, "port", "option should be port");
+    assertEquals(aRecord.value, "8080", "port should be 8080");
+}
+
+test(should_parse_port_arg);
+
+fun should_parse_args(){
+  opts = parseArgs(["--port=8080", "--address=localhost"]);
+  assertEquals(opts.port, 8080, "By default port should be 8080");
+}
+
+test(should_parse_args);
+
+fun should_get_application_root(){
+  var path := ".";
+  var path_expected := path.file().abs().butright(1);
+  var path_actual := getApplicationRoot(path); 
+  // "."
+  assertEquals(path_actual, path_expected, "should resolve dynamically");
+  
+  path := "/foo/";
+  path_actual := getApplicationRoot(path); 
+  assertEquals(path_actual, path, "should do nothing");
+
+  path := "/foo";
+  path_actual := getApplicationRoot(path);
+  assertEquals(path_actual, "$path/", "should add / to path");
+}
+
+test(should_get_application_root);

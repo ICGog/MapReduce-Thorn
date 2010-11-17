@@ -1,0 +1,38 @@
+{
+  import CLUE.*;
+  import CLUESET.*;  
+
+  
+  cs = ClueSet();
+  ~!@eq(cs.clues.num(), 0)@!~  ;
+ 
+  // Not yet...
+  if (cs.twoCluesWithSameNumber() ~ +n) { ~!@hit()@!~ 0 ; } else {~!@hit()@!~ ; }
+  
+  cs.learn(NumClue(13));
+
+  // Still not yet.
+  if (cs.twoCluesWithSameNumber() ~ +n) { ~!@hit()@!~ 0 ; } else {~!@hit()@!~ ; }
+  
+  cs.learn(NumClue(17));
+
+  // Still not yet.
+  if (cs.twoCluesWithSameNumber() ~ +n) { ~!@hit()@!~ 0 ; } else {~!@hit()@!~ ; }
+
+  cs.learn(NumClue(13));
+  
+  // Hah, found one!
+  if (cs.twoCluesWithSameNumber() ~ +n) {
+     ~!@eq(n, 13)@!~  ;
+  }
+  else { ~!@hit()@!~ 0 ; }  
+  
+  
+  // Not yet! Clues are 0 and 4 apart.
+  if (cs.cluesAPrimeApart() ~ +[m,n]){ ~!@hit()@!~ 0 ; } else {~!@hit()@!~ ; }
+  
+  cs.learn(NumClue(2)); // 13-2 = 11 is prime.  17-2=15, is not.
+  
+  if (cs.cluesAPrimeApart() ~ +[m,n]) { ~!@eq(m,2)@!~  ; ~!@eq(n,13)@!~  ; }
+  
+}

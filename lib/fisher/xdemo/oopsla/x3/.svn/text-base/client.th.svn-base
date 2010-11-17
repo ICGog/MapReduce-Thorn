@@ -1,0 +1,96 @@
+spawn client {
+body{
+  println("I'm the Thorn aspect of the client, and I'm running.");
+  import CHEEPER.*;
+  import HTML.*;
+  import XML.*;
+  import HTTP.*;
+  println("The client is on.");
+
+  HTTPSocketeer(4321);
+  
+  var goon := true;
+  var user := null;
+  
+  fun cheepTableRow({:chirp:{:text, number, philosopher:}, plusVotes, minusVotes:}) = 
+    [
+      number,
+      text,
+      philosopher,
+      plusVotes,
+      minusVotes
+    ];
+  
+  fun mainPage(name, pw, msg, cheepRows) {
+    hiddens = [
+       hiddenInput("name", name),
+       hiddenInput("pw", pw),
+       ];
+    topControls = [
+       textInput("newChirp"),
+       button("sendChirp", "sendChirp", "Chirp!"),
+       ];
+    topAndBottomControls = [
+       ];
+    line = [hr()];
+    message = ([msg, line...] if msg != null else []);
+    cheepstuff = [] if cheepRows == null
+       else [simpleTable({:border:1:}, 
+         %[ cheepTableRow(row) | for row <- cheepRows ])]
+       ;
+    bod = form("http://localhost:4321", "get", 
+       [hiddens..., 
+        topControls..., 
+        topAndBottomControls...,
+        line ...,
+        message ...,
+        cheepstuff..., 
+        line ...,
+        topAndBottomControls...]);
+    html(title("Cheeper!"), bod);
+  }
+  
+  fun logon!(req, name, pw) {
+     msg = server <-> register!(User(name, pw));
+     page = mainPage(name, pw, msg, []);
+     req.respond(OK, page,  {::});
+  }
+  
+  fun dunno!(req, params, path) {
+     req.respond(OK, "params=$params path=$path", {::});
+  }
+  
+  fun show!(req, name, pw, n) {
+     chirpRows = server <-> fullList(User(name, pw));
+     page = mainPage(name, pw, null, chirpRows);
+     req.respond(OK, page, {::});
+  }show!
+  
+  fun chirp!(req, name, pw, newChirp) {
+     if (newChirp.len > 0) {
+       response = server <-> chirp!(User(name,pw), newChirp);
+       chirpRows = server <-> fullList(User(name, pw));
+       page = mainPage(name, pw, response, chirpRows);
+       req.respond(OK, page, {::});
+     }
+     else {
+       chirpRows = server <-> fullList(User(name, pw));
+       page = mainPage(name,pw,"That's not a whole chirp!", chirpRows);
+       req.respond(OK, page, {::});
+     }
+  }chirp!
+  
+  fun dealWith(req, {:name, pw, logon:}, path) = logon!(req, name, pw);
+    | dealWith(req, {:name,pw,show:n:}, path) = show!(req, name,pw,n);
+    | dealWith(req, {:name,pw,newChirp,sendChirp:},path) = chirp!(req, name, pw, newChirp);
+    | dealWith(req, params, path) = dunno!(req, params, path);
+
+
+  while(goon) {
+    receive{
+      req && HTTPRequest("GET", params, path) => dealWith(req, params, path)
+    }receive
+  }while
+  
+}body
+}client

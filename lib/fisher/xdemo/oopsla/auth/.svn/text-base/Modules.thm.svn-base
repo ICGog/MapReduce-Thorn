@@ -1,0 +1,11 @@
+module CRYPT {
+  // Better encryption functions are available...
+  fun crypt(s) = s.capitalize;
+  class Password:pure {
+    val encrypted; 
+    Password(e:string) { encrypted = crypt(e); }
+    def is?(e:string) = (encrypted == crypt(e));
+  }Password
+}
+    
+  

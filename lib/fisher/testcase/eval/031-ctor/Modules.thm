@@ -1,0 +1,12 @@
+module REGION {
+   class Abdomen {
+     var beard;
+     var fighter := 11;
+     var mallard; 
+     new Abdomen(a) { beard := a; mallard := a*10; }
+     new Abdomen(a,[]) {beard := a; mallard := 222; fighter := 333; }
+     new Abdomen(a, b) {beard := a; mallard := b; }
+     new Abdomen(a,b,c) {beard := a; fighter := b; mallard := c; }
+     def donate() = [beard, fighter, mallard];     
+   }
+}REGION

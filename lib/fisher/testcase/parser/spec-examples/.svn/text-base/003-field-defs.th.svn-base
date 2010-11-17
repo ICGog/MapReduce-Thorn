@@ -1,0 +1,8 @@
+//CLS
+class C(a,b) {
+  val c = [a,b];
+  Cplx(x,y) = a;  // defines x,y
+  var temp;
+  var count := 0;
+  val v; // Must be bound by constructor.
+}C

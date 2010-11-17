@@ -1,0 +1,34 @@
+spawn boing {
+
+  body{
+   println("Hi!  I'm Boing!  You're not!");
+   marco = spawn marco {
+     body {
+      try {
+        recv{
+          x from y envelope e  
+            && it.securityInfo ~ +si => {
+            for (st <- si) {
+              t = st.token;
+              if (t == "two") {
+                println("you had the correct token");
+                //sal <<< "back at you" security t
+              }if
+            }for
+          }
+        }recv
+      }try
+      catch {
+        Z => {println("Got an error! :: $Z!");}
+      }catch
+     }body
+   }marco;
+   
+   sal = spawn sal {
+     body{
+       marco <<< "Hi!" security ["one", "two"];
+     }
+   }sal;
+   
+  }body
+}

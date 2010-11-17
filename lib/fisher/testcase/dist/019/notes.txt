@@ -1,0 +1,6 @@
+Testing spawns inside of before and after blocks.  This isn't a great idea,
+but it is a great edge case.
+
+pasta = the server
+
+pasta, when it gets a message, spawns two threads which each send notes to the client.

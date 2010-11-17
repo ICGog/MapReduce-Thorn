@@ -1,0 +1,7 @@
+{
+  o = object{f = 1;};
+  ~!@eq(o.f, o.f(), 1)@!~  ;
+  ~!@assert(o.f == o.f() == 1)@!~  ;
+  p = object{f = 2; def f() = 222;};
+  ~!@eq(p.f, p.f(), 222)@!~  ;
+}

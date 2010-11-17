@@ -1,0 +1,18 @@
+module PRIME {
+  fun divides?(x,y) = (x div y)*y == x;
+  fun composite?(n) = 
+     n <= 1 ||
+     %some(divides?(n, k) | for k <- 2 .. n, while k*k <= n);
+  fun prime?(n) = not (composite?(n));
+}
+
+module DATA {
+  L = [
+    {:a:1, b:1:},
+    {:a:2, b:2:},
+    {:a:3, b:3:},
+    {:a:3, b:4:},
+    {:a:4, b:4:},
+    {:a:5, b:6:}
+  ];
+}

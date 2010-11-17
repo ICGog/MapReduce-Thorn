@@ -1,0 +1,11 @@
+//CLS
+
+class C extends A, B{
+  val see; // Ctor must init this.
+  new C(x,y) { 
+    new@A(x); 
+    new@B(y); 
+    see = 1; // Binds the field of 'this'.
+    }
+  new C() = {A();};
+}class

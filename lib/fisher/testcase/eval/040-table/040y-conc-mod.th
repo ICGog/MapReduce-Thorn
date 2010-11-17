@@ -1,0 +1,25 @@
+{
+  t = map();
+  for(i <- 1..9) t[i] := 11*i;
+/*
+  ~!@bad(({
+  for({:k,v:} <- t) {
+    if (k == 4) t(k) := null;
+  }
+  }));
+*/
+  
+  o = ord();
+  for(i <- 1..9) o @= i;
+  
+/*
+   The following may be bad, or it may not.
+  ~!@bad(({
+    for(r <- o){
+      o.remove(1);
+    }
+  }))@!~  ;
+*/  
+  
+  
+}

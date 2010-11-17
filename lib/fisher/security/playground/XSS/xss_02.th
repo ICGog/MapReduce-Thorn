@@ -1,0 +1,175 @@
+module SECURITYPROVIDER {
+  javaly fun make_token(msg, k, c) = fisher.runtime.`security`.SecurityProviderModule.makeToken;
+  javaly fun init_sp() = fisher.runtime.`security`.SecurityProviderModule.initSecurityProvider;
+  javaly fun gen_new_cap(granter) = fisher.runtime.`security`.SecurityProviderModule.generateNewCapability;
+  javaly fun gen_and_grant(granter, c) = fisher.runtime.`security`.SecurityProviderModule.generateAndGrantNewCapability;
+  javaly fun grant(granter, k, c) = fisher.runtime.`security`.SecurityProviderModule.grantCapability;
+  javaly fun grantIfOwned(granter, k, c) = fisher.runtime.`security`.SecurityProviderModule.grantCapabilityOnlyIfOwned;
+  javaly fun trust(spRef) = fisher.runtime.`security`.SecurityProviderModule.trust;
+}module
+
+module BROWSERINTERFACE {
+  javaly fun writeToFile(x) = fisher.runtime.`security`.tests.BrowserInterface.writeToFile;
+  javaly fun popUpBrowser(x) = fisher.runtime.`security`.tests.BrowserInterface.popUpBrowser;
+}module
+
+spawn xssdemo {
+  body {    
+    XSS_SP_BROWSER = spawn XSS_SP_BROWSER {
+      body {
+        import BROWSERINTERFACE.*;
+        import SECURITYPROVIDER.*;
+        init_sp();
+        trust(thisComp());
+        var XSS_SANITIZER := null;
+        recv {
+          {: sanitizer :} => {
+            XSS_SANITIZER := sanitizer;
+          }
+        }
+        xssCap = gen_and_grant(thisComp(), XSS_SANITIZER);
+        XSS_SANITIZER <<< {: capability: "capability", k: xssCap :};
+        try {
+          while (true) {
+            recv {
+              {: grant:"grant", c: c, k: k :} from y => {
+                println("granting for $c from $y");
+                grantedCap = grantIfOwned(y, k, c);
+                if (grantedCap != null) {
+                  c <<< {: capability:"capability", k:grantedCap :};
+                }
+	          }
+	          | {: make_token:"make_token", msg, capability, data :} from y => {
+	            t = make_token(msg, capability, y);
+	            y <<< {: token: t, data: data:};
+	          }
+              | {: html: x :} from y envelope e && it.securityInfo ~ +si checked => {
+                if (xssCap != null) {
+                  var good := false;
+                  for (st <- si) {
+                    t = st.k;
+                    if (t == xssCap) {
+                      good := true;
+                    }
+                  }
+                  if (good) {
+                    println("Message from $y is: '$x'");
+                    temp = writeToFile(x);
+                    popUpBrowser(temp);
+                    println("Just popped up the browser");
+                  } else {
+                    println("bad message from $y");
+                  }
+                } else {
+                  println("browser not ready");
+                  y <<< {: failure: "not ready yet" :};
+                }
+              }
+	        }recv
+	      }while
+        }try
+        catch {
+          Z => {println("Security Violation! $Z!");}
+        }catch
+      }body
+    }XSS_SP_BROWSER;
+    
+    XSS_SANITIZER = spawn XSS_SANITIZER {
+      body {
+        import SECURITYPROVIDER.*;
+        trust(XSS_SP_BROWSER);
+        
+        //do this to bootstrap
+        XSS_SP_BROWSER <<< {: sanitizer: thisComp() :};
+        
+        var cap := null;
+        while (true) {
+          recv {
+            {: ready :} from y => {
+              if (cap == null) {
+                y <<< {: sanitizerReady: "no" :};
+              } else {
+                y <<< {: sanitizerReady: "yes" :};
+              }
+            }
+            | {: capability: "capability", k :} from y => {
+              if (y == XSS_SP_BROWSER) {
+                cap := k;
+              }
+            }
+            | {: html :} from y => {
+              if (cap != null) {
+                //do some check
+                safeHtml = {: html: html.replace("<script>", "&lt;script&gt;").replace("</script>", "&lt;/script&gt;") :};
+                XSS_SP_BROWSER <<< {: make_token: "make_token", msg: safeHtml, capability: cap, data: {:sendTo: y, msg: safeHtml:} :};
+              } else {
+                y <<< {: failure: "not ready yet" :};
+              }
+            }
+            | {: token: t, data: {:sendTo, msg :} :} from y => {
+              if (y == XSS_SP_BROWSER) {
+                sendTo <<< msg security [t];
+              }
+            }
+          }recv
+        }while
+      }
+    }XSS_SANITIZER;
+    
+    attackMsg = {: html: "<script>alert('hi');</script> <b>Hi!</b>" :};
+    USER = spawn USER {
+      body{
+        fun wait() {
+          var sanitizerNotReady := true;
+          XSS_SANITIZER <<< {: ready: "are you ready?" :};
+          while (sanitizerNotReady) {
+            recv {
+              {: sanitizerReady: "yes" :} => {
+                sanitizerNotReady := false;
+              }
+              | {: sanitizerReady: "no" :} => {
+                XSS_SANITIZER <<< {: ready: "are you ready?" :};
+              }
+            }
+          }
+        }
+    
+        import SECURITYPROVIDER.*;
+        trust(XSS_SP_BROWSER);
+        wait();
+        XSS_SANITIZER <<< attackMsg;
+        recv {
+          {: html: msg :} from y envelope e && it.securityInfo ~ +si checked => {
+		    if (y == XSS_SANITIZER) {
+              XSS_SP_BROWSER <<< {: html: msg :} security si;
+            }
+          }
+          | {: failure :} from y => {
+            println(failure);
+          }
+        }
+      }
+    }USER;
+    
+    MALICIOUS = spawn MALICIOUS {
+      body {
+        fun wait() {
+          var sanitizerNotReady := true;
+          XSS_SANITIZER <<< {: ready: "are you ready?" :};
+          while (sanitizerNotReady) {
+            recv {
+              {: sanitizerReady: "yes" :} => {
+                sanitizerNotReady := false;
+              }    
+              | {: sanitizerReady: "no" :} => {
+                XSS_SANITIZER <<< {: ready: "are you ready?" :};
+              }
+            }
+          }
+        }
+        wait();
+        XSS_SP_BROWSER <<< attackMsg;
+      }body
+    }MALICIOUS;
+  }body
+};

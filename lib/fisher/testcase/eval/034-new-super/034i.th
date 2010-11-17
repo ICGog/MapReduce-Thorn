@@ -1,0 +1,21 @@
+{
+  class Butler {
+    val pod;
+    val rival; 
+    new Butler(p,r) { pod = p; rival = r;} 
+    new Butler(){ new('POD', 'RIVAL'); }
+  }Butler
+
+  class Book extends Butler {
+    val sentry;
+    new Book(){new('bp', 'br', 'bs');}
+    new Book(p,r,s) {new@Butler(p,r); sentry = s;}
+    new Book(s) { new@Butler(); sentry = s;}
+  }
+  
+  ~!@obj_local_struct(Book(),"pod=bp,rival=br,sentry=bs,")@!~;
+  ~!@obj_local_struct(Book(1),"pod=POD,rival=RIVAL,sentry=1,")@!~;
+  ~!@obj_local_struct(Book(1,2,3),"pod=1,rival=2,sentry=3,")@!~;
+  
+  
+}

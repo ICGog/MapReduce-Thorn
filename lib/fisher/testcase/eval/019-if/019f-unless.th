@@ -1,0 +1,10 @@
+{
+  a = (1 unless true else 2);
+  ~!@eq(a, 2)@!~  ;
+  b = (1 unless false else 2);
+  ~!@eq(b, 1)@!~  ;
+  c = (1 if true else 2);
+  ~!@eq(c, 1)@!~  ;
+  d = (1 if false else 2);
+  ~!@eq(d, 2)@!~  ;
+}

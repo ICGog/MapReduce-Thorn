@@ -1,0 +1,31 @@
+ spawn server1 {
+  import HTTP.*;
+  body{
+    sock = HTTPSocketeer(4121);
+    var goon := true;
+    println("Server1 starting");
+    while(goon) {
+      recv{
+        req && HTTPRequest("GET", params, resource) => {
+           println("Yow, a request for $resource");
+           println("Oy, its params are $params");           
+           f = resource.file;
+           exists = f.exists?();
+           if (exists && f.dir?) {
+             req.respond(OK, "Hey, that's a directory, spogger", {::});
+           }
+           else if (exists) {
+             req.respond(OK, f.contents(), {: :});
+           }
+           else {
+             req.respond(HTTP_404, "Not there, spogger.", {: :});
+           }
+        }
+      | other => {
+          println("WTF is $other?");
+        }
+      }
+    }while
+    println("Server1 quitting.");
+  }body
+}server1;

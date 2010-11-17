@@ -1,0 +1,55 @@
+{
+
+  class Person {
+    var firstName;
+    var lastName;
+    var spouse;
+    var sex := 'n';
+    var title := null;
+    new Person(f, l, r) {
+       firstName := f;
+       lastName := l;
+       if (r ~ {: sex: (s && ('m' || 'f' || 'n')) :}) sex := s;
+       if (r ~ {: title: t :}) title := t;
+    }new
+    def marry(other : Person) {
+       this.makeSingle();
+       other.makeSingle();
+       this.spouse := other;
+       other.spouse := this;
+    }
+    def makeSingle() {
+      if (spouse ~ +_) {spouse.spouse := null;}
+      spouse := null;
+    }
+    def str() =  "$firstName $lastName ($sex)";
+  }Person
+
+
+  p1 = Person("Enrico", "Fermi", {: sex:'m' :}); 
+  ~!@eq(p1.str(), "Enrico Fermi (m)")@!~  ;
+  ~!@eq(p1.spouse, null)@!~  ;
+
+  // Violetto Stalin
+  p2 = Person("Violetto", "Stalin", {: :});
+  ~!@eq(p2.str(), "Violetto Stalin (n)")@!~  ;
+  ~!@eq(p2.spouse, null)@!~  ;  
+  
+  p1.marry(p2);
+  
+  ~!@same_ptr(p1.spouse, p2)@!~  ;
+  ~!@same_ptr(p2.spouse, p1)@!~  ;
+  
+  // Duchess Normal Wood-Burning-Stove
+  p3 = Person("Normal", "Wood-Burning-Stove", {: title: "Duchess", sex: 'f' :});
+  ~!@eq(p3.str(), "Normal Wood-Burning-Stove (f)")@!~  ;
+  ~!@eq(p3.title, "Duchess")@!~  ;
+  
+  p1.marry(p3);
+  ~!@same_ptr(p1.spouse, p3)@!~  ;
+  ~!@same_ptr(p3.spouse, p1)@!~  ;
+  ~!@eq(p2.spouse, null)@!~  ;  
+  
+  
+
+}

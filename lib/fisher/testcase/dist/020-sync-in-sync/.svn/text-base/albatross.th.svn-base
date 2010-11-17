@@ -1,0 +1,12 @@
+spawn albatross {
+  body{
+    ~!@testStartLatch();
+    {: albatrossComp: albatross, bustardComp: bustard, cuckooComp: cuckoo, 
+       dodoComp: dodo :} = ~!@recOfPorts();
+    r = bustard <-> blast();
+    ~!@eq(r, ‹c:"C!", d:"D!"›)@!~  ;
+    ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body;
+}albatross;

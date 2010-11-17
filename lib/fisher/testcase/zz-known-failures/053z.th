@@ -1,0 +1,7 @@
+{
+// This belongs in 053-extend.
+// ADAGE.dim is a javaly function, and somehow those don't get imported.
+import ADAGE.dim;
+
+~!@hit()@!~  ;
+}

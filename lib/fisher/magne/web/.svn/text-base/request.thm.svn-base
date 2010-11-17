@@ -1,0 +1,93 @@
+/*
+ * Wraps a HTTP request.
+ */
+module webrequest{
+  
+  import webdict.QueryDict;
+  import webdict.MultipartDict;
+  import webdict.HeaderValueDict;
+
+  /** HTTP request */
+  class Request{
+
+    environ = map();
+
+    content_;
+    host: string;
+    method: string;
+    path: string;
+    query: string;
+    headers: table;
+    ip: string;
+    var cookies;
+
+    var GET_:QueryDict;
+    var POST_;
+
+    new Request(args:record){
+      // COMMENT: don't think I have seen the doc for the difference between
+      // init of vals in the constructor and in methods.
+      // Is it possible to lazy init a val, like cookies?
+
+      method = args.method;
+      path = p if args ~ {: path:p :} else '';
+      host = h if args ~ {: host:h :} else '';
+      content_ = c if args ~ {: content:c :} else '';
+      query = qs if args ~ {: query: qs :} else '';
+      ip = i if args ~ {: ip:i :} else '';
+      headers = hs.toMap() if args ~ {: headers:hs :} else map();
+    }
+
+    /**
+     * Get cookies (lazy init)
+     */
+    def cookies(){
+      if(cookies ~ !+_){
+        cookies := HeaderValueDict(cookie) if headers['cookie'] ~ +cookie else HeaderValueDict();
+      }
+      return cookies;
+    }
+    
+    /**
+     * Gets the request's URI parameters.
+     *
+     * Returns:
+     *   URI parameters : QueryDict
+     */
+    def GET(){
+      if(GET_ ~ +g){
+      // save it also 
+        return g;
+      }
+      GET_ := QueryDict(query);
+      return GET_;
+    }
+    
+    /**
+     * Gets the request's URL encoded body.
+     *
+     * Returns:
+     *   URL encoded body : QueryDict
+     */
+    def POST(){
+      if(POST_ ~ +p){
+        return p;
+      }
+      POST_ := this.content();
+      return POST_;
+    }
+
+    def content(){
+      content_type = ct if headers['content-type'] ~ +ct else '';
+      if(content_type.toLower().startsWith?('application/x-www-form-urlencoded')){
+        return QueryDict(content_.str());
+      }
+      else if(content_type.toLower().startsWith?('multipart/form-data')){
+        return MultipartDict(content_type, content_);
+      }
+      else {
+        throw "(request.thm) Bad Content-Type: $content_type)";
+      }
+    }
+  }
+}

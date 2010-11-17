@@ -1,0 +1,24 @@
+// FILE: tut04/assoc.th
+// run with "th -f tut04.th"
+{
+  t = table(x){y;};
+  t("yes"):= {: y:1 :};
+  t(null) := {: y:2 :};
+  t(1233) := {: y:3 :};
+  
+  fun lookup(myY) {
+    for ( {:x, y:} <- t) {
+       if (y == myY) return +x;
+    }
+    return null;
+  }
+  
+  for ( myY <- [1,2,3,4] )
+  if (lookup(myY) ~ +myX) {
+     println("lookup($myY) found that t($myX) = {: y: $myY :}");
+  }
+  else {
+     println("There is no entry in t which has y=$myY.");
+  }
+  
+}

@@ -1,0 +1,90 @@
+spawn baron {
+  baron = thisComp();
+  
+  fun make_serf(L) {
+     spawn serf {
+        body{
+           {: accumComp: accum :} = ~!@recOfPorts();
+           for(cmd <- L) {
+             match(cmd){
+                ‹reg:_, res:b› => {
+                  r = accum <-> register();
+                  ~!@eq(r,b);
+                }
+             |
+                ‹h:x, res: b› => {
+                  r = accum <-> here's(x);
+                  ~!@eq(r,b);
+                  }
+             |  
+                ‹g:s› => {
+                  r = accum <-> gimme();
+                  ~!@eq(r,s);
+                  }
+             | ‹w:n› => {
+                  recv{$(n) from $(baron) => {}}
+                  }
+             | ‹b: n› => {baron <<< n;}
+             }match
+           }for
+           baron <<< "done";
+        }body
+     }spawn;
+  }make_serf
+  
+  initially{~!@testStartLatch();}
+  body{
+    // Synchronization things -- we want to make sure 
+    // that the serfs are in the middle of their 
+    // code concurrently.
+    phase1 = [‹b: 1›,‹w: 2›];
+    phase2 = [‹b: 3›, ‹w:4› ];
+    dance = [phase1 ... , phase2 ... ];
+
+    s1 = make_serf([
+        ‹reg:1, res:true›,
+        ‹h:10, res: true›,
+        dance ..., 
+        ‹g: ‹n: 1, sx: 10, sx2: 100››
+       ]);
+    s2 = make_serf([
+        ‹h: 11, res: false›,
+        ‹reg: true, res: true›,
+        ‹reg: true, res: false›,
+        ‹h: 3, res: true›,
+        dance ..., 
+        ‹g: ‹n:1, sx: 3, sx2: 9››,
+        ‹h: 4, res:true›,
+        ‹g: ‹n:2, sx: 7, sx2: 25››
+       ]);
+    s3 = make_serf([
+       ‹reg: true, res:true›,
+       ‹h: 10, res:true›, 
+       phase1 ...,
+       ‹h: 11, res:true›,
+       ‹h: 12, res:true›,
+       phase2 ..., 
+       ‹g: ‹n:3, sx: 10+11+12, sx2: 100+121+144››
+       ]);
+    serfs = [s1,s2,s3];
+    
+    fun wait_for_serfs(n) {
+      for (s <- serfs) recv{ $(n) from $(s) => {}}
+    }
+    
+    wait_for_serfs(1);
+    for(s <- serfs) s <<< 2;
+    wait_for_serfs(3);
+    for(s <- serfs) s <<< 4;
+    
+    // Wait for them all to finish.
+    recv{ "done" from $(s1) => {}}
+    recv{ "done" from $(s2) => {}}
+    recv{ "done" from $(s3) => {}}
+    {: accumComp: accum :} = ~!@recOfPorts();    
+    accum <-- plzDie();
+    ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}baron;

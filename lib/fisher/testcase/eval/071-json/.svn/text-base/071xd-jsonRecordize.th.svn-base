@@ -1,0 +1,12 @@
+{
+  import JSON.*;
+  o1 = object{ a=1; b=2; };
+  r1 = {:a:1, b:2:};
+  ~!@eq(jsonRecordize(o1), r1 )@!~  ;
+  o2 = object{ c = o1; d = [[[o1]]]; e = "a spish"; var f := 1;};
+  o2.f := o1;
+  r2 = {: c:r1, d:[[[r1]]], e:"a spish", f:r1 :};
+  ~!@eq(jsonRecordize(o2), r2)@!~  ;
+  
+  ~!@eq(jsonRecordize(1), 1)@!~  ;
+}

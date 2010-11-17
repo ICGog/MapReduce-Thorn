@@ -1,0 +1,22 @@
+// How do-until interacts with binding. 
+
+{
+  var L := [];
+  var i := 0;
+  do {
+    i := i + 1;
+    L := [L..., i];
+    rhythm = L;
+  }
+  until (L ~ [a,b,c,d,e])
+
+  ~!@undef(rhythm)@!~;
+  ~!@eq(L, [1,2,3,4,5])@!~;
+  ~!@eq(a, 1)@!~;
+  ~!@eq(b, 2)@!~;
+  ~!@eq(c, 3)@!~;
+  ~!@eq(d, 4)@!~;
+  ~!@eq(e, 5)@!~;
+
+
+}

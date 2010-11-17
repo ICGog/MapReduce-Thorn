@@ -1,0 +1,8 @@
+{
+ import SAND.*;
+ sandbox();
+ ~!@bad(({
+   import SANDLY.doThis;
+   import SANDLY.sandbox2;
+ }))@!~  ;
+}

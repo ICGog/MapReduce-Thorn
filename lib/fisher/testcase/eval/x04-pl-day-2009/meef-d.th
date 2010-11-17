@@ -1,0 +1,24 @@
+{
+bio = table(name,day){map var weight; val bp; val hair; };
+
+bio("kim",1) := {: bp: 120, hair: "black", weight: 120 :};
+
+bio["kim", 1] := 130; 
+
+~!@assert(bio["kim", 1] == 130)@!~  ;
+
+~!@assert(bio("kim", 1).hair == "black")@!~  ;
+
+bio.ins( {: name:"kim", day: 4, hair: "black", weight: 132, bp: 125 :});
+bio.ins( {: name:"kim", day: 8, hair: "blue", weight: 135, bp: 110 :});
+
+d = %find( day | for {: name: "kim", day, hair:"blue" :} <~ bio );
+~!@assert(d == 8)@!~  ;
+
+bio("kim", d) := null; 
+
+~!@assert(
+%every(hair == "black" | for {: name:"kim", hair :} <~ bio)
+)@!~  ;
+
+}

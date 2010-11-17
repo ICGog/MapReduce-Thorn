@@ -1,0 +1,60 @@
+// web service api for webcheeper
+module wcapi{
+  
+  import webresponse.*;
+  import webrequesthandler.*;
+  
+  import json.*;
+  import wcmodels.*;
+
+  /** /api/user/:userkey/messages/ */
+  class ApiUserMessages extends RequestHandler{
+    
+    def get(request, args){
+      if(request.GET ~ +q &&
+         args['userkey'] ~ +userkey){
+
+        messages = db.messages.get_user_messages(userkey);
+        
+        db.messages.sanitize(messages);
+
+        return Response({: content: encode(messages) :});
+      }
+      return ResponseBadRequest("You should supply a userkey!");
+    }
+  }
+
+  /** /api/user/:username/messages/related/ */
+  class ApiUserRelatedMessages extends RequestHandler{
+    
+    def get(request, args){
+      if(request.GET ~ +q &&
+         args['userkey'] ~ +userkey){
+        
+        messages = db.messages.get_user_related_messages(userkey);
+        db.messages.sanitize(messages);
+
+        return Response({: content: encode(messages) :});
+      }
+      return ResponseBadRequest("You should supply a userkey!");
+    }
+  }
+  /** /api/user/:username/users/ */
+  class ApiUserUsers extends RequestHandler{
+    
+    def get(request, args){
+      if(request.GET ~ +q &&
+         args['userkey'] ~ +userkey &&
+         db.users.get(userkey) ~ +user){
+        
+        users = db.users.query().find_all();
+        for(u <- users){
+          u['following'] := true if [user['key']].subset(u['followerKeys']) else false;
+        }
+        db.users.sanitize(users);
+        return Response({: content: encode(users) :});
+      }
+      return ResponseBadRequest("You should supply a userkey!");
+    }
+  }
+}

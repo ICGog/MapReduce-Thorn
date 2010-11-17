@@ -1,0 +1,102 @@
+spawn doofyLittleWebServer {
+  import HTTP;
+  initially{
+    HTTP.listenOn(8080); // (1)
+  }initially
+  
+  //(2)
+  var goon := true;
+  async plz_die() {goon := false;}
+
+  // (3), 
+  sync GET(get : HTTPGet && {:uri:}) {
+    // Decode the URI into a file name.
+    if (uri.endsWith?("/")) uri += "index.html";
+    ct = guessContentTypeFromURI(uri);
+    file = uri.file(); // (4)
+    try {
+      contents = file.contents(); //(5)
+      response = get.response(contents, {: content_type: ct :}); //(6)
+      return response; // (7)
+    }try
+    catch {
+      _ => { // (8)
+         return get.errorResponse(404, "No file $file here, dood!");
+      } 
+    }catch
+  }
+  
+  contentTypes = [
+    {: suffix: "html",  content: "text/html" :},
+    {: suffix: "htm",   content: "text/html" :},
+    {: suffix: "txt",   content: "text/plain" :},
+    {: suffix: "java",   content: "text/plain" :},
+    {: suffix: "gif", content: "image/gif" :},
+    {: suffix: "class", content: "application/octet-stream" :},
+    {: suffix: "jpg", content: "image/jpeg" :},
+    {: suffix: "jpeg", content: "image/jpeg" :}
+    ];
+
+  fun guessContentTypeFromURI(uri) = 
+    %first( content 
+      %none "text/plain"
+      | for {: suffix, content:} <- contentTypes,
+        if uri.endsWith?(".$suffix")
+      );
+
+  body{
+    while(goon) { // more (2)
+      serve;
+    }    
+  }body
+}doofyLittleWebServer;
+
+/*
+
+This is a loose Thornification of the minimal http server from 
+Java Network Programming (Elliotte Rusty Harold, ISBN 1-56592-227-1),
+pages 208-210.  
+
+The underlying classes will parse HTTP requests: 
+   GET /path/to/file/index.html HTTP/1.0
+becomes a HTTPGet object. This object serves as message, sender, and envelope,
+I guess. GET is interpreted as a sync:GET message.
+
+(1): the intent is that this component get HTTP requests coming in on port 8080.
+   These requests will be put in the same mailbox as Thorn-to-Thorn messages; 
+   there is only one mailbox.  My intent is that each port have a different 
+   protocol: e.g., we might use 8080 for HTTP, and 4385 for Thorn-to-Thorn.
+   It might be possible to heterodyne and use one port for multiple protocols; 
+   I don't know networking well enough to tell.
+
+(2): The polite way to turn off this server is: server <-- plz_die().
+
+(3) Following the HTTP convention, the names of HTTP methods (GET,POST)
+    are uppercase.  The pattern in the sync declaration restricts attention 
+    to HTTPGets.
+
+(4) We blithely serve up any file on the filesystem at this point.  
+    If the URI points off-site or to a nonexistant file,  we'll get 
+    an exception.
+
+(5) file.contents() gets the contents of a file as a string.
+
+(6) This method of HTTPGet builds a response packet.  It will do some 
+    common things by itself, like compute Content-Length.  
+    It would be polite to provide Server and Last-Modified at this point. 
+
+(7) John has been arguing that an explicit "reply" should be used in 
+    syncs.  "return" is optional -- without it, response would be the 
+    result of the function -- but since the return value is kind of in 
+    the middle of the function, I wanted the explicit return.  This 
+    is a point in favor of "reply".
+
+(8) Exceptions remain an unclear point in the language, so I'm just catching
+    them all.
+
+(9) The Java program spends a lot of time parsing and assembling 
+    messages.  I think most of that will be routine, and 
+    most of it will be done by methods in the HTTPRequest 
+    subclasses, like HTTPGet.
+
+*/

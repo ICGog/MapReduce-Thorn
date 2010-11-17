@@ -1,0 +1,13 @@
+spawn alarmer {
+  var alarmer; var patient; var delayer;
+  initially{
+    ~!@testStartLatch();
+    {: alarmerComp: a, patientComp: p, delayerComp: d :} = ~!@recOfPorts();
+    alarmer := a; patient := p; delayer := d;
+  }
+  body {
+    ~!@sleep(200);
+    delayer <<< "ring, ring!";
+  }body
+
+}alarmer;

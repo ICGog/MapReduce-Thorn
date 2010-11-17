@@ -1,0 +1,8 @@
+{
+
+  ~!@eq(1:int, 1)@!~  ;
+  ~!@bad(1:string)@!~  ;
+  {: x: 1:int :};  
+  class Tree{}
+  ~!@bad({: x:1:Tree :})@!~  ;
+}

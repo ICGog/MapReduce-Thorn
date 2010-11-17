@@ -1,0 +1,45 @@
+{
+  ot = ord{map a; b; c;};
+  var b := ‹a:1, b:"perverted", c:"rio grande chub"›;
+  var u := ‹a:2, b:"honest", c:"mule"›;
+  var g := ‹a:3, b:"flaming", c:"mutton snapper"›;
+  ot.addAll([b,u,g]);
+  ~!@eq(ot.rows(), [b,u,g])@!~  ;
+  
+  ~!@eq(ot.lst(), [1,2,3])@!~  ;
+  
+  ~!@bad((ord{a;b;}).lst())@!~  ;
+  
+  ot(1) := null;
+  ~!@eq(ot.lst(), [1,3])@!~  ;
+  ~!@eq(ot.rows(), [b,g])@!~  ;
+  ot.addAfter(0, u);
+  ~!@eq(ot.rows(), [b,u,g])@!~  ;
+  ot.addAfter(2, u);
+  ~!@eq(ot.rows(), [b,u,g,u])@!~  ;
+  ot.addAfter(0, u);
+  ~!@eq(ot.rows(), [b,u,u,g,u])@!~  ;
+
+  ot.addBefore(0, u);
+  ~!@eq(ot.rows(), [u,b,u,u,g,u])@!~  ;
+
+  ot.addBefore(-1, g);
+  ~!@eq(ot.rows(), [u,b,u,u,g,g,u])@!~  ;
+
+  ot.clear!();
+  ot.addBefore(0, u);
+  ~!@eq(ot.rows(), [u])@!~  ;
+  ot.addBefore(1000, g);
+  ~!@eq(ot.rows(), [u,g])@!~  ;
+
+  ot.addAfter(1000, u);
+  ~!@eq(ot.rows(), [u,g,u])@!~  ;
+  ot.addBefore(0, b);
+  ~!@eq(ot.rows(), [b, u,g,u])@!~  ;
+
+  ot.del(-1);
+   ~!@eq(ot.rows(), [b, u,g])@!~  ;
+
+
+
+}

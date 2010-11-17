@@ -1,0 +1,11 @@
+import B.*;
+spawn Camel {
+
+body{
+  bb = spawn Balrog("burny");
+  ~!@hit()@!~  ;
+  ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+}body
+}Camel;

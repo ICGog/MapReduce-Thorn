@@ -1,0 +1,11 @@
+spawn querent {
+  body{
+    ~!@testStartLatch();
+    {: serverComp: server :} = ~!@recOfPorts();
+    result = server <-> labor();
+    ~!@eq(result, "polka")@!~  ;
+    ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}querent;

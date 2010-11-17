@@ -1,0 +1,15 @@
+spawn vampir {
+  sync facilitate() {
+    ~!@sleep(1000);
+    "This may occasionally appear due to scheduler imbalance.";
+  }
+  initially{
+      }initially
+  body{
+    ~!@testStartLatch();
+    serve;
+    {: timilotlComp : timilotl, vampirComp: vampir :} = ~!@recOfPorts();
+    timilotl <<< "OK, test over";
+
+  }body
+}vampir;

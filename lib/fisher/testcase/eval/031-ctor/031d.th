@@ -1,0 +1,31 @@
+{
+  class Joker {
+    val lst; 
+    val maxVal; 
+    val maxI;
+    
+    new Joker([x, L...]) {
+       lst = L;
+       var i := 1; 
+       var m := 0;
+       var v := x;
+       for(y <- L) {
+         if (y > v) {m := i; v := y;}
+         i := i + 1;
+       }
+       maxVal = v;
+       maxI = m;        
+    }
+    
+  }Joker
+  var j;
+
+  j := Joker([0,1,2,3,4,5]);
+  ~!@eq(j.maxVal, 5)@!~  ;
+  ~!@eq(j.maxI, 5)@!~  ;
+
+  j := Joker([5,4,3,2,1,0]);
+  ~!@eq(j.maxVal, 5)@!~  ;
+  ~!@eq(j.maxI, 0)@!~  ;
+
+}

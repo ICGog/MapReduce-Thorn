@@ -1,0 +1,14 @@
+spawn kim {
+  import PROFILE.*;
+
+body{
+   var venus;  #coordination
+   recv{"cupid" from v => {venus := v;}} #coordination
+   agency = registry() <-> agencyAdvertising(".*matches.*");
+   agency <-> register("Kim", Profile([
+                 {: topic: "j-pop", weight: 7:}, {:topic: "sushi", weight: 3:} ]));
+   date = agency<->matchFor("Kim");
+   if (date.date == "Pat") { venus <<< "happy ending";} # coordination
+   else { ~!@hit()@!~ 0 ; }  #testcase
+}body
+}kim;

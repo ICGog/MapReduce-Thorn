@@ -1,0 +1,9 @@
+{
+  import PLASTER = FRUITYBRUISE;
+  import PLASTER.*;
+  strawberry := "Oh yes!";
+  lemon := [1];
+  ~!@bad(({blueberry := "true";}))@!~  ;
+  ~!@bad(({lemon := object{};}))@!~  ;
+  
+}

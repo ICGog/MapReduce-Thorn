@@ -1,0 +1,13 @@
+{
+  import CPLX.*;
+  z = Cplx(1,2);
+  ~!@eq(z+z, Cplx(2,4) )@!~   ;
+//  ~!@eq(z*z, Cplx(-3,4) )@!~  ;
+  for (i <- 1 .. 7) { ~!@eq(z,z)@!~ 7 ; }
+  
+  ~!@eq(sqrtNeg(9), Cplx(0,3))@!~  ;
+  ~!@eq(sqrtNeg(-9), Cplx(3,0))@!~  ;
+  
+  ~!@eq(Cplx(1,2).str(), "1.0+2.0i")@!~  ;
+  
+}

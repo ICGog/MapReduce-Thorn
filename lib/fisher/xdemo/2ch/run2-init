@@ -1,0 +1,4 @@
+ #!/bin/bash
+source ~/.bashrc
+ch=$FISHERDEMO/2ch
+th -m $ch/Modules.thm -s $ch/init-db.th -p 4399

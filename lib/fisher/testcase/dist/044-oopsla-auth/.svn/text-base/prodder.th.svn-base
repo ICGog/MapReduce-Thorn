@@ -1,0 +1,51 @@
+spawn prodder {
+body{
+  ~!@testStartLatch();
+  import CRYPT.*;
+  
+  {:authComp:auth:} = ~!@recOfPorts();
+  
+  bjorn = "Bjorn";
+  bjornpw = "i-am-bjorn";
+  
+  bjreg = auth <-> register(bjorn, Password(bjornpw));
+  ~!@assert(bjreg)@!~  ;
+  bjfail = auth <-> register(bjorn, Password("floodle"));
+  ~!@assert(!bjfail)@!~  ;
+  bjconf = auth <-> confirm?(bjorn, bjornpw);
+  ~!@assert(bjconf)@!~  ;
+  ~!@eq((auth <-> nFails(bjorn)), 0)@!~  ;
+  ~!@assert(!(auth <-> confirm?(bjorn, "nope")))@!~  ;
+  ~!@eq((auth <-> nFails(bjorn)), 1)@!~  ;
+
+  auth <-> register("Bard", Password("þ"));
+  
+  prefixes = ["thorn", "þ", "sythyry"];
+  suffixes = ["", "09", "123"];
+  guesses = %[p+s | for p <- prefixes, for s <- suffixes]; 
+  
+  
+  find( for g <- guesses, if (auth <-> confirm?("Bard", g))) {
+    println("044/prodder.th -- pw = $g");
+    ~!@eq(g, "þ")@!~  ;
+  }
+  else {
+    println("No clue.");
+  }
+
+
+
+
+
+
+
+  auth <-- done();
+  
+
+  
+  
+  
+  
+  ~!@checkphase()@!~  ;
+}body
+}prodder;

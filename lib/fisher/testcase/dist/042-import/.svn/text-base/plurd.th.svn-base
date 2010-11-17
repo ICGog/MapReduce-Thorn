@@ -1,0 +1,18 @@
+
+spawn plurd {
+//import ARDORÕ;
+body{
+  ~!@testStartLatch();        
+  {:coordinatorComp: coord :} = ~!@recOfPorts();
+
+  xc = thisComp();
+  q = spawn Qeefle { 
+     body{
+//       ~!@eq(ARDORÕ.refereeõ, 2)@!~  ;
+     }body
+  };
+
+  coord <<< "plurd ok";
+
+}body
+}plurd;

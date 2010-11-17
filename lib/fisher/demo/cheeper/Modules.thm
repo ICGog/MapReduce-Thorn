@@ -1,0 +1,5 @@
+module CHEEPER {
+  class Chirp(text, user, n):pure {
+    def str = '($n) "$text" -- $user';
+  }
+}module

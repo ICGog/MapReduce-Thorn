@@ -1,0 +1,18 @@
+println("I like fish");
+
+println("I also like revisionary herb gardens.");
+
+me = thisComp();
+
+p = spawn {
+  body {
+    println("Your lame dean made you the white asshole you are!");
+    me <<< "Calfes! The eighth wonder of the world!";
+  }
+  };
+
+recv {
+  x => println("$p says $x")
+     }
+
+println("there is ow: " + "ow".file.exists?);

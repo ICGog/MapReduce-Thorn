@@ -1,0 +1,47 @@
+{
+
+  class `high-pressure phaser detoxifier` {
+    var kazoo : string := 1; 
+  }
+  ~!@bad( `high-pressure phaser detoxifier`())@!~  ;
+
+  class `tawdry rock`(x) {
+    var `mildewed seraph` : string := 1;
+  }
+  ~!@bad(`tawdry rock`(2))@!~  ;
+
+  class `plaid regime` {
+    var barnacle : list;
+    new `plaid regime`(x){
+      barnacle := x;
+    }
+  }
+  
+  `plaid regime`([]);
+  `plaid regime`([2]);
+  ~!@bad(`plaid regime`("oh no no no please no no"))@!~  ;
+  
+  class C{
+    var v : int := 0; 
+    def dume() { 
+      v := 1;
+      ~!@bad(({v := true;}))  ;
+    }dume }C
+    C().dume();
+    
+  class D extends C{
+    var b : bool := true;
+    def mewd() {
+      this.dume();
+      this.v := 2;
+      this.v := null;
+      ~!@bad(({this.v := "new!";}))@!~  ;
+      }
+  }D
+  
+  D().dume();
+  D().mewd();
+  
+  ~!@bad(({var hook:bool := 1;}))@!~  ;
+
+}

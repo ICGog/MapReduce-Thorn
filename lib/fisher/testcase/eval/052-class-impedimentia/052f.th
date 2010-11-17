@@ -1,0 +1,20 @@
+//FAIL: Collision
+{
+  import own POT = RAT;
+  import Pdoily = POT.Doily;
+  import RAT.*;
+  import RPaper = RAT.Paper;
+  class Incident extends Pdoily, RPaper {
+    def warn() = [super@Pdoily.warn(), super@RPaper.warn()];
+  } 
+  
+  i = Incident();
+  ~!@eq(i.warn(), [0, "beware 0"])@!~  ;
+  turban := "rat-1";
+  ~!@eq(i.warn(), [0, "beware rat-1"])@!~  ;
+  POT.turban := "I want to thank you for all the phone calls and voters.";
+  ~!@eq(i.warn(), ["I want to thank you for all the phone calls and voters.", "beware rat-1"])@!~  ;
+
+
+}
+  

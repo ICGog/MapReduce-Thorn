@@ -1,0 +1,18 @@
+{
+  ~!@eq(parseConstant("1"), 1)@!~  ;
+  ~!@eq(parseConstant("-1"), -1)@!~  ;
+  ~!@eq(parseConstant("true"), true)@!~  ;
+  ~!@eq(parseConstant("false"), false)@!~  ;
+  ~!@eq(parseConstant("'ow'"), "ow")@!~  ;
+  ~!@eq(parseConstant("\"owow\""), 'owow')@!~  ;
+  ~!@eq(parseConstant("\"\"\"\n\r\"\"\""), '\n\r')@!~  ;
+  ~!@eq(parseConstant("null"),null )@!~  ;
+  ~!@eq(parseConstant("[]"), [])@!~  ;
+  ~!@eq(parseConstant("[1]"), [1])@!~  ;
+  ~!@eq(parseConstant("[1,[]]"), [1,[]])@!~  ;
+  ~!@eq(parseConstant("[1,[[], 2]]"), [1,[[], 2]])@!~  ;
+  ~!@eq(parseConstant("{}"), {::})@!~  ;
+  ~!@eq(parseConstant("{a:1}"), {:a:1:})@!~  ;
+  ~!@eq(parseConstant("{a:1, b:2}"), {:b:2, a:1:})@!~  ;
+  ~!@eq(parseConstant("{a:1, b:[2]}"), {:b:[2], a:1:})@!~  ;
+}

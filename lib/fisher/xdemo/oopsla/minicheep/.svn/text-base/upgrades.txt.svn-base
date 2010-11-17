@@ -1,0 +1,1 @@
+* Add 'lastSeen' field to 'users' so that we can do 'show unseen messages'

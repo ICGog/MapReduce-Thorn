@@ -1,0 +1,21 @@
+{
+  class C{
+    var z;
+    var x;
+    new C(x') = {
+      x := x';
+      class D() {
+        var dx; 
+        var dy;
+        new D(y) {dx := x; dy := y;}
+        def dd() = {:x,dy,dx,z:};
+      }D
+      z := D(x+1);
+    }
+    def yoink() {
+      ~!@assert(z.dd() ~ {:x:$(x), dx:$(x), dy:$(x+1), z: _ :})@!~  ;
+    }
+  }C
+  c = C(10);
+  c.yoink();
+}

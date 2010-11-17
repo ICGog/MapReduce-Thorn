@@ -1,0 +1,5 @@
+{
+ ~!@assert("a +4 Enchanted Necklace" :? string)@!~  ;
+ ~!@assert(1 :? int)@!~  ;
+ ~!@assert(true :? bool)@!~  ;
+}

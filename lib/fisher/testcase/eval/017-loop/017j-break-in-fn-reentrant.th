@@ -1,0 +1,32 @@
+{
+  var f;
+  var i := 0;
+  Devonian: while (i < 3) {
+     i := i + 1;
+     honorable: while (i < 10) {
+        f := fn(){  ~!@hit()@!~ 7;  break honorable; ~!@hit()@!~0; };
+        f();
+     }while
+     ~!@bad(f())@!~3;
+  }while
+  ~!@hit()@!~1;
+  ~!@bad(f())@!~;
+  
+
+  i := 0;
+  f := false;
+  jittery: while (i < 10) {
+     i := i + 1;
+     var j := 0;
+     acrid: while (j < 3) {
+       j := j + 1;
+       if (f == false) {
+          f := fn(){ ~!@hit()@!~10; break acrid; };
+          }
+       else {
+          f();
+       }
+     }while
+  }while
+  ~!@hit()@!~1; 
+}

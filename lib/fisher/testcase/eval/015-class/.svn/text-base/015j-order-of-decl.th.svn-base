@@ -1,0 +1,28 @@
+{
+
+   {
+     class C {
+       def m() = v + 1;
+       val v;
+       new C(v') { v = v'; }
+     }
+     
+     c = C(10);
+     ~!@eq(c.v, 10)@!~  ;
+     ~!@eq(c.m(), 11)@!~  ;
+   }
+
+   // Same code with val and def swapped.
+   {
+     class C {
+       val v;
+       def m() = v + 1;
+       new C(v') { v = v'; }
+     }
+     
+     c = C(10);
+     ~!@eq(c.v, 10)@!~  ;
+     ~!@eq(c.m(), 11)@!~  ;
+   }
+   
+}

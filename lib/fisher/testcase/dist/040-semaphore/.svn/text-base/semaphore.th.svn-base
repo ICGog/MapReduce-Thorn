@@ -1,0 +1,77 @@
+spawn sematest {
+body{
+  test = thisComp();
+  count = 4;
+  names = ["Hissfash", "FireworksMan", "RoachMan", "BarometerMan"];
+  
+  
+  
+  sema = spawn sema {
+    var goon := true;   
+    var s := 1; 
+    o = ord();
+    body{
+      while(goon) {
+        recv{
+          "p" from c && (s > 0)? => {
+              s -= 1;
+//println("P from $c (s := $s)");
+              o @= s;
+              c <<< "p'd";
+              }
+        | "v" from c => {
+              s += 1;
+//println("V from $c (s := $s)");
+              o @= s;
+              c <<< "v'd";
+              }          
+        | "quit" => {
+//println("Quit");
+              goon := false;
+              }
+        }recv
+      }while
+      // Check o.
+      for (i <- 0 .. o.num - 1) {
+//oi = o[i];
+//println("o[$i] = $oi"); 
+         ~!@eq(o[i], (i) mod 2)  ;
+      }for
+//println("Sema am dnoe!");
+      test <<< "done";
+      test <<< "more done";
+    }body
+    }sema;
+
+    fun zapper(name) = spawn zapper {
+      body{
+        for(i <- 1 .. count ){
+           //println("$name about to P #$i");
+           sema <<< "p";
+           recv {"p'd" => {}};
+           //println("$name about to V #$i");
+           sema <<< "v";
+           recv {"v'd" => {}};
+           //println("$name p'd and v'd #$i");
+        }for        
+        tc = thisComp();
+        test <<< "$name($tc) is done";
+      }body
+    }zapper;
+
+    zappers = %[zapper(name) | for name <- names];
+    
+    for (z <- zappers) {
+      recv{x from $(z) => {
+        //println("Quitness from $z: $x");
+      }}
+      //println("$z is done!!!!");
+    }    
+    
+    sema <<< "quit";
+    recv {xx from $(sema) => {
+       //println("More doneness from sema: $xx");
+    }};    
+    
+}body
+}sematest;

@@ -1,0 +1,6 @@
+{
+  class C { var a; }
+  r = C();
+  r.a := 1;
+  if ( r ~ ‹a› ) {~!@eq(a, 1)@!~ 1 ;} else {~!@hit()@!~ 0 ;} 
+}

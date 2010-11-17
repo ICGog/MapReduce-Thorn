@@ -1,0 +1,27 @@
+spawn slerver {
+  import HTTP.*;
+  body{
+    sock = HTTPSocketeer(4321);
+    println("Slerver slarting....");
+  
+    recv{
+      req from dood => {
+        println("req=$req");
+        println("dood=$dood");
+        for(l <- req.original()) {
+          println("ORIG: " + l);
+        }
+/*
+        resp = req.buildResponse(OK, "Need Transf. Power", {: :});
+        println("resp=$resp");
+        dood <<< resp;
+*/
+        req.respond(OK, "Come here, Watson!", {: :});
+      }
+    }
+
+
+    println("Slerver slouching off....");
+    
+  }body
+}slerver;

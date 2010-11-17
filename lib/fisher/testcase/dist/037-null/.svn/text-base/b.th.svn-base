@@ -1,0 +1,9 @@
+spawn b {
+
+sync frog() = null;
+
+body{
+    ~!@testStartLatch();
+    serve;
+}body
+}b;

@@ -1,0 +1,135 @@
+/**
+ * Contains base for all application request handlers.  handle(...) is
+ * called from the serverside and passes in the request and uri
+ * arguments.
+ * 
+ * Based on the method in the HTTP request, get, post, put, delete is
+ * called. HTML doesn't have put, delete, instead post is
+ * overloaded. POSTing to .../?_method=PUT calls the put method, and
+ * POSTing to .../?_method=DELETE calls the delete method.
+ *
+ * I wanted the server side just create the object, but then every
+ * request handler needs a constructor; to extract that away the request
+ * handler is instantiated and handle(..) is called.
+ */
+module webrequesthandler{
+  
+  import webresponse.Response;
+  import webresponse.ResponseNotAllowed;
+  import webrequest.Request;
+
+  // FIXME: doesn't work
+//   import webappinfo.dirname;
+//   import webappinfo.thisScript;
+  import webappinfo.*;
+  import webmimetype.guessType;
+
+  class RequestHandler:pure{
+    
+    // this.decorations will return "No method named decorations from
+    // this.decorations" if not here.
+    decorations;
+
+    /*
+     * Wraps do(Get|Post|...) in the decorations.
+     * Returns:
+     *   decorated handler
+     */
+    def decorate(doHandler:fn, method:string){
+      // retrieve the userdefined decorators
+      if(this.decorations ~ +decs){
+        decorators:list = d if decs.toMap()[method] ~ +d else [];
+        return this.doDecoration(doHandler, decorators);
+      }
+      else{
+        return doHandler;
+      }
+    }
+
+    def doDecoration(handler:fn, [h, t...]) = this.doDecoration(h(handler), t);
+    | doDecoration(handler:fn, []) = handler;
+
+    // standard responses when not overwritten
+    def get(request, uriargs) = ResponseNotAllowed(); 
+    def post(request, uriargs) = ResponseNotAllowed(); 
+    def put(request, uriargs) = ResponseNotAllowed(); 
+    def delete(request, uriargs) = ResponseNotAllowed(); 
+
+    // to parse around in decorations which can't be done
+    // with methods!
+    doGet    = fn(r,u) = this.get(r,u);
+    doPost   = fn(r,u) = this.post(r,u);
+    doPut    = fn(r,u) = this.put(r,u);
+    doDelete = fn(r,u) = this.delete(r,u);
+    doHead   = fn(r,u) = this.head(r,u);
+    
+    /**
+     * Handle the incoming request.
+     * 
+     * The webserver request and the application side requests are
+     * not the same. We keep them decoupled, WSGI style.
+     * serverside <-> application side 
+     *
+     * Args:
+     *   request: the request
+     *   uriargs: arguments in uri /notes/:id/, i.d., the value of :id
+     */
+    def handle(request:Request, uriargs:table){
+
+      // COMMENT: An alternative would be to put in the args in the
+      // constructor. However, then we need an explicit contructor in
+      // each of the handlers to call the super contructor.
+
+      
+      // FIXME: this just got ugly after introducing decorations
+      match(request.method){
+        "GET"    => { return this.decorate(doGet, 'get')(request, uriargs); }
+      | "POST"   => {
+          if(request.GET.getone('_method') ~ +m){
+            match(m){
+              "PUT"    => { return this.decorate(doPut, 'put')(request, uriargs);}
+            | "DELETE" => { return this.decorate(doDelete, 'delete')(request, uriargs);}
+            | method   => { return ResponseNotAllowed(); }
+            }
+          }
+          return this.decorate(doPost, 'post')(request, uriargs);}
+        
+      | "HEAD"   => {
+          res = this.decorate(doGet, 'get')(request, uriargs);
+          res.content := '';
+          return res;}
+        
+        | "PUT"    => { return this.decorate(doPut, 'put')(request, uriargs);}
+        | "DELETE" => { return this.decorate(doDelete, 'delete')(request, uriargs);}
+        | method   => { return ResponseNotAllowed();}
+      }
+    }
+    
+
+  /**
+   * Extract the permitted HTTP methods given by the methods implemented
+   * by the subclass.
+   *
+   * TODO: How to do that reflectively?
+   */
+    def permitted_HTTP_methods(){}    
+  }
+  
+  /**
+   * Handles static files based on the settings in app.yaml. The URI
+   * pattern to handler mappings are added on startup.
+   *
+   * On AppScale static files are handled by the nginx server.
+   */
+  class StaticFilesHandler:pure extends RequestHandler{
+    
+    def get(request, uriargs){
+
+      path = dirname(thisScript()) + request.path().butleft(1);
+      content_type = ct if guessType(path) ~ +ct else 'application/octet-stream';
+      return Response({: 
+          `content-type`: content_type,
+            content: path.file().readBytes() :});
+    }
+  }
+}

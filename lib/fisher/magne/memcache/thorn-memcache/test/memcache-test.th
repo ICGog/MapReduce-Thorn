@@ -1,0 +1,42 @@
+component memcachetest(){
+  
+  import unittest.*;
+
+  val server = site("thorn://localhost:11211");
+
+  fun should_get_null_value(){
+    value = server <-> get("key");
+    assertEquals(value, null);
+  }
+
+  fun should_set_and_get_value(){
+    server <-- set("key", "value");
+    value = server <-> get("key");
+    assertEquals(value, "value");
+  }
+
+  fun should_delete_value(){
+    server <-- set("key", "value");
+    server <-- delete("key");
+    value = server <-> get("key");
+    assertEquals(value, null);
+  }
+
+  fun should_flush_all(){
+    server <-- set("key", "value");
+    server <-- flush_all();
+    value = server <-> get("key");
+    assertEquals(value, null);
+  }
+  
+  body{
+    println("memcache test");
+    
+    test(should_get_null_value);
+    test(should_set_and_get_value);
+    test(should_delete_value);
+    test(should_flush_all);
+  }
+}
+
+spawn memcachetest();

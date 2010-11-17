@@ -1,0 +1,7 @@
+killall -9 java
+java -classpath ../../fisher.jar fisher.run.Thorn -m ../oopsla/Modules.thm -s ../oopsla/server.th -p 5555 &
+sleep 1
+java -classpath ../../fisher.jar fisher.run.Thorn -m ../oopsla/Modules.thm -s ../oopsla/dater.th -p 5557 &
+sleep 1
+java -classpath ../../fisher.jar fisher.run.Thorn -m ../oopsla/Modules.thm -s ../oopsla/kim.th -p 5556 &
+

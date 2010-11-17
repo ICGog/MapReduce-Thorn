@@ -1,0 +1,29 @@
+Formals /*&*/Formals():
+  { 
+    Token start, end;
+    Pat pat;
+    Id id;
+    List<Pat> formals = null;
+    Cmd where = null;
+  }
+{
+  (
+    start = <LPAREN>
+    [
+      pat = Pat() {formals = list(pat);}
+      ( <COMMA>
+        pat = Pat() {formals.add(pat);}
+      )*
+    ]
+    {if (formals == null) formals = Collections.EMPTY_LIST;}
+    end = <RPAREN>
+  |
+    id = Id()
+    {start = id.start; end = id.end;}
+    {formals = list((Pat)new PatVar(start, end, id));}
+  )
+  [ <WHERE>
+    where = CompactExp()
+  ]
+  {return new Formals(start, end, formals, where);}
+}//////////////////////Formals

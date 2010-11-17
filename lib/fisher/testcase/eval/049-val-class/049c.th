@@ -1,0 +1,10 @@
+
+{
+  class val ValParentally {
+    val x;
+  }
+
+  class Childly extends ValParentally {
+    var y;
+  }
+}

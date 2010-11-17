@@ -1,0 +1,16 @@
+{
+  class A {
+    imm_state = 1;
+  }
+  
+  class B extends A;
+  class C extends A;
+  
+  class D extends A,B;
+  
+  d = D();
+  ~!@eq(d.imm_state, 1)@!~  ;
+
+
+
+}

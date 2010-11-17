@@ -1,0 +1,35 @@
+spawn sprain {
+  val yurtle = 4;
+  fun f(x) = x+yurtle;
+  val grunkle = f(3*yurtle);
+  body{
+    ~!@eq(f(12), 16)@!~  ;
+    ~!@eq(grunkle, 16)@!~  ;
+    import PREDESTINATION.Yankee;
+    import PREDESTINATION.ride;
+    {
+       y = Yankee(ride(1,2));
+       ~!@assert(y ~ Yankee([1,2]))@!~  ;
+    }
+    import MECCA = LIBRARY;
+    {
+      import MECCA.*;
+      c = Crustacean(1,shatter(2,3,4));
+      ~!@assert(c ~ Crustacean(1, [[2,3],4]))@!~  ;
+    }
+    import MAVERICK.*;
+    ~!@eq(defame(), 1)@!~  ;
+    ~!@eq(defame(), 2)@!~  ;
+    import own SOUP = MAVERICK;
+    import ban = SOUP.defame;
+    ~!@eq(ban(), 1)@!~  ;
+    ~!@eq(ban(), 2)@!~  ;
+    ~!@eq(ban(), 3)@!~  ;
+    ~!@eq(ban(), 4)@!~  ;
+    ~!@eq(defame(), 3)@!~  ;
+    ~!@eq(ban(), 5)@!~  ;
+    ~!@checkphase(
+//      {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}sprain;

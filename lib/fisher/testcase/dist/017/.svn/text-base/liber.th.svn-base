@@ -1,0 +1,45 @@
+spawn liber {
+  scrawl = table(client){var scenic?, nScenic, nUgly ;};
+  var goon := true;
+  var total := 0;
+  
+  sync tap() from client {
+     if (scrawl(client) ~ +{: nScenic, nUgly :}) {
+         {: nScenic, nUgly, total :};
+     }
+     else {
+       scrawl(client) := {: scenic?: true, nScenic : 1, nUgly: 0 :};
+       {: nScenic:1, nUgly:0, total :};
+     }
+  }tap
+  
+  sync flap() from client {
+    if (scrawl(client) ~ +{:scenic?, nScenic, nUgly :}) {
+        nscenic = ! scenic?;
+        scrawl(client) := {: scenic? : nscenic, nScenic, nUgly :};
+        {: total, nscenic :};
+        }
+
+  }flap
+
+  sync zap() { goon := false; }  
+  
+  body{
+    ~!@testStartLatch();
+    while(goon) {
+      serve 
+      before(msg, client) {
+        if (scrawl(client) ~ {: scenic?, nScenic, nUgly :}) {
+          k = 1 if scenic? else 0;
+          r =  {: scenic?, 
+             nScenic: nScenic + k,
+             nUgly: nUgly + (1 - k) :};
+          scrawl(client) := r;             
+        }if
+        }before
+      after{
+        total += 1;
+        }after
+    }while
+  }body
+}liber;

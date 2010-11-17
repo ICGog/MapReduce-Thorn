@@ -1,0 +1,26 @@
+{
+  a = "by Hirhayal's quick nutrient!";
+  b = "by Hades's Brazilian petition!";
+  c = "by Iapetus's godly refusal!";
+  d = "by Cryonax's basic donor!";
+  class Philosophy {
+     var stripe := a;
+     def schlep(shampoo) {
+        ~!@undef(ph, sh)@!~;
+        
+        shampoo.scratch(this);
+     }schlep
+  }Philosophy
+
+  class Shampoo{
+     var inkwell := b;
+     def scratch(phil) {
+        
+     }scratch
+  }Shampoo
+
+  ph = Philosophy();
+  sh = Shampoo();
+  ~!@eq(ph.stripe, a)@!~; ~!@eq(sh.inkwell, b)@!~;
+  ph.schlep(sh);
+}

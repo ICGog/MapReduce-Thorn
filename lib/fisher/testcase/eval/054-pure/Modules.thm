@@ -1,0 +1,13 @@
+module PROPOSAL {
+  class Purr(x) : pure {
+    def funny() = (fn() = [x]);
+  }
+  
+  class Impy() /* impure */ {
+    var zither:= 0;
+  }
+  
+  class Lamb() /* innocent */ {
+  }
+  
+}

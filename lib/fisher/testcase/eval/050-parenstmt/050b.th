@@ -1,0 +1,12 @@
+{
+  fun bwrw() = (throw "ow";);
+  
+  try {
+    a = bwrw();
+    { ~!@hit()@!~ 0 ; }
+  }
+  catch {
+    "ow" => {~!@hit()@!~  ;}
+  }
+
+}

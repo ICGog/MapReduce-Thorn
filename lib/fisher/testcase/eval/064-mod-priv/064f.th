@@ -1,0 +1,4 @@
+//FAIL:
+{
+  import m = SILHOUETTE.n;
+}

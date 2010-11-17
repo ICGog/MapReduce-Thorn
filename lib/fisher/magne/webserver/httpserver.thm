@@ -1,0 +1,120 @@
+module httpserver{
+
+  import simplehttp.*;
+  import webrequest.Request;
+  import webrouter.Route;
+  import webrouter.Router;
+
+  /**
+   * Runs request handlers in a separate component.
+   *
+   * We can't reuse components since we put in the request from
+   * Java and the only way to respond is through that reference.
+   * 
+   * Args:
+   *   javareqquest: HTTP request from "Java". Used to make the response.
+   *   matched_groups: groups caught in a reg.exp search 
+   *   route: {: regexp, handler, group_names :}
+   */
+  component request_handler_runner(javarequest, matched_groups, route:record){
+    
+    /**
+     * Extracts the values of the matched groups and puts them in 
+     * a map where they are accessible by name, e.g.,
+     * "/:userkey/". 
+     *
+     * Groups are defined by the ":" in the uri pattern
+     *
+     * Returns:
+     *   map : groupname -> value 
+     */
+    fun extract_args(){
+      result = map();
+      for(i <- route.group_names.range()){
+        result[(route.group_names)(i)] := matched_groups(i+1).text;
+      }
+      return result;
+    }
+
+    fun run_request_handler(){
+      args = extract_args();
+
+      // convert "Java" request to web request
+      // to decouple things.
+      request = Request({:
+                         method  : javarequest.method(),
+                         path    : javarequest.path(),
+                         content : javarequest.content(),
+                         headers : javarequest.headers(),
+                         query   : javarequest.query(),
+                         ip      : javarequest.ip()
+                         :});
+    
+      // RequestHandler instance per request...
+      response = (route.handler)().handle(request, args);
+      // respond through the javarequest
+      javarequest.respond(response.status, response.content, response.headers.list());
+      log(request.method, response.status, request.path);
+    }
+
+    fun log(method, code, path){
+      println("$method $code $path");
+    }
+
+    body{
+      run_request_handler();
+    }
+  }
+
+  class Server(port, routes){
+
+    def init(){
+      // Activate server, i.d., start listening on socket.
+      SimpleHTTPServer(port);
+      this.run();
+    }
+
+    /* 
+     * Dispatches the request.
+     * 
+     * Returns: 
+     *   Whether the resources was found.
+     */
+    def dispatch(javarequest){
+      for(route <- this.routes){
+        if(javarequest.path().matchRE(route.regexp) ~ +matched_groups){
+          // Dispatch requests in a separat component.
+          spawn request_handler_runner(javarequest, matched_groups, route/* ,(route.handler)()*/);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
+     * Serve loop.
+     */
+    def run(){
+      var goon := true;
+      webserveraddress = thisSite().host() + ":" + port;
+      println("Webserver running on http://$webserveraddress");
+        
+       while(goon) {
+        receive{
+          // req: the Java object
+          req && SimpleHTTPRequest() => {
+            
+            found = this.dispatch(req); 
+            if(!found){
+              req.respond(404, "Not Found", []);
+              println(req.method() + " " + 404 + " " + req.path());
+            }
+          }
+          | other => {
+            println("WTF is $other?");
+          }
+        }
+      }
+    }
+  }
+}

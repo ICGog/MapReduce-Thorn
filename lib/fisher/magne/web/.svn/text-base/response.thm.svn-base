@@ -1,0 +1,108 @@
+/**
+ * Wraps a HTTP response.
+ */
+module webresponse{
+  
+  import webdict.HttpHeadersDict;
+
+  default_content_type = 'text/html; charset=utf-8';
+
+  /** HTTP Response */
+  class Response{
+
+    var content; 
+    status: int;
+    headers: HttpHeadersDict;
+
+    new Response(args:record){
+      content := c if args ~ {: content:c :} else '';
+      status = s if args ~ {: status:s :} else 200;
+      headers = HttpHeadersDict(h) if args ~ {: headers:h :} else HttpHeadersDict();
+      headers.add('Content-Type', c if args ~ {: `content-type`:c :} else default_content_type);
+    }
+
+    new Response(){
+      new({::});
+    }
+
+    def str(){
+      return "response $status\n$headers\n$content";
+    }
+  }
+
+  /** Subclasses: 
+      
+      Convenient helpers that can be directly returned as
+      a response.
+   */
+
+  class ResponseNotAllowed extends Response{
+
+    // TODO: should take a list of methods that are allowed.
+    new ResponseNotAllowed(){
+      r = {:
+           content: "Not Allowed", 
+           content_type: "text",
+           status: 405 
+           :};
+      new@Response(r);
+    }
+  }
+
+  class ResponseUnauthorized extends Response{
+
+    // FIXME: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+    new ResponseUnauthorized(){
+      r = {:
+           content: "Unauthorized", 
+           content_type: "text",
+           status: 401
+           :};
+      new@Response(r);
+    }
+  }
+
+
+  class ResponseBadRequest extends Response{
+    
+    new ResponseBadRequest(errorMessage){
+      r = {: 
+           content: errorMessage,
+           content_type: "text",
+           status: 400
+           :};
+      new@Response(r);
+    }
+  }
+
+  class ResponseNotFound extends Response{
+    
+    new ResponseNotFound(){
+      r = {:
+           content: "Not Found", 
+           content_type: "text",
+           status: 404 
+           :};
+      new@Response(r);
+    }
+  }
+
+  class ResponseSeeOther extends Response{
+    
+    new ResponseSeeOther(location){
+      r = {:
+           status: 303,
+           headers: {: location :}
+           :};
+      new@Response(r);
+    }
+  }
+
+  class ResponseNotModified extends Response{
+    
+    new ResponseNotModified(){
+      new@Response({: status: 304 :});
+    }
+  }
+
+}webresponse

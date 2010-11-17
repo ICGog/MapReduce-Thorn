@@ -1,0 +1,82 @@
+import unittest.*;
+import webdatastore.*;
+
+println("datastore test");
+     
+flush("persons");
+flush("users");
+  
+fun should_add_entity(){
+  key_ = server <-> put("persons", {: `key`: "1", name: "Jakob", age: 27, keys:[], saved:false :});
+  assertEquals(key_, "1");
+}
+
+test(should_add_entity);
+
+fun should_get_entity_just_added(){
+  entity = server <-> get("persons", "1");
+  createdat = entity.createdat;
+  assertEquals(entity, {: `key`:"1", name: "Jakob", age:27, createdat, keys:[] :});
+}
+
+test(should_get_entity_just_added);
+
+fun should_delete_entity(){
+  entity = server <-> delete("persons", "1");
+  createdat = entity.createdat;
+  assertEquals(entity, {: `key`:"1", name: "Jakob", age:27, createdat, keys:[] :});
+}
+
+test(should_delete_entity);
+
+
+fun query_should_filter_entities_with_gt_filter(){
+  server <-> put("persons", {: `key`:"1", name: "Jakob", age: 27, keys:[], saved:false :});
+  server <-> put("persons", {: `key`:"2", name: "Enric", age: 27, keys:[], saved:false :});
+  server <-> put("persons", {: `key`:"3", name: "Daniel", age: 22, keys:[], saved:false :});
+    
+  query = {: filters: [{: 
+                        property:"name", 
+                        type:">", 
+                        value: "E" :}]:};
+  result = %sort[ p %< p.name | for p <- (server <-> execute("persons", query))];
+  
+  assertEquals(result.len(), 2, "Expected two results, was $result");
+
+  expected = [
+              {: `key`:"2", name: "Enric", age: 27, createdat: result(0).createdat, keys:[] :},
+              {: `key`:"1", name: "Jakob", age: 27, createdat: result(1).createdat, keys:[] :}
+
+              ];
+  assertTrue(result.setEq(expected), "Expected: $expected, Actual: $result");
+}
+
+test(query_should_filter_entities_with_gt_filter);
+
+fun query_should_return_row_when_elm_in_list(){
+  
+
+  server <-> put("persons", {: `key`:"1", name: "jakob", age: 27, keys:["1","2","3"], saved:false :});
+  server <-> put("persons", {: `key`:"2", name: "enric", age: 22, keys:["4"], saved:false :});
+
+  persons = server <-> execute("persons", {: :});
+  assertEquals(persons.len(), 3);
+
+  query = {: filters: [{: property: "keys", type: "=", value: "1" :}]:};
+  result = server <-> execute("persons", query);
+  assertEquals(result.len(), 1);
+
+  expected = [{: 
+               `key`:"1", 
+               age: 27,
+               name: "jakob", 
+               keys: ["1", "2", "3"],
+               createdat: result(0).createdat
+            :}
+    ];
+
+  assertTrue(result.setEq(expected), "Expected: $expected, Actual: $result");
+}
+
+test(query_should_return_row_when_elm_in_list);
+

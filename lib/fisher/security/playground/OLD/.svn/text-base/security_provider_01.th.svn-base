@@ -1,0 +1,55 @@
+module SECURITYPROVIDER {
+  javaly fun make_token(x, y, z, w) = fisher.runtime.`security`.SecurityProviderModule.makeToken;
+  javaly fun init_sp(x) = fisher.runtime.`security`.SecurityProviderModule.initSecurityProvider;
+}module
+
+spawn boing {
+
+  body{
+   println("Testing a simple implementation of a security provider");
+   sp = spawn sp {
+     body {
+      import SECURITYPROVIDER.*;
+      init_sp(thisComp());
+      try {
+       while (true) {
+	        recv {
+	          {: make_token:"make_token", msg, capability :} from y => {
+	             println("$y says $msg");
+	             y <<< make_token(msg, capability, y, thisComp());
+	          }
+	        }recv
+	      }while
+      }try
+      catch {
+        Z => {println("Oh, nose! $Z!");}
+      }catch
+     }body
+   }sp;
+   
+   A = spawn A {
+     body{
+       sp <<< "Hi!";
+       recv {
+         x from y envelope e  
+            && it.securityInfo ~ +si checked => {
+              println("good message");
+         }
+       }
+     }
+   }A;
+   
+   B = spawn B {
+     body{
+       sp <<< {: make_token:"make_token", msg:"message1", capability:"cap1" :};
+       recv {
+         x from y => {
+           println("$y says $x");
+           A <<< "message1" security [x];
+         }
+       }
+     }
+   }B;
+   
+  }body
+};

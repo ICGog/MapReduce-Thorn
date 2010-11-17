@@ -1,0 +1,17 @@
+module THORN {
+ javaly fun thisComp() = fisher.runtime.builtInFun.DIST.thisComp;
+ javaly fun thisSite() = fisher.runtime.builtInFun.DIST.thisSite;
+ javaly fun site(ip, port) = fisher.runtime.builtInFun.DIST.site;
+ javaly fun newNonce() = fisher.runtime.builtInFun.DIST.newNonce;
+ javaly fun syncReply(letter, value) = fisher.runtime.builtInFun.DIST.syncReply;
+ javaly fun splitSync() = fisher.runtime.builtInFun.DIST.splitSync;
+
+ javaly fun parseConstant(string) = fisher.runtime.builtInFun.MISC.parseConstant;
+ javaly fun readln0() = fisher.runtime.builtInFun.MISC.readln0;
+ javaly fun readln(prompt) = fisher.runtime.builtInFun.MISC.readln;
+ javaly fun println(text) = fisher.runtime.builtInFun.MISC.println;
+ javaly fun crude_serialize(thing) = fisher.runtime.builtInFun.MISC.crude_serialize;
+ javaly fun crude_deserialize(text) = fisher.runtime.builtInFun.MISC.crude_deserialize;
+ javaly fun command_line_args() = fisher.runtime.builtInFun.MISC.command_line_args;
+ 
+}

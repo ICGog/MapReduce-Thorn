@@ -1,0 +1,64 @@
+{
+  r1 = ‹a:1, b:1›;
+  r2 = ‹a:2, b:2›;
+  r3 = ‹a:3, b:33, c:1›;
+  r4 = ‹a:3, b:3›;
+  r5 = ‹a:3, b:17›;
+  r6 = ‹a:4, b:1›;
+  L = [r1, r2, r3, r4, r5, r6];
+  
+  {
+    t = %some(a > b | for ‹a,b› <- L);
+    ~!@eq(t,true)@!~  ;
+  }
+  {
+    t = %some(a < b < 10 | for ‹a,b› <- L);
+    ~!@eq(t,false)@!~  ;
+  }
+  {
+    t = %some(b == 1 | for ‹a,b› <- L, if a == 3);
+    ~!@eq(t,false)@!~  ;
+  }
+  {
+    t = %some(b == 17 | for ‹a,b› <- L, if a == 3);
+    ~!@eq(t,true)@!~  ;
+  }
+
+  {
+    t = %some(b1 != b2 | for ‹a:a1, b:b1› <- L, for ‹a:a2, b:b2› <- L, if a1 == a2 == 3);
+    ~!@eq(t,true)@!~  ;
+  }
+  {
+    t = %some(b1 != b2 | for ‹a:a1, b:b1› <- L, for ‹a:a2, b:b2› <- L, if a1 == a2 == 4);
+    ~!@eq(t,false)@!~  ;
+  }
+  {
+    t = %some(s == 36 | for ‹a,b› <- L, var s := 0 %< s+b );
+    ~!@eq(t,true)@!~  ;
+  }
+  {
+    t = %some(s == -123 | for ‹a,b› <- L, var s := 0 %< s+b );
+    ~!@eq(t,false)@!~  ;
+  }
+  {
+    t = %some(a != b | for (r && ‹a,b›) <- L, while !(r ~ ‹c›));
+    ~!@eq(t,false)@!~  ;
+  }
+  {
+    t = %some(z == 36 | for ‹a,b› <- L, val z = a+b);
+    ~!@eq(t,true)@!~  ;
+  }
+  {
+    t = %some(z == 37 | for ‹a,b› <- L, val z = a+b);
+    ~!@eq(t,false)@!~  ;
+  }
+        
+  
+/*
+  {
+    t = %some();
+    ~!@eq(t,)@!~  ;
+  }
+*/
+
+}

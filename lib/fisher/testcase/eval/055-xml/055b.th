@@ -1,0 +1,12 @@
+{
+  import XML.*;
+  x = Elem("oif", {: a:1 :}, []);
+  
+  ~!@eq(x.str(), '<oif a="1"/>\n')@!~  ;
+  
+  flub = Elem("oif", {: a:1, b:2 :}, []);
+  bulf = Elem("oif", {: b:2, a:1 :}, []);
+  ~!@eq(flub, bulf)@!~  ;
+  
+
+}

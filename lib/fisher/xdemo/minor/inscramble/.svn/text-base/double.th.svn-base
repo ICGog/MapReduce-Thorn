@@ -1,0 +1,24 @@
+{
+  // This is based on Gordon Thiesfeld's solution 
+  // over here: http://www.rubyquiz.com/quiz76.html
+  // I actually like mine better: it's not contaminating String and 
+  // Array with random methods.  Though it is wordier 
+  // than the Ruby: 
+  //    first,last,middle = shift, pop,scramble
+  //    "#{first}#{middle}#{last}"
+  // I think it's clearer, too.
+  fun perMiddle(s) {
+    if (s.len <= 2) s;
+    else {
+       s(0) + 
+       %sort[s(i) %< 9999999.rand0 | for i <- 1 .. s.len-2].joined("") + 
+       s(-1);
+    }
+  }perMiddle
+  filename = "orig.txt";
+  corpus = filename.file.contents;
+  
+  words = corpus.split("\\b");
+  scrambledWords = %[perMiddle(word)  | for word <- words];
+  println(scrambledWords.joined(""));
+}

@@ -1,0 +1,15 @@
+{
+  class Share {
+    def rainy? = true;
+    var b := true;
+    def eager? { b := !b; b; }
+  }
+  
+  s = Share();
+  ~!@eq(s.rainy?, true)@!~  ;
+  ~!@eq(s.eager?, false)@!~  ;
+  ~!@eq(s.eager?, true)@!~  ;
+  ~!@eq(s.eager?, false)@!~  ;
+  ~!@eq(s.rainy?, true)@!~  ;
+}
+  

@@ -1,0 +1,14 @@
+{
+  import ADAGE.*;
+  reset();
+  f = File("$tmp/sludge"); // tmp.file("sludge");
+  ~!@assert(! f.exists?())@!~  ;
+  f.writeln("ow");
+  ~!@assert(f.exists?())@!~  ;
+  e = File("$tmp/endurable"); // tmp.file("endurable");  
+  b1 = f.rename(e);
+  ~!@assert(b1)@!~  ;
+  ~!@assert(! f.exists?())@!~  ;
+  ~!@assert(e.exists?())@!~  ;
+  reset();
+}

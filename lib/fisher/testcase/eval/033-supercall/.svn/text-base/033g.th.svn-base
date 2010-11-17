@@ -1,0 +1,15 @@
+{
+  import Writer = SIN.Foulmouthed;
+  import Blanket = SIN.Glossary;
+
+  class Lawn extends Writer, Blanket {
+    def orchestrate() = [super@Writer.orchestrate(), super@Blanket.orchestrate()];
+  }
+
+  l = Lawn();
+  
+  ~!@eq(l.orchestrate(), [ [0, 'Loser'], [[13],3]])@!~;
+  
+
+
+} 

@@ -1,0 +1,26 @@
+spawn stringy {
+  initially{
+  }initially
+  body{
+  import LINES.*;
+  ss = StringSocketeer(4321);
+  ~!@testStartLatch();
+  var n := 0;
+  var goon := true;
+  
+  while(goon){
+     recv{
+       x from y => {
+          ~!@phase(n, x);
+          n += 1;
+          goon := x != "Done!";
+       }
+     }
+  }
+  ~!@checkphase(
+    {: phase: 0 , bag: ["hi!"]:},
+    {: phase: 1 , bag: ["ow!"]:},
+    {: phase: 2 , bag: ["Done!"]:}
+    )@!~  ;
+  }body
+}stringy;

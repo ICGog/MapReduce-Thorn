@@ -1,0 +1,45 @@
+{
+  ~!@eq(true
+    , %all(n > 0 | for n <- 1 .. 5)
+    )@!~  ;
+  ~!@eq(false
+    , %every(n > 0 | for n <- (-3) .. 5)
+    )@!~  ;
+
+  ~!@eq(true,
+    %every(
+      %some(x > y | for x <- 1..4)
+      |
+      for y <- 1..3
+    )
+  )@!~  ;
+  ~!@eq(false,
+    %every(
+      %some(x > y | for x <- 1..4)
+      |
+      for y <- 1..4
+    )
+  )@!~  ;
+
+  ~!@undef(a,b,i)@!~  ;
+  ~!@eq(
+    %every( a == b
+    | for i <- 1 .. 10,
+      val a = i*i,
+      var b := 1 %> b + 2*i - 1
+    )
+    ,
+    true
+  )@!~  ;
+  ~!@undef(a,b,i)@!~  ;
+
+  fun sat([], p) = [];
+    | sat([a,b...],p && (p(a))?) = [a, sat(b,p)...];
+    | sat([a,b...],p) = sat(b,p);
+  fun divides(x,y) = (x div y)*y == x;
+  ~!@eq(divides(3,2),false)@!~  ;
+  ~!@eq(divides(4,2),true)@!~  ;
+  
+  prime1 = fn(n) = n == 2 || %every(!(divides(n, k)) | for k <- 2 .. n-1);
+  ~!@eq(sat([2,3,4,5,6,7,8,9,10], prime1), [2,3,5,7])@!~  ;
+}

@@ -1,0 +1,12 @@
+spawn scribbly {
+  initially{
+  }initially
+  body{
+    import LINES.*;
+    ~!@testStartLatch();
+    syte = siteForStrings("localhost", 4321);
+    syte.send("hi!\n");
+    syte.send("ow!\n");
+    syte <<< ("Done!\n");
+  }body
+}scribbly;

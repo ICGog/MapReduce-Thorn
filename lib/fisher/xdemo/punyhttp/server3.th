@@ -1,0 +1,26 @@
+spawn server3 {
+  import HTTP.*;
+  import FILE.*;
+  body{
+    sock = HTTPSocketeer(4321);
+    var goon := true;
+    println("Server3 starting");
+    while(goon) {
+      recv{
+        req && HTTPRequest("GET", resource) => {
+           f = File(resource);
+           if (f.exists?()) {
+             req.respond(OK, f.contents(), {: :});
+           }
+           else {
+             req.respond(HTTP_404, "Not there, spogger.", {: :});
+           }
+        }
+      | other => {
+          println("WTF is $other?");
+        }
+      }
+    }while
+    println("Server3 quitting.");
+  }body
+}server3;

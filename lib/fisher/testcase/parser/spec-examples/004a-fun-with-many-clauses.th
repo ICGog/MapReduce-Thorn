@@ -1,0 +1,7 @@
+//STMT
+{
+/*
+  fun sum([]) = 0;
+  and sum([x,y...]) = x + sum(y);
+*/
+}

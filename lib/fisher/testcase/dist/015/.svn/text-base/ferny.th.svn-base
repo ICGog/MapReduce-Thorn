@@ -1,0 +1,45 @@
+spawn ferny{
+  initially{ ~!@testStartLatch(); }
+  fun makeZapper(ph) {
+     ferny = thisComp();
+     zapper = spawn zapper {
+        body{
+          {: whiffComp : whiff :} = ~!@recOfPorts();
+          r1 = whiff <-> snag(ph);
+          ~!@eq(r1, "snagged")  ;
+          ~!@phase(ph+1, r1);
+          
+          t0 = whiff <-> sizzle(ph, 0);
+          t1 = whiff <-> sizzle(ph, 1);  
+          ~!@eq(t1, t0+1);
+          ~!@sleep(25); // A delay so that the other zapper can try to get in (and fail)
+          t2 = whiff <-> sizzle(ph, 2);
+          ~!@eq(t2, t0+3, t1+2) ;
+          
+          romega = whiff <-> done(ph);
+          ~!@eq(romega,"bye")  ;
+          ~!@phase(ph+99, romega);
+          ferny <<< "done";
+        }body
+     }zapper;
+     zapper;
+  }makeZapper
+  body{
+    z100 = makeZapper(100);
+    z200 = makeZapper(200);
+    z300 = makeZapper(300);
+    recv{"done" from $(z100) => {}}
+    recv{"done" from $(z200) => {}}
+    recv{"done" from $(z300) => {}}
+    {: whiffComp : whiff :} = ~!@recOfPorts();
+    whiff <-> plzDie();
+    ~!@checkphase(
+    {: phase: 101, bag: ["snagged"]:},
+    {: phase: 199, bag: ["bye"]:},
+    {: phase: 201, bag: ["snagged"]:},
+    {: phase: 299, bag: ["bye"]:},
+    {: phase: 301, bag: ["snagged"]:},
+    {: phase: 399, bag: ["bye"]:}
+    )@!~  ;
+  }body
+}ferny;

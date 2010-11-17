@@ -1,0 +1,38 @@
+{
+//    if ("0123" ~ index("1" -> i)) {
+//      ~!@eq(i, 1)@!~  ;
+//    }
+//    else { ~!@hit()@!~ 0 ; }
+//  
+//    if ("by Hirhayal's nucleus!" ~ index("no, no" -> _)) 
+//       { ~!@hit()@!~ 0 ; }
+//    else {
+//       ~!@hit()@!~ 1 ;
+//       }
+//  
+//    if ("by Tartarus's military scarf!" ~ index("i" -> i && (i>3)?)) {
+//      ~!@eq(i, 15)@!~  ;
+//    }
+//    else { ~!@hit()@!~ 0 ; }
+//  
+//    if ("by Tartarus's military scarf!" ~ index("i" -> i && (i<3)?)) {
+//       { ~!@hit()@!~ 0 ; }
+//    }
+//    else { ~!@hit()@!~ 1 ; }
+//  
+//  
+//    // indexAfter!
+//    
+//    if ("by Lolth's web-based suicide!" ~ indexAfter("w", 3 -> i)) {
+//       ~!@eq(i, 11)@!~  ;
+//    }
+//    else { ~!@hit()@!~ 0 ; }
+//  
+//    if ("by Lolth's web-based suicide!" ~ indexAfter("w", 12 -> i)) {
+//       { ~!@hit()@!~ 0 ; }
+//    }
+//    else {
+//       ~!@hit()@!~  ;
+//    }
+//  
+}

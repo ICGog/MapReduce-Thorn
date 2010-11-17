@@ -1,0 +1,8 @@
+module IPOD {
+  val paper = 1;
+  val `broad bandanna` = "a +4 Invisible Flowery Candelabra Of Rembrandt";
+}
+module SHAWL {
+  import IPOD.`broad bandanna`;
+  val paper = 2;
+}

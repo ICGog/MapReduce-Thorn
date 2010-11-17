@@ -1,0 +1,22 @@
+spawn saga {
+  initially{
+    ~!@testStartLatch();
+  }initially
+  body{
+    {: lowtimeComp: low :} = ~!@recOfPorts();
+    recv{"readyio" from $(low) => {}};
+    low <<< "okidoki";
+    recv{
+      "wakie!" => {
+          ~!@phase(1, "bad!");
+          ~!@hit()@!~ 0 ;
+          }
+       timeout(1) {
+          ~!@hit()@!~  ;
+          ~!@phase(1, "good");
+       }timeout
+    }recv
+    
+    
+  }body
+}saga;

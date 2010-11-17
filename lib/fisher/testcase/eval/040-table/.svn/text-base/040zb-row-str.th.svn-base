@@ -1,0 +1,8 @@
+{
+  t = table(a){var b; var c;};
+  t(000) := {: b:1, c:2 :};
+  // This should run without error...
+  %[r.str | for r <- t];
+  %[r.str() | for r <- t];
+  ~!@hit()@!~  ;
+}

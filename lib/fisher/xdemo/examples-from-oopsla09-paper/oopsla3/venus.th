@@ -1,0 +1,16 @@
+spawn Venus {
+  import AGENCY.Agency;
+  import PROFILE.*;
+  body{
+    agencies = [
+      spawn Agency("Pat's Matches", 10, "Better matches!", thisComp()),
+      spawn Agency("DateBase", 0, "More Choices!", thisComp())];
+    pat = agencies(0);
+    pat <-> register("Pat", Profile(
+              [{:topic: "j-pop", weight: 4:},
+               {:topic: "sushi", weight: 6:}]));
+    pat <-> register("Chris", Profile(
+              [{:topic: "hip-hop", weight: 8:},
+               {:topic: "sushi", weight: 4:}]));
+  }body
+}Venus;

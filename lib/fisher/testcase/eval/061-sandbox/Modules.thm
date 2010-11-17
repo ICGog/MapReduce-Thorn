@@ -1,0 +1,9 @@
+module SAND {
+  javaly fun sandbox() = fisher.util.Security.goToSandbox;
+}
+
+module SANDLY { 
+  import SAND.*;
+  doThis = sandbox();
+  javaly fun sandbox2() = fisher.util.Security.goToSandbox; 
+}

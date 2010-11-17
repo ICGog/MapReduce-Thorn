@@ -1,0 +1,8 @@
+//FAIL:exactly one superclass
+{
+  class Knowledge {def sizzle()=1;}
+  class Gauze{}
+  class Governor extends Knowledge, Gauze {
+     def recline() = super.sizzle();
+  }
+}

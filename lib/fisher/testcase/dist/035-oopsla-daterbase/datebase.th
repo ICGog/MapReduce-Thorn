@@ -1,0 +1,25 @@
+spawn DateBase {
+
+  import PROFILE.Profile;
+  customers = table(name){
+     val source, profile;
+     var picked;};
+  var goon := true;
+
+  sync info(name) = customers(name);
+  
+  sync setInfo(rec) = {customers.ins(rec); true;}
+
+  sync addPicked(name, newPick) {
+     customers(name).picked := newPick :: customers(name).picked;
+  }
+  
+  sync allCustomers() = customers.rows();
+
+  async quit(){ goon := false; }
+
+body{
+  ~!@testStartLatch();
+  while(goon) serve;        
+}body
+}DateBase;

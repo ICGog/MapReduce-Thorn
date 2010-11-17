@@ -1,0 +1,1363 @@
+<h1>A Merciless Thorn Tutorial</h1>
+<h1>DRAFT: Please do not distribute</h1>
+<p>
+By Bard Bloom, IBM.
+</p>
+
+<h2>Installation</h2>
+
+<p>
+<b>todo:</b> Explain installation in more detail.
+</p>
+
+<p>
+The current installation process is described in the
+file <kbd>demo/README.txt</kbd> in the fisher part of the repository.  The
+tutoral will assume that the shell command to run thorn is <kbd>th</kbd>. 
+</p>
+
+<h2>Hello, World</h2>
+
+<p>
+The simplest Hello World program in Thorn is somewhat of a cheat. The command
+to evaluate a Thorn file prints the result, unless you tell it not to with
+the <kbd>--noprint</kbd> option.  So, the Thorn code
+in <kbd>tut01-hello-world/hw1.th</kbd> will print <kbd>Hello, world!</kbd>
+when run:
+</p>
+<pre>
+$ th -f tut01-hello-world/hw1.th 
+Hello, world!
+</pre>
+
+<p>
+The source code for this is simply: 
+</p>
+
+<pre>
+// file:  tut01-hello-world/hw1.th
+"Hello, world!";
+</pre>
+
+<p>
+We'll dissect that program line by line:
+</p>
+
+
+<table border="1">
+
+<tr>
+  <td><kbd>// file:  tut01-hello-world/hw1.th</kbd></td>
+  <td>
+    This is a comment. As in Java and C++, 
+    comments can be started with <kbd>//</kbd>, and go through the end of the
+    line.  Also, in the style of various scripting languages, they can start
+    with <kbd>#</kbd> and go through the end of the line.
+    Or, if you prefer, they can start with <kbd>/*</kbd> and 
+    continue through the next <kbd>*/</kbd>
+    <br/>
+    <i>This comment isn't important for the Hello World example.  We put a
+    comment like this in front of every code block in the tutorial so that
+    you know where to find that code block.  There's no need to do this in
+    real code.</i>
+    
+  </td>
+</tr>
+
+<tr>
+  <td><kbd>"Hello, world!";</kbd></td>
+  <td>
+     <p><kbd>"Hello, world!"</kbd> is a string literal. Strings can be written
+     in four ways. 
+     Short strings can start and end with <kbd>"</kbd>, or can start and end
+     with <kbd>'</kbd>.  These strings have to fit on one line.  Longer
+     strings can start and end with <kbd>"""</kbd> or with <kbd>'''</kbd>;
+     these can span several lines.   </p>
+     <p>
+     The <kbd>;</kbd> at the end turns the string literal into a statement.  
+     The value of the program is the value of the last statement in it, which
+     is the string <kbd>Hello, world!</kbd>. 
+     </p>
+  </td>
+</tr>
+
+</table>
+
+<h3>Another Hello, World Program</h3>
+
+<p>
+But <kbd>hw1.th</kbd> is sort of cheating.  It relies on a sneaky property of
+the interpreter.  Often, you will want programs to print something and keep
+running.  Here's how to do that: 
+</p>
+
+<pre>
+// file:  tut01-hello-world/hw2.th
+println("Hello, world!");
+</pre>
+
+<p>
+<kbd>println</kbd> is a built-in function which converts its argument to a
+string and prints it.    Functions are called with the
+syntax <kbd><i>function</i>(<i>arg1</i>,<i>arg2</i>)</kbd>.  The <kbd>;</kbd>
+ends the statement.  
+</p>
+
+<p>
+And here's what happens when you run <kbd>hw2.th</kbd>
+with <kbd>--noprint</kbd>.  
+</p>
+
+<pre>
+$ th --noprint -f tut01-hello-world/hw2.th 
+Hello, world!
+</pre>
+
+<h2>Cheeper</h2>
+
+<p>
+Having gotten that out of the way, it's time to do something interesting.
+Imagine that we've just gotten the idea for a great new internet service: a
+collective wisdom sharing site.  Users can post bits of wisdom to it, and read
+wisdom from other users.  They'll be able to search for wisdom concerning
+particular topics, get updates of the wisdom from particular philosophers that
+they like, and to vote on how wise other people's wisdom actually is.  The
+service will be called <b>Cheeper</b>, and the individual bits of wisdom will
+be called <b>Chirps</b>. 
+</p>
+
+<p>
+This is an experimental project. We'll start off with a very simple version of
+the idea, and add some features as we think of them and see how they work.  
+</p>
+
+<h2>Distributed Computing</h2>
+
+<p>
+Cheeper is going to be a <i>distributed</i> system.  Part of it,
+the <i>server</i> will run on one computer; the rest, the <i>clients</i>, will
+run on (potentially) different computers. The two will talk to each other over
+the network.  Distributed programming can be quite subtle, but we'll start
+with a very easy version and build up to something more intricate.
+</p>
+
+<p>
+Our first program is the "Hello, world" of distributed computing.  The client
+will ask for the user's name, send it to the server, get a response back, and
+print the response. The server accepts a name, and replies politely to it. To
+start with, it won't even be able to accept <i>two</i> names.
+</p>
+
+<p>
+To run it, start two terminal windows.  In one of them, navigate to the
+tutorial directory and run the command <kbd>th -s tut02/server.th -p 4260
+</kbd> to start the server.  It will print <kbd>Server is happily
+    started!</kbd>, and wait for the client to do something.  (4260 is a port
+    number -- it can be nearly anything bigger than 1024, as long as that port
+    is free on your computer.)
+</p>
+
+
+<p>
+Start the client in the other window, with <kbd>th -s tut02/client.th -p 4385
+</kbd>.  It will ask you for your name.  Type your name, or, if you prefer,
+someone else's; I used mine.  When you press enter, two things will happen.
+(1) In the client window, you'll get a message from the server, and (2) in the
+server window, you'll see a message from the server about the event: 
+</p>
+
+
+<table border="1" style="background-color:lightblue">
+<tr>
+  <td width="50%">
+  <b>Client Window</b>
+  <pre>$ th -s tut02/client.th -p 4385
+Your name: Bard
+The server said 'And hello to you, Bard, from Cheeper.'</pre>
+  </td>
+  <td width="50%">
+  <b>Server Window</b>
+  <pre>$ th -s tut02/server.th -p 4260
+Server is happily started!
+Bard said hello.</pre>
+  </td>
+</tr>
+</table>
+
+<p>
+So let's dissect the code and see what's going on there.
+</p>
+
+
+<h3><kbd>tut02/client.th</kbd>: Client Code</h3>
+
+<p>
+The client's code is: 
+</p>
+<pre>
+// file: tut02/client.th
+spawn client {
+  body{
+    server   = site("localhost", 4260);
+    userName = readln("Your name: ");
+    response = server <-> hello(userName);
+    println("The server said '$response'");
+  }body
+}client;
+</pre>
+
+<p>
+There are several new things in this code -- and, unlike Hello, World, many of
+them are specific to Thorn.
+</p>
+
+<p>
+First of all, the <kbd>spawn</kbd> command starts a new <i>component</i>, akin
+to a thread or a process.  Components are <i>isolated</i>; <i>viz.</i>, only
+one component has access to any given datum.  Components can communicate,
+sending copies of data to each other.  Components are single-threaded: there
+is no internal concurrency.
+</p>
+
+<p>
+A <kbd>spawn</kbd> command can have several subcommands.  The client code only
+uses the <kbd>body</kbd> subcommand: the code which the component executes.
+We'll see other features of <kbd>spawn</kbd> shortly.
+</p>
+
+<p>
+The first three lines of the body are <i>bindings</i>.  They all have the
+form <kbd><i>x</i> = <i>Y</i>;</kbd>.  Bindings are used to give names to
+values.  The name <kbd><i>x</i></kbd> must be new: we couldn't, for example,
+use <kbd>println</kbd> instead of <kbd>server</kbd>, or replace all three
+names by just <kbd>x</kbd>.  Bindings are <i>not</i> assignments.
+Once <kbd><i>x</i></kbd> has been bound to <kbd><i>Y</i></kbd>, it keeps that
+binding as long as it is in scope.   Assignments, which we will see later,
+change an existing variable -- but not one that has been bound.
+</p>
+
+<p>
+<kbd>server = site("localhost", 4260);</kbd> binds <kbd>server</kbd> to the
+server's <i>site</i>.  A site is an Internet address plus a port -- the
+minimum information needed to send network messages somewhere.  For the
+moment, we'll hardwire both the internet address (<kbd>"localhost"</kbd>
+meaning "this computer") and the port (<kbd>4260</kbd> appearing in the
+author's fiction).  Far later, we'll compute them.
+</p>
+
+
+<p>
+<kbd>userName = readln("Your name: ");</kbd> prints <kbd>Your name: </kbd> on
+the console, and waits for you to type something.  When you press the Enter
+key, the string that you have typed is bound to <kbd>userName</kbd>.  
+</p>
+
+<p>
+<kbd>response = server <-> hello(userName);</kbd> is the first distributed
+command that we have seen.  It sends a message to <kbd>server</kbd>, a command
+named <kbd>hello</kbd>, with your name as the argument.  It then waits for the
+server to send something back -- the <kbd><-></kbd> symbol hints that messages
+go both ways -- and, when it shows up, binds it to <kbd>response</kbd>. 
+A significant amount of networking is hidden in this one line.
+</p>
+
+<p>
+<kbd>println("The server said '$response'");</kbd> prints a message
+telling what the server said.  The <kbd>println</kbd> function is the same one
+that we've seen before.  The <kbd>$</kbd> in the string is new: it
+is <i>string interpolation</i>.  Whenever <kbd>$<i>name</i></kbd> appears in a
+string, the value of <kbd><i>name</i></kbd> is inserted instead.  
+</p>
+
+<p>
+Those four lines are the body of <kbd>client</kbd>.  It will execute them and
+then stop.
+</p>
+
+<p>
+Closing braces in Thorn can be decorated with a clue that explains what is
+being closed. The clue can be the kind of statement being
+closed: <i>e.g.,</i>, the <kbd>body{</kbd> block is closed
+with <kbd>}body</kbd>. Or the clue can be the <i>name</i> of the thing being
+defined, if it has one. The body doesn't have a name, but the <kbd>spawn</kbd>
+is named <kbd>client</kbd>, and so it can be closed with <kbd>}client</kbd>.
+It could also be closed with <kbd>}spawn</kbd>, or with <kbd>}</kbd>. Any
+other decoration will cause a parse error. As a point of style, we recommend
+decorating closing braces when they are far from their opening braces; decide
+for yourself how far 'far' is.
+</p>
+
+<h3><kbd>tut02/server.th</kbd>: Server Code</h3>
+
+<p>
+The server is a bit more complicated, but only because we need to tell it that
+it's supposed to respond to a <kbd>hello</kbd>.  Its code is: 
+</p>
+
+<pre>
+// file: tut02/server.th
+spawn server {
+  sync hello(clientName) {
+    println("$clientName said hello.");
+    "And hello to you, $clientName, from Cheeper.";
+  }
+  body{
+    println("Server is happily started!");
+    serve;
+  }body
+}server;
+</pre>
+
+<p>
+Like the client, the server code has a <kbd>spawn</kbd>, a <kbd>body</kbd>,
+and a <kbd>println</kbd> or two using string interpolation.  Two features are
+new: <kbd>sync</kbd> and <kbd>serve</kbd>.
+</p>
+
+<p>
+<kbd>sync</kbd> introduces a <b>communicator</b>.  The server can respond to a
+remote procedure call with name <kbd>hello</kbd> and a single
+argument <kbd>clientName</kbd> -- which is just what the client
+sent. <kbd>sync</kbd> communicators need a response; there's
+an <kbd>async</kbd> for a communicator that doesn't need one.  
+</p>
+
+<p>
+When the server executes <kbd>sync</kbd>, it does, in effect, a function call.
+The client's name is bound to <kbd>clientName</kbd>.  Then the server prints
+out <kbd>"$clientName said hello."</kbd>. Finally, it returns a polite
+message.  Thorn's networking gadgetry handles the work of delivering the
+message to the client.
+</p>
+
+<p>
+Just because the server <i>can</i> respond to a <kbd>hello</kbd> communicator
+doesn't mean that it <i>will</i>. It must explicitly say that it is ready,
+with the <kbd>serve</kbd> command. <kbd>serve;</kbd> waits for a communicator
+to come in from some other component, and deals with it. It only
+handles <i>one</i> communicator -- if you want to handle several, as servers
+generally do, put <kbd>serve;</kbd> in a loop.  
+</p>
+
+<p>
+When the client and server are run, the server will execute
+the <kbd>println</kbd>, and then wait in the <kbd>serve;</kbd> until the
+client sends a message. When the client finally gets around to
+executing <kbd>server <-> hello(userName);</kbd>, the server will run
+its <kbd>hello</kbd> code, and send its response back to the client.
+</p>
+
+<p>
+(Programmers familiar with networking are surely nervous at this point.
+Communicators and <kbd>serve</kbd> have more options, like timeout, for
+handing some of the troubles that networks are heir to.)
+</p>
+
+<p>
+And that's the essence of distributed computing in Thorn.   Now, we will build
+the first draft of Cheeper on top of it.
+</p>
+
+<h2>Cheeper: login</h2>
+
+<p>
+To start with, let's program the ability to log in to the server.  (Once you've
+logged on, you won't be able to do anything yet; that's the next step.)
+The server is going to have to keep track of the users it has registered,
+which will show off Thorn's  <kbd>table</kbd> data structure.  
+</p>
+
+<p>
+For the moment, we'll simplify the login logic a bit. If you log in under a
+name that's been registered with the server, it will succeed if you gave the
+right password or fail if you didn't. If you try to log in under a name the
+server has never heard of, a sensible server would reject that too, and tell
+you how to register. For this stage of Cheeper, we'll just register the user
+with that name and password. This is just a convenience for early
+experimentation, and will get upgraded later, along with everything else.
+</p>
+
+<p>
+The client will have a simplifying assumption too.  Since the server can't do
+anything, the client will exit immediately after trying to log the user in.
+This will get upgraded too, but it's enough to test out the login procedures.
+(It won't tell the server that the user is logging out; if the server cares
+about that fact later on, it will have to figure it out on its own. This is a
+characteristic annoyance of distributed computing.)
+</p>
+
+<p>
+A typical run of <kbd>tut03</kbd> follows.  In this, I log in once to register
+with password <kbd>ow</kbd>, log in again to check that it works, and try to
+log in a third time with the wrong password to show off rejection on client
+and server side.
+</p>
+
+
+<table border="1" style="background-color:lightblue;">
+
+
+<tr>
+  <td width="50%">
+  <pre>
+%: th -s client.th -p 4385
+Talk is cheap. Wisdom is Cheeper.
+Name: Bard
+Password: ow
+Hi, Bard! Welcome to Cheeper!
+But Cheeper can't do anything else yet, so ... bye.
+
+%: th -s client.th -p 4385
+Talk is cheap. Wisdom is Cheeper.
+Name: Bard
+Password: ow
+Hi, Bard! Welcome back to Cheeper!
+But Cheeper can't do anything else yet, so ... bye.
+
+%: th -s client.th -p 4385
+Talk is cheap. Wisdom is Cheeper.
+Name: Bard
+Password: ow-ow-ow-ow-ow
+I'm sorry, but that didn't work for some reason. </pre>
+  </td>
+  <td width="50%">
+<pre>
+%: th -s server.th -p 4260
+Cheeper server starting.
+Registering Bard with ow
+Bard logged back in.
+Someone thought Bard's password was 'ow-ow-ow-ow-ow', the loon!
+</pre>
+</td>
+</tr>
+</table>
+
+<h3><kbd>tut03/client</kbd></h3>
+
+<p>
+The client code isn't greatly different from last time, but we do get a couple
+new constructs.
+</p>
+
+<pre>
+// File: tut03/client.th
+spawn client {
+  body{
+    println("Talk is cheap. Wisdom is Cheeper.");
+    name = readln("Name: ");
+    password = readln("Password: ");
+    server = site("localhost", 4260);
+    identity = {: name:name, password:password :};            // (A)
+    loginRes = server <-> login(identity);
+    if(loginRes == null) {                                    // (B)
+        println("I'm sorry, but that didn't work for some reason.");
+    }
+    else {
+        println(loginRes);
+        println("But Cheeper can't do anything else yet, so ... bye.");
+    }
+  }body
+}client;
+
+</pre>
+
+<p>
+Line <kbd>(A)</kbd> is our first sight of the <b>record</b>, Thorn's
+lightweight construct for packing up a few values into one.  It's loosely like
+a RECORD in Pascal, a struct in C, or an object with all public fields and no
+methods in Java.  It associates a few names to a few values. For example, 
+<kbd>{: a:1, b:2 :}</kbd> associates the value 1 with the name <kbd>a</kbd>,
+and the value 2 with the name <kbd>b</kbd>. <kbd>{: :}</kbd> is an empty
+record with no fields.  There are a few ways to get values <i>out</i> of
+records; we'll see one on the server.
+</p>
+
+<p>
+(Incidentally, if <kbd>{: ... :}</kbd> is annoyingly large, Thorn accepts 
+the synonym <kbd>&#8249; ... &#8250;</kbd> -- if you can figure out how to
+type it, and arrange for the proper file codings.  On a Mac, with US Extended
+key bindings, this is shift-option-3 and shift-option-4.)
+</p>
+
+<p>
+The record on line <kbd>(A)</kbd>, then associates the name that the user
+typed with <kbd>name</kbd>, and the password with <kbd>password</kbd>.  By
+some coincidence, we had bound the name as <kbd>name</kbd> in the code as
+well, and the password to <kbd>password</kbd>.  This coincidence happens so
+often that Thorn has an abbreviation for it.  <kbd>{: a :}</kbd> is an
+abbreviation for <kbd>{: a : a :}</kbd>.  Line <kbd>(A)</kbd> could have been
+coded as simply:
+<pre>
+    identity = {: name, password :}; /* (A') */
+</pre>
+</p>
+
+<p>
+The other new concept is the <kbd>if</kbd> statement. It's a bit more powerful
+than <kbd>if</kbd> in C or Java or what have you, as we will see later.  Thorn
+has the usual Boolean values <kbd>true</kbd> and <kbd>false</kbd>, and the
+familiar C-style Boolean operations of <kbd>&&</kbd> for short-circuiting
+<b>and</b>, <kbd>||</kbd> for short-circuiting <b>or</b>, and <kbd>!</kbd>
+for <b>not</b>.  (Thorn also uses <kbd>A ^^ B ^^ C ^^ D</kbd> to tell if
+exactly one of <kbd>A</kbd>, <kbd>B</kbd>, <kbd>C</kbd>, and <kbd>D</kbd> is
+true.  This is not quite the same as the <kbd>^</kbd> exclusive-or operation
+in some other languages, which would check that an odd number of those
+variables were true.)
+</p>
+
+<p>
+Thorn also has <kbd>null</kbd>, a value which means "nothing" or "failure".  
+</p>
+
+<p>
+This <kbd>if</kbd> looks familiar: if the login result is null, do one thing;
+if it's not null, do something else. The client and server have to have the
+same interpretation of the result of the login command: <i>e.g.,</i> if the
+server returnde <kbd>false</kbd> for failure and the client
+expected <kbd>null</kbd> for failure, the two would get confused. In this
+case, the server wants to return more information than just <kbd>true</kbd>
+for success; it's sending a cheerful welcome message for the user as the
+success result. This pattern -- send back a useful non-<kbd>null</kbd> result
+on success and <kbd>null</kbd> on failure -- is idiomatic Thorn, and used all
+over. 
+</p>
+
+<p>
+<b>Thorn Convention: booleans:</b> A function that <i>just</i> returns success or
+failure should return a boolean value, <kbd>true</kbd> or <kbd>false</kbd> --
+and the name of the function should end with a <kbd>?</kbd>.  For
+example, <kbd>prime?(n)</kbd> is the conventional name of a function to tell
+whether <kbd>n</kbd> is prime or not, and to return a boolean result.  
+</p>
+
+<p>
+<b>Thorn Convention: nulls:</b> A function which can either succeed and
+produce some other information, or fail with no further information, should
+return a non-null value on success and a null value on failure. Its name
+should not end with a <kbd>'?'</kbd>. For example, a
+function <kbd>factor(n)</kbd> which computed a factor of <kbd>n</kbd> if there
+is one should return an integer factor, or <kbd>null</kbd> for failure.  (Later
+on we will see how to say "It succeeded, and the answer was null" as distinct
+from "It failed".)
+</p>
+
+<h3><kbd>tut03/server.th</kbd></h3>
+
+<p>
+Now, here's the server code.  It has a number of new features.
+</p>
+
+<pre>
+// File: tut03/server.th
+spawn server {
+  users = table(name){password;};                         // (C)
+  sync login({:name: n, password: pw:}) {                 // (D)
+     userRow = users(n);                                  // (E)
+     if (userRow == null) {
+        // No row there, so register a new user.
+        users(n) := {: password:pw :};                    // (F)
+        println("Registering $n with $pw");
+        return "Hi, $n! Welcome to Cheeper!";             // (G)
+     }
+     else if (userRow ~ {: password: $(pw) :}) {          // (H)
+        println("$n logged back in.");
+        return "Hi, $n! Welcome back to Cheeper!";
+     }
+     else {
+        // Wrong password.
+        println("Someone thought $n's password was \'$pw\', the loon!");
+        return null;
+     }
+  }
+  body{
+    println("Cheeper server starting.");
+    while (true) {                                        // (I) 
+      serve;
+    }
+  }body
+}server;
+
+</pre>
+
+<h4><kbd>(C)</kbd> A Taste of Tables</h4>
+
+<p>
+Line <kbd>(C)</kbd> has two new features. First of all, Thorn allows binding
+names to values at the top level of a <kbd>spawn</kbd>. If we wanted to give a
+new name to the number 1 throughout the component, inside the <kbd>sync</kbd>
+and the <kbd>body</kbd>, we could have <kbd>one = 1;</kbd> at
+line <kbd>(A)</kbd>.  Indeed, the <kbd>users</kbd> table is available everywhere.
+</p>
+
+<p>
+More important is the <kbd>table</kbd> construct.  Tables are one of Thorn's
+main mutable data structures -- one of the main ways to keep track of a lot of
+information in a way that can change from moment to moment.  They are
+a high-powered variant on arrays, hash tables, <kbd>java.util.Map</kbd>,
+dictionaries in Python, and so forth.  A table has one or more <b>keys</b>,
+and zero or more <b>non-keys</b>.  The table can be indexed or subscripted by
+its keys, and will produce a record containing the keys and the non-keys.  
+</p>
+
+<p>
+Tables are Thorn values. The expression <kbd>table(name){password;}</kbd>
+creates a new table. The rest of line <kbd>(C)</kbd> gives that new table the
+name <kbd>users</kbd>.  The server component will use the same table for as
+long as it lives.  (It's not a database table, just another runtime object.
+If we want it to live for longer than the server component -- and we will! --
+we'll have to make arrangements for it to do so ourselves.)
+</p>
+
+
+<p>
+Tables can have multiple keys. In this server, each name is a distinct
+account. But if we wanted, <i>e.g.</i>, to keep track of the user's machine,
+so that the Bard working from Melyl was a different account than the Bard
+working from Nethry, we could have two subscripts just as easily as
+one: <kbd>table(user, machine){password;}</kbd>  
+</p>
+
+<p>
+Similiarly, tables can have multiple non-keys. Right now, the <kbd>users</kbd>
+table has only one, the password.  As Cheeper grows, we'll add more non-keys
+for other things related to the user.  
+</p>
+
+<h4><kbd>(D)</kbd> A Taste of Pattern Matching</h4>
+
+<p>
+We've seen the <kbd>{: ... :}</kbd> record constructor, which creates new
+records.  Creating new records (and other composite values) is certainly
+useful.  Even more useful is to be  able to pick information out of them.
+Thorn has an extensive set of <i>patterns</i>, used in many places, which
+allow you to test whether a value has a particular structure, and, if it does,
+extract selected pieces of information from it.
+Whenever possible, patterns look like the objects they're supposed to match.  
+</p>
+
+<p>
+The <kbd>{: name: n, password: pw :}</kbd> on line <kbd>(D)</kbd> is a
+pattern. It matches a record which has <kbd>name</kbd> and <kbd>password</kbd>
+fields -- and possibly other fields as well. It also binds <kbd>n</kbd> to
+the <kbd>name</kbd> field and <kbd>pw</kbd> to the <kbd>password</kbd> field
+in the body of the <kbd>sync</kbd>. (As with record constructors, a field
+like <kbd>name</kbd> appearing alone is an abbreviation
+for <kbd>name:name</kbd>. We often write this sort of pattern as just <kbd>{:
+name, password :}</kbd>, making <kbd>name</kbd> and <kbd>password</kbd> be
+variables for the name and password in the body. Using the field names as
+variable names is a convenient Thorn idiom.)
+</p>
+
+<p>
+We'll get back to pattern matching later. 
+</p>
+
+<h4><kbd>(E)</kbd>: Table Subscripting</h4>
+
+<p>
+<kbd>users(name)</kbd> in the table <kbd>users</kbd> for an entry with key
+equal to the user's name <kbd>n</kbd>. (The syntax is the same as function
+call: if <kbd>users</kbd> were a function, the same expression would call that
+function on one argument.) It returns <kbd>null</kbd> if there's no entry with
+that key, following the Thorn convention.
+</p>
+
+<p>
+If there <i>is</i> an entry with that key, <kbd>users(n)</kbd> returns the
+whole <i>row</i>: a record with all the fields of the table, both key and
+non-key. In this case, it will return a record of the form <kbd>{: name : n',
+password : pw' :}</kbd>, where <kbd>n'</kbd> is the name in the table -- the
+same as <kbd>n</kbd> -- and <kbd>pw'</kbd> is the password from the table,
+which might not be the same password that the user typed just now.  
+</p>
+
+<p>
+<b>Aside:</b> Yes, variable names can have single quotes in them.  At the end
+of a name, they're conventionally used as primes: <kbd>n'</kbd> is a variable
+that's being used sort of like <kbd>n</kbd> somehow.  Inside of a name,
+they're useful as in English: <kbd>it'sNotThere = ! someFile.exists?();</kbd>.
+</p>
+
+<h4><kbd>(F)</kbd> Entering a Row into a Table</h4>
+
+<p>
+If the user named <kbd>n</kbd> isn't in the table already, we'll enter them.
+One way to do this is given on line <kbd>(F)</kbd>.  This looks like assigning
+to <kbd>users(n)</kbd> a record whose fields are all the non-key fields of the
+table.   This gives enough information for Thorn to figure out what's supposed
+to go in the table -- the key field is a subscript to <kbd>users</kbd>, and
+the non-key field is an element of the record. 
+</p>
+
+<p>
+Incidentally, one way to delete an entry from a table is to
+assign <kbd>null</kbd>, thus: <kbd>users(n) := null;</kbd>
+</p>
+
+<h4><kbd>(G)</kbd>: Returning values with <kbd>return</kbd></h4>
+
+<p>
+In <kbd>tut02</kbd>, we saw that a <kbd>sync</kbd> would return the value of
+the last statement in its body.  Sometimes that's not convenient, or not
+clear, so Thorn has a <kbd>return</kbd> statement as well, which can return a
+value from anywhere in a <kbd>sync</kbd> (or function or method) body.  
+</p>
+
+<p>
+In this code, the <kbd>return</kbd> is optional. Without it, the value
+of <kbd>login</kbd> would be the value of the its last
+statement, <i>viz.</i> <kbd>if</kbd> inside of it.  In the case of a new user,
+that would be the value of the statement at <kbd>(G)</kbd>.  I
+wrote <kbd>return</kbd> there anyways. That makes it clearer that the value is
+supposed to be returned.  Also, if we somehow added code after
+the <kbd>if</kbd> later on, the <kbd>return</kbd> would still return its value.
+</p>
+
+<h4><kbd>(H)</kbd> More Pattern Matching </h4>
+
+<p>
+This statement shows off three things: 
+</p>
+
+<ol>
+<li>The matching operation <kbd>~</kbd></li>
+<li>The interpolation pattern <kbd>$(...)</kbd></li>
+<li>Nested patterns</li>
+</ol>
+
+<p>
+The <kbd>~</kbd> operation is pretty simple.  <kbd><i>E</i> ~ <i>P</i></kbd>
+tries to match the value of the expression <kbd><i>E</i></kbd> against the
+pattern <kbd><i>P</i></kbd>.  If the match succeeds, it returns true (and
+binds anything that <kbd><i>P</i></kbd> binds).  If the match fails, it
+returns false.  Since <kbd>~</kbd> returns booleans, you'll often see and
+write it in the test of an <kbd>if</kbd>.
+</p>
+
+<p>
+The interpolation pattern <kbd>$( <i>E</i> )</kbd> matches just one thing: the
+value of the expression <kbd><i>E</i></kbd>.  For example, <kbd>$(2+3)</kbd>
+matches just the number 5, and so <kbd>5 ~ $(2+3)</kbd> will return true.
+In <kbd>(H)</kbd>, we're using <kbd>$( pw )</kbd> to match the value of the
+variable <kbd>pw</kbd>, holding the password.
+</p>
+
+<p>
+Patterns can be nested freely. So, up above on line <kbd>(C)</kbd>, we saw
+that <kbd>{: password:pw :} </kbd> matched a record with a field
+named <kbd>password</kbd>, and bound the value of that field to the
+variable <kbd>pw</kbd>.  (More precisely, it tries to match the value of the
+field against a pattern which is just a variable.  Variables match anything,
+though, so that match succeeds, and incidentally binds the variable to the
+thing that was matched.) 
+</p>
+
+<p>
+On line <kbd>(H)</kbd>, the nested pattern is the interpolation
+pattern <kbd>$( pw )</kbd>, which matches the value of the
+variable <kbd>pw</kbd>. So, the whole pattern <kbd>{: password: $(pw) :}</kbd>
+matches a record with a password field equal to the value of the
+variable <kbd>pw</kbd>.  
+</p>
+
+<p>
+This test could have been written in a more C/Java style as <kbd>if
+(userRow.password == pw)</kbd>. When we see how pattern matching
+and <kbd>if</kbd> bind variables, we'll see why Thorn programmers like to
+use <kbd>~</kbd> in tests.
+</p>
+
+<h4><kbd>(I)</kbd>: <kbd>while</kbd> loops</h4>
+
+<p>
+Thorn has the familiar <kbd>while</kbd> loop.  The loop on <kbd>(I)</kbd>
+will, of course, run indefinitely, until something external happens to stop
+it.  Each time through the loop, <kbd>server</kbd> accepts
+one <kbd>hello</kbd> communicator.
+For this example, we'll need to press control-C in that shell window.
+That's not a good approach for a high-quality server, but it's enough for this
+example. 
+</p>
+
+
+
+
+<h2>Cheeper: Chirps</h2>
+
+<p>
+The first piece of actual content for Cheeper has to be the ability to chirp.
+A user can send a wise phrase to the server, which the server will remember
+and tell to others.  
+</p>
+
+<h3>The Interaction</h3>
+
+
+<p>
+Here's a simple interaction.  The command lines have changed somewhat, adding
+an extra argument <kbd>-m tut04/Modules.thm</kbd> to share some definitions.
+In this transcript, I start the server and client.  Then I log in, produce two
+items of wisdom, and log out with the <b>quit</b> command.  I log back in and
+use the <b>list</b> command to see all the wisdom currently in the system.  In
+the other window, the server prints out a trace of important events in the
+history of the system, so that I can tell it's doing something.
+</p>
+
+<table border="1">
+<tr>
+  <td>
+<pre>
+$ th -m tut04/Modules.thm -s tut04/client.th -p 4385
+Talk is cheap. Wisdom is Cheeper.
+Name: Bard
+Password: ow
+Hi, Bard! Welcome to Cheeper!
+Chirp: I like cheese!
+Thank you for your wisdom.
+Chirp: I like theramin music!
+Thank you for your wisdom.
+Chirp: quit
+$ th -m tut04/Modules.thm -s tut04/client.th -p 4385
+Talk is cheap. Wisdom is Cheeper.
+Name: Bard
+Password: ow
+Hi, Bard! Welcome back to Cheeper!
+Chirp: list
+[0] Bard said, 'I like cheese!'.
+[1] Bard said, 'I like theramin music!'.
+Chirp: quit
+$ 
+</pre>
+</td>
+  <td>
+<pre>
+$ th -m tut04/Modules.thm -s tut04/server.th -p 4260
+Cheeper server starting.
+Registering Bard with ow
+doChirp: [0] Bard said, 'I like cheese!'.
+doChirp: [1] Bard said, 'I like theramin music!'.
+Bard logged back in.
+</pre></td>
+</tr>
+
+
+
+</table>
+
+
+<h3><kbd>tut04/Modules.thm</kbd></h3>
+
+<p>
+In good object-oriented style, we'll define a class <kbd>Chirp</kbd> for
+chirps.  Both client and server need to have access to the <kbd>Chirp</kbd>
+class.  So, we will define <kbd>Chirp</kbd> in a place which both components
+can access: a <i>module</i>.  Modules provide code sharing, plus ways to
+encapsulate related constructs into a single place, and other things as well.
+The module code looks like this: 
+</p>
+
+
+<pre>
+// File: tut04/Modules.thm
+module CHEEPER{                                                         // (4A)
+  class Chirp(philosopher, wisdom, wisNo) : pure {                      // (4B)
+    def str()="[$wisNo] $philosopher said, '$wisdom'.";              // (4C)
+  }
+}CHEEPER
+</pre>
+
+<h4>Modules and Classes</h4>
+
+<p>
+On line <kbd>(4A)</kbd>, the module is declared.   Modules are generally put
+in a file with extension <kbd>.thm</kbd>.  A module can contain class and
+function definitions, constant bindings, and a few other things.
+</p>
+
+<p>
+<kbd>(4B)</kbd> is the class definition.  This defines a class
+called <kbd>Chirp</kbd>.   The <kbd>(philosopher, wisdom, wisNo)</kbd>
+provides a few things: 
+</p>
+<ol>
+<li>Three <i>member fields</i>,
+  called <kbd>philosopher</kbd>, <kbd>wisdom</kbd>, and <kbd>wisNo</kbd>.
+  These fields are public -- they can be read from outside the object.
+  They are constant (<i>cf.</i>  <kbd>final</kbd> in Java), and cannot be 
+  changed after the chirp is constructed.
+</li>
+<li>A <i>constructor</i>, much like constructors in Java or C++.  The
+  expression <kbd>Chirp(phil, "I like cheese", 3)</kbd> creates a new Chirp
+  with <kbd>philosopher==phil</kbd> and so forth.
+</li>
+<li>A <i>pattern</i>, so that chirps can be taken apart in the same way that
+  records can.  <kbd>ch ~ Chirp($(phil), _, _)</kbd> is true of all chirps
+  from <kbd>phil</kbd>. 
+</li>
+</ol>
+
+<p>
+The <kbd>:pure</kbd> in the class definition says that this class
+is <i>pure</i>.  Objects of pure class -- <i>a.k.a.</i> pure objects -- cannot
+have any mutable state.  Any computation only involving pure objects always
+returns the same result.  Pure objects are the only objects which can be
+transmitted from one process to another.  (Other values, like strings and
+records and lists, can be transmitted too -- as long as they are immutable.)
+</p>
+
+<p>
+As seen on <kbd>(4C)</kbd>, methods are defined by the <kbd>def</kbd>
+keyword.  A short method definition can be written on one line, with the
+syntax <kbd>def m(x) = SomeExp;</kbd>.  (Longer ones can have blocks of
+code in braces.)  The <kbd>str()</kbd> method is the standard method for
+converting an object to a string, like <kbd>toString()</kbd> in Java.  String
+interpolation can come in quite handy in defining <kbd>str()</kbd> methods.
+</p>
+
+<h3><kbd>tut04/client.th</kbd></h3>
+
+<p>
+We'll make some necessary changes to the client, and an unnecessary one as
+well. The unnecessary one is refactoring: we'll move the login code into a
+function, so that the main body of the client looks reasonable.  The necessary
+changes are the ones that add the "quit", "list", and chirp commands.
+</p>
+
+<pre>
+// File: tut04/client.th
+spawn client {
+   
+  import CHEEPER.*;                                             // (4D)
+   
+  server = site("localhost", 4260);                             // (4E)
+  var goon := true;                                             // (4F)
+  var identity;                                                 // (4G)
+  
+  fun login() {                                                 // (4H)
+    name = readln("Name: ");
+    password = readln("Password: ");
+    identity := {: name:name, password:password :};             // (4I)
+    loginRes = server <-> login(identity);
+    if(loginRes == null) {                                    
+        println("I'm sorry, but that didn't work for some reason.");
+    }
+    else {
+        println(loginRes);
+    }
+  }login
+      
+  fun doUserCommand() {
+     cmd = readln("Chirp: ");
+     match(cmd) {                                               // (4J)
+        "quit"    => {goon := false;}                           // (4K)
+     |  "list"    => doList()                             
+     |  _         => {doChirp(cmd);}                            // (4L)
+     }match
+  }doUserCommand
+  
+  
+  fun doList() {
+     chirps = server <-> listChirps(identity);                  // (4M)
+     for( ch <- chirps ) {                                      // (4N)
+       println(ch);                                             // (4O)
+     }
+  }doList
+  
+  fun doChirp(wisdom) {
+     response = server <-> doChirp(identity, wisdom);
+     println(response);
+  }doChirp
+   
+  body{
+    println("Talk is cheap. Wisdom is Cheeper.");
+    login();
+    while(goon) {
+       doUserCommand();
+    }
+  }body
+}client;
+</pre>
+
+<p>
+The <kbd>import CHEEPER.*;</kbd> command, line <kbd>(4D)</kbd>, makes all the
+definitions in the CHEEPER module available to the client. 
+</p>
+
+<p>
+On <kbd>(4E)</kbd>, we compute the server's site, as before.  This binding is
+at the top level of the <kbd>spawn</kbd>, <i>outside</i> the body.  So, the
+variable <kbd>server</kbd> is available to the body, and to all the functions
+that we define.
+</p>
+
+<p>
+<kbd>(4F)</kbd> defines a mutable variable.  Variables bound with <kbd>=</kbd>
+can't be assigned or changed, and in a great many cases that is desirable.
+However, sometimes it is convenient to have variables that can change -- we'll
+see a chirp counter in the server code.  Thorn allows mutable variables, but
+they have to be declared with <kbd>var</kbd>.  The assignment operation
+is <kbd>:=</kbd>, as in Pascal and Algol; the operation <kbd>=</kbd> is
+reserved for bindings and other definitions.  
+</p>
+
+<p>
+The variable <kbd>goon</kbd> (officially pronounced "go on") is used to
+control the main loop of the client. It is initially true, meaning "keep
+running". The "quit" command will set it to false.
+</p>
+
+<p>
+<kbd>(4G)</kbd> Variables can be declared and initialized at once, as in the
+previous line.  They can also be left uninitialized, as in <kbd>(4G)</kbd>.
+They have value <kbd>null</kbd> until they are set to something else.
+</p>
+
+<p>
+Line <kbd>(4H)</kbd> starts the definition of the <kbd>login</kbd> function.
+This function contains most of the body of the <kbd>tut03</kbd> example
+client: the code to handle logging on to the server.   Functions are declared
+by the <kbd>fun</kbd> keyword.  As with methods, one-expression function
+bodies can be written with <kbd>=</kbd>, as in <kbd>fun square(x)=x*x;</kbd>.
+Longer ones, like <kbd>login</kbd>, take a braced body.
+</p>
+
+<p>
+<kbd>(4I)</kbd> shows an assignment statement, using <kbd>:=</kbd>.  
+</p>
+
+<p>
+The <kbd>doUserCommand()</kbd> function is the heart of the client. It reads a
+command from the user, figures out what it is, and does it. We could
+use <kbd>if</kbd> statements, as in <kbd>tut03</kbd>. However, since we'll be
+asking many questions about the same value <kbd>cmd</kbd>,
+<kbd>(4J)</kbd> uses the <kbd>match</kbd> statement.  
+This has the general form <kbd>match(<i>E</i>){ 
+<i>P1</i> => <i>B1</i>
+| <i>P2</i> => <i>B2</i>
+...
+| <i>Pn</i> => <i>Bn</i>
+}
+</kbd>
+It evaluates its expression, and tries to match its value
+against <kbd><i>P1</i></kbd>.  If that succeeds, it
+evaluates <kbd><i>B1</i></kbd>.  If <kbd><i>P1</i></kbd> doesn't match,
+the <kbd>match</kbd> statement tries <kbd><i>P2</i></kbd>, and so on until
+something matches.  It is a runtime error if nothing matches.  
+</p>
+
+<p>
+Line <kbd>(4K)</kbd> handles the <b>quit</b> command, by setting <kbd>goon :=
+false;</kbd>.  The next line does a function call, and so forth.
+</p>
+
+<p>
+Line <kbd>(4L)</kbd> uses the <i>wildcard
+pattern</i> <kbd>_</kbd>.  <kbd>_</kbd> matches anything.
+Since <kbd>match</kbd> causes a runtime error if no clause succeeds, 
+having a final clause with pattern <kbd>_</kbd> is quite common.  
+</p>
+
+<p>
+The <kbd>doList</kbd> function asks the server for all the chirps in the
+system. The server will reply with a list of <kbd>Chirp</kbd> objects
+on <kbd>(4M)</kbd>. Lists are a built-in datatype in Thorn, with plenty of
+functions and specialized control structures for working with them.  One of
+these is the <kbd>for</kbd> command on <kbd>(4N)</kbd>, which executes its
+body once for each element <kbd>ch</kbd> in the list.  On <kbd>(4O)</kbd>, the
+client prints the chirps; <kbd>println</kbd>, like most functions that expects
+strings, turns arbitrary objects into strings by calling
+their <kbd>str()</kbd> method.
+</p>
+
+<h3><kbd>tut04/server.th</kbd></h3>
+
+<p>
+Here's the server code: 
+</p>
+
+<pre>
+// File: tut04/server.th
+spawn server {
+  import CHEEPER.*;                                        
+      
+  users = table(name){password;};  
+  
+  chirps = table(number){chirp;};                          
+  
+  var chirpNumber := 0;                                    
+                       
+  sync login({:name: n, password: pw:}) {                 
+     userRow = users(n);                                  
+     if (userRow == null) {
+        // No row there, so register a new user.
+        users(n) := {: password:pw :};                    
+        println("Registering $n with $pw");
+        return "Hi, $n! Welcome to Cheeper!";             
+     }
+     else if (userRow ~ {: password: $(pw) :}) {          
+        println("$n logged back in.");
+        return "Hi, $n! Welcome back to Cheeper!";
+     }
+     else {
+        // Wrong password.
+        println("Someone thought $n's password was \'$pw\', the loon!");
+        return null;
+     }
+  }
+
+  fun invalid({:name, password:}) =                             // (4P)
+     (null if users(name) ~ {: password: $(password) :}         // (4Q)
+          else +"You are not logged in as $name.");             // (4R)
+
+  sync doChirp(identity, wisdom) {
+     if (invalid(identity) ~ +msg)                              // (4S)
+        msg;
+     else {
+        chirp = Chirp(identity.name, wisdom, chirpNumber);      // (4T)
+        chirps(chirpNumber) := {: chirp :};
+        println("doChirp: $chirp");
+        chirpNumber += 1;                
+        "Thank you for your wisdom.";
+     }
+  }doChirp
+
+  sync listChirps(identity){
+     if (invalid(identity) ~ +msg) msg;
+     else {
+        %[chirp | for {: chirp :} <- chirps];                   // (4U)
+     }
+  }
+  
+  body{
+    println("Cheeper server starting.");
+    while (true) {                                         
+      serve;
+    }
+  }body
+}server;
+
+</pre>
+
+
+<p>
+The server code has some changes that are the kinds of things we've seen
+before. 
+The server, like the client, imports the module <kbd>CHEEPER</kbd>.  
+It defines a second table, <kbd>chirps</kbd>, recording all the chirps in the
+system by number.  <kbd>chirpNumber</kbd> is a server-wide mutable variable
+used to number the chirps as they come in.
+</p>
+
+<p>
+As our one and only concession to security at this point, we will require the
+client to transmit the <i>identity</i> of the user -- that is, a
+record <kbd>{: name, password :}</kbd>.    The actual client we have written
+never cheats, but, in general, distributed components should not trust each
+other.    Since each communicator on the server will have to check the user's
+identity, we'll encapsulate what we can conveniently.  The <kbd>invalid</kbd>
+function checks whether an identity is invalid -- either unknown user or
+wrong password.  It returns <kbd>null</kbd> if the identity <i>is</i> valid,
+or a helpful message if it is not.
+</p>
+
+<p>
+On <kbd>(4Q)</kbd>, observe Thorn's if-then-else expression. (We've already
+seen the <i>statement</i>.)  In the style of Python, it is <kbd><i>Etrue</i>
+if <i>Test</i> else <i>Efalse</i></kbd>.    If <kbd><i>Test</i></kbd> is
+true, <kbd><i>Etrue</i></kbd> will be returned; if it is
+false, <kbd><i>Efalse</i></kbd> will be returned.
+</p>
+
+
+
+<h4>if/bind Idiom</h4>
+
+<p>
+Line <kbd>(4S)</kbd> shows another central Thorn idiom. It is quite common in
+any computer program to look for something. If you find it, you use it. If you
+don't, you do something else.  The idiom in Thorn is: 
+<pre>
+   if ( lookForIt() ~ +thingFound ) {
+        useThing(thingFound);
+   }
+   else {
+        dealWithNotThere();
+   }
+</pre>
+</p>
+
+
+<p>
+This idiom uses the  <kbd>+ <i>E</i></kbd> operation
+(pronounced <i>"positively <kbd><i>E</i></kbd></i>") found in
+line <kbd>(4R)</kbd>, and the <kbd>+ <i>P</i></kbd> pattern found in
+line <kbd>(4S)</kbd>.  The <kbd>+<i>E</i></kbd> operation packages up the
+value of <kbd><i>E</i></kbd> in a way that ensures that it's not null.
+The <kbd>+<i>P</i></kbd> pattern reverses the process.  <kbd>null</kbd> does
+not match <kbd>+<i>P</i></kbd>.  If a non-null value is matched
+against <kbd>+<i>P</i></kbd>, the <kbd>+</kbd> operation is reversed, and the
+resulting value is matched against <kbd><i>P</i></kbd>.  
+</p>
+
+<p>
+If the user's identity is invalid, <kbd>invalid</kbd> packages up the failure
+message with <kbd>+</kbd>.  That package is matched against the
+pattern <kbd>+msg</kbd>.  The <kbd>+</kbd> in the pattern opens up the
+package; then the failure message is matched against the
+variable <kbd>msg</kbd>.  Variables match anything, and so that ends up
+binding the failure message to <kbd>msg</kbd>.
+</p>
+
+<p>
+Conversely, if the user's identity is valid, <kbd>invalid</kbd> returns null.
+Null does not match <kbd>+msg</kbd>, so the test in the <kbd>if</kbd> fails,
+and its <kbd>else</kbd> clause is executed.
+</p>
+
+<p>
+The other half of the idiom is the fact that pattern matches in the test of
+an <kbd>if</kbd> bind variables in the <i>then</i> clause: 
+</p>
+<pre>
+if ( {: x:1, y:2 :} ~ {: x, y :} ) {
+   println("x=1=$x and y=2=$y");
+} 
+else {
+   // x and y are not bound here.
+}
+</pre>
+
+<p>
+<b>Elaboration 1:</b> This even works if there are several pattern matches and
+other tests <kbd>&&</kbd>'ed together: 
+</p>
+<pre>
+if ( r1 ~ {: x, y, z :} && x > y && z ~ {: a, b, c :} {
+   print("x=$x, y=$y, z=$z, a=$a, b=$b, c=$c, and notice $x>$y too.");
+}
+else {
+  // none of x,y,z,a,b,c are bound here.
+}
+</pre>
+
+<p>
+<b>Elaboration 2:</b> That's <i>all</i> it works for.  
+</p>
+<pre>
+if (  (r~{:x,y:}) || (r==null)  ) {
+   // x and y are not bound here.
+   // Because the r~{:x,y:} might not have been true.
+}
+else {
+   // they're not bound here either.
+}
+</pre>
+
+
+<p>
+The file <kbd>tut04/assoc.th</kbd> has a simpler example of this idiom.  It
+defines a table with fields <kbd>x</kbd> and <kbd>y</kbd>.  
+</p>
+<pre>
+  t = table(x){y;};
+  t("yes"):= {: y:1 :};
+  t(null) := {: y:2 :};
+  t(1233) := {: y:3 :};
+</pre>
+<p>
+<kbd>x</kbd> is the key, but we want to look up <kbd>y</kbd>'s. We do this by
+iterating over the table, checking the <kbd>y</kbd> of each field in turn.
+When we find the desired value, we return <kbd>+x</kbd> -- answering in the
+positive that we did find that <kbd>y</kbd>, under key <kbd>x</kbd>. 
+</p>
+<pre>
+  fun lookup(myY) {
+    for ( {:x, y:} <- t) {
+       if (y == myY) return +x;
+    }
+    return null;
+  }
+</pre>
+
+<p>
+And here's <kbd>lookup</kbd> in action: 
+</p>
+<pre>
+  for ( myY <- [1,2,3,4] )
+  if (lookup(myY) ~ +myX) {
+     println("lookup($myY) found that t($myX) = {: y: $myY :}");
+  }
+  else {
+     println("There is no entry in t which has y=$myY.");
+  }
+</pre>
+
+<p>
+Running it produces the output:
+</p>
+<pre>
+$ th -f tut04/assoc.th -np
+lookup(1) found that t(yes) = {: y: 1 :}
+lookup(2) found that t(null) = {: y: 2 :}
+lookup(3) found that t(1233) = {: y: 3 :}
+There is no entry in t which has y=4.
+</pre>
+
+
+<p>
+<b>Fine Point:</b> For almost every value <kbd>v</kbd>, <kbd>+v ==
+  v</kbd>. 
+  <kbd>+3 == 3</kbd>, just like the usual meaning of the
+  unary <kbd>+</kbd> operation on integers. <kbd>+"You are not" == "You are
+  not"</kbd>, and similarly for objects, lists, records, booleans, and almost
+  everything else. This makes the <kbd>+</kbd> operation and pattern  pretty
+  efficient -- it almost never needs to allocate memory.  
+The main exception is <kbd>null</kbd>. <kbd>+v</kbd> <i>never</i> is null for
+  any <kbd>v</kbd>; that's the point of unary <kbd>+</kbd>.
+  So, <kbd>+null</kbd> is some specific non-null value, called
+  a <i>nullity</i>. The only purpose of <kbd>+null</kbd> is to allow Thorn to
+  have a test that returns the answer <i>"Yes, I found that thing you wanted,
+  and it is null."</i>. Of course, <kbd>+ + null</kbd> has to be different
+  from <kbd>+ null</kbd>, on the off chance that you want to say <i>"Yes, I
+  found it, and it is <kbd>+null</kbd>"</i>. And so on: you can
+  keep <kbd>+</kbd>'ing <kbd>null</kbd> as many times as you like, and you'll
+  always get different values.  
+  In practice, <kbd>+null</kbd> shows up occasionally, but 
+  I've never even needed <kbd>+ + null</kbd> in
+  any code except for test cases about how <kbd>+</kbd> works.
+</p>
+
+<p>
+<b>Note:</b> Because of the fine point, you can often get away without writing
+the <kbd>+</kbd> on the searching function. In line <kbd>(4R)</kbd>, the
+return value <kbd>"You are not logged in..."</kbd> is clearly a string, so
+the <kbd>+</kbd> operation leaves it unchanged; it could be omitted.  I
+recommend writing the <kbd>+</kbd> to emphasize that the function is intended
+to be used with a <kbd>+</kbd> pattern on the other side.
+</p>
+
+
+<h4><kbd>(4U)</kbd> Queries</h4>
+
+<p>
+Certain patterns operation show up constantly in programming. <i>E.g.,</i> you
+may have a collection of things, and want to do the same process to each thing
+and get the results as another collection. In Java with <kbd>java.util</kbd>
+collection classes, it's a bit clumsy. In languages that take their lists
+seriously, like Lisp and ML, this is a fairly easy thing to write. Thorn
+certainly takes its lists seriously.
+</p>
+
+<p>
+The query <kbd>%[chirp | for {: chirp :} <- chirps];</kbd> loops over the
+rows of the table <kbd>chirps</kbd>.  Each row has a <kbd>chirps</kbd> field,
+which (by the usual abbreviation of <kbd>x:x</kbd> as <kbd>x</kbd> in a
+record) is bound to <kbd>chirp</kbd>.  These values are collected into a list.  
+</p>
+
+<p>
+Thorn has a Swiss Army Knife of other queries, for searching collections,
+constructing tables, sorting, grouping, and so on.  We will see several more
+of them in later versions of Cheeper. Queries all begin with a <kbd>%</kbd>,
+so they're fairly easy to recognize.
+</p>

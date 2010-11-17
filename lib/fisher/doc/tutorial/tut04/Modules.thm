@@ -1,0 +1,5 @@
+module CHEEPER{
+  class Chirp(philosopher, wisdom, wisNo) : pure {                      //
+    def str()="[$wisNo] $philosopher said, '$wisdom'.";              // 
+  }
+}CHEEPER

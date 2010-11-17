@@ -1,0 +1,6 @@
+words = "corpus.txt".file.contents.split("\\W+");
+wc = %group(word = w.toLower){n=%count; | for w <- words};
+sorted = %sort["%3d %s".format(n,word) 
+               %> n %< word
+               | for {:word, n:} <- wc];
+println(sorted.joined("\n"));

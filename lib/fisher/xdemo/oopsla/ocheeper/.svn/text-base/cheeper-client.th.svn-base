@@ -1,0 +1,66 @@
+spawn cheeper_client {
+
+  import CLIENT.*;
+
+  fun slogan() = 
+    [
+      "Not as nice for half the price!",
+      "Talk is cheep. Wisdom is Cheeper.",
+      "Cheeper by the dozen."
+    ].rand();
+
+  fun printChirps(L) {
+     for (chirp <- L) println(chirp);
+  }
+
+  fun printHelp() {
+    println("/q: quit client");
+    println("/x: quit client and server");
+    println("/a: print all chirps");
+    println("/ : print all chirps since the last time you used the '/' command");
+    println("/t: print the top five chirps");
+    println("/?: this help message");
+    println("+n: vote for chirp number n");
+    println("-n: vote against chirp number n");
+    println("/s; tell server to save");
+    println("/r: tell server to reload from saved");
+    println("Anything else is a chirp of your wisdom!");
+  }
+
+  body{
+    println(slogan());
+    
+    username = readln("Who are you: ");
+    password = readln("Password: ");
+    server = cheeperServer();
+    me = {:username, password:};
+    
+    res = server <-> register(me); 
+
+    println("-- Welcome to Cheeper.  /? for help --");
+    
+    var goon := true;
+    while(goon) {
+      s = readln("Chirp:").trim();
+      match (s) {
+        "/q" => {goon := false;}
+      | "/x" => {goon := false; server <-- plz_die();}
+      | "/s" => {println(server <-> writeDB());}
+      | "/r" => {println(server <-> readDB());}
+      | "/a" => {printChirps(server <-> allChirps() ); }
+      | "/t" => {printChirps(server <-> topChirps(5) ); }
+      | "/"  => {printChirps(server <-> unseen(me));}
+      | "/.*" /_ => {printHelp();}
+      | "\\+ *([0-9]+)" / [ .int(n) ] => 
+           {println(server <-> vote(n, true, me));}
+      | "\\- *([0-9]+)" / [ .int(n) ] => 
+           {println(server <-> vote(n, false, me));}
+
+      | _ => {
+          response = server <-> chirp(s, me);
+          println(response);
+        }
+      }match
+    }while
+  }body
+}cheeper_client;

@@ -1,0 +1,14 @@
+{
+  import WHERE.*;
+  
+  reset();
+  
+  f = tmp.file("scribble.tmp");
+  ~!@eq(f.contents(), null)@!~  ;
+  byby = [0, 12, 24, 36, 48];
+  f.writeBytes(byby.asBytes());
+  ybyb = f.readBytes();
+  ~!@eq(byby, ybyb.lst())@!~  ;
+  
+  
+}

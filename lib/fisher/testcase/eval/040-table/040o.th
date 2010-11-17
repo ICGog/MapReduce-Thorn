@@ -1,0 +1,31 @@
+{
+  t = table(a) {var b;};
+  fun it's(l) {
+    st = %sort( r %< r.a | for r <- t );
+    ~!@eq(st, l);
+    }
+  fun hey(a, b) {
+    t(a) := {: b :};
+    {: a, b :};
+    }
+  
+  var u := hey(1,"by Saruman's team");
+  it's([u]);
+  
+  t(1).b := 2;
+  u := ‹a:1, b:2›;
+  it's([u]);
+  
+  ~!@bad(({
+    t(2).b := 'oh dear, this row doesn\'t exist';
+    }))@!~  ;  
+  
+  var m := hey(2, "by Dra's imaginary immature blowfish");
+  it's([u,m]);
+  m := ‹a:2, b:"by Yan-C-Bin's angel"›;
+  t(2).b :=    "by Yan-C-Bin's angel";
+  it's([u,m]);
+  
+  
+  
+}

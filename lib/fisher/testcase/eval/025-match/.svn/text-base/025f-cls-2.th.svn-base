@@ -1,0 +1,44 @@
+{
+  class A {
+     val a;
+     new A(a') { a = a'; }
+  }
+  class B extends A {
+     val b; 
+     new B(a', b') {new@A(a'); b=b'; }
+  }
+  class C {
+     val c;
+     new C(c') { c = c'; }
+  }
+  class D extends C {
+     val d; 
+     new D(c', d') {new@C(c'); d=d'; }
+  }  
+  class E extends B,D {
+     val e;
+     new E(a', b', c', d', e') {new@B(a',b'); new@D(c',d'); e=e'; }
+  }
+  
+  if (E(1,2,3,4,5) ~ ‹a,c,e›:E) {
+     ~!@eq(a,1)@!~  ;~!@eq(c,3)@!~  ;~!@eq(e,5)@!~  ;
+  }
+
+  if (E(1,2,3,4,5) ~ _:A) ~!@hit()@!~  ; else { ~!@hit()@!~ 0 ; }
+  if (E(1,2,3,4,5) ~ _:B) ~!@hit()@!~  ; else { ~!@hit()@!~ 0 ; }
+  if (E(1,2,3,4,5) ~ _:C) ~!@hit()@!~  ; else { ~!@hit()@!~ 0 ; }
+  if (E(1,2,3,4,5) ~ _:D) ~!@hit()@!~  ; else { ~!@hit()@!~ 0 ; }
+
+  ~!@eq(A(1) ~ _:A, true)@!~  ;
+  ~!@eq(A(1) ~ _:B, false)@!~  ;
+  ~!@eq(A(1) ~ _:C, false)@!~  ;
+  ~!@eq(A(1) ~ _:D, false)@!~  ;
+  ~!@eq(A(1) ~ _:E, false)@!~  ;
+
+  ~!@eq(B(1,2) ~ _:A, true)@!~  ;
+  ~!@eq(B(1,2) ~ _:B, true)@!~  ;
+  ~!@eq(B(1,2) ~ _:C, false)@!~  ;
+  ~!@eq(B(1,2) ~ _:D, false)@!~  ;
+  ~!@eq(B(1,2) ~ _:E, false)@!~  ;
+
+}

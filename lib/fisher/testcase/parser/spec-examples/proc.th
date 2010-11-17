@@ -1,0 +1,19 @@
+//SEQ
+{
+// Compute the length of list L in a very stupid way indeed.
+p = spawn{
+  var n := 0;
+  async bump(v) { n := n + 1;} 
+  sync tell() {n;}
+  var goOn := true;
+  async plzDie() { goOn := false;}
+  body{
+    while (goOn) { serve; }
+  }
+  }spawn; 
+
+for (v <- L) p <-- bump(v);
+n1 = p<-> tell() timeout(100);
+p <-- plzDie();
+
+}

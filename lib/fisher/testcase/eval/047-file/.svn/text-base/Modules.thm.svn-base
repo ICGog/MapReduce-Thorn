@@ -1,0 +1,12 @@
+module WHERE {
+  tmpfilename = "/tmp/thorntest";
+  tmp = tmpfilename.dir();
+  fun reset() {
+     unless (tmp.exists?()){
+       tmp.mkdir();
+     }
+     for(f <- tmp.files()) {
+        f.del!();
+     }for
+  }reset
+}

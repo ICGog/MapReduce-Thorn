@@ -1,0 +1,19 @@
+I keep wanting to put type/pattern constraints on class parameters: 
+
+I wrote: 
+  class Ingredient {
+    val name;
+    val allergen?;
+    val unit; 
+    new Ingredient(n':string,  a': bool, u': Unit) {
+       name = n';
+       allergen? = a';
+       unit = u';
+    }
+    method str() = name;
+  }
+
+But why not:
+  class Ingredient(name: string, allergen?: bool, unit: Unit) { 
+    method str() = name;
+  }

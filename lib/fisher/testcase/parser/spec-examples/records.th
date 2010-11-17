@@ -1,0 +1,5 @@
+//STMT
+{
+ a = {: a:a, a:a, a:a :};
+ b = {: a:fn x = 1 , b: 1 if c else b+1 :};
+}

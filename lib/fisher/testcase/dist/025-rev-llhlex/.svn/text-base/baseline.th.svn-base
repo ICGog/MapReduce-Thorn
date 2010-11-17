@@ -1,0 +1,14 @@
+spawn baseline {
+  sync baseline_sync(a,b) from FROM envelope ENVELOPE prio 1 {
+     "baseline_sync_body";
+  }
+  async baseline_async(a,b) from FROM envelope ENVELOPE prio 2 {
+     "baseline_async_body";
+  }
+  body{
+     while(false) serve;
+    ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}baseline;

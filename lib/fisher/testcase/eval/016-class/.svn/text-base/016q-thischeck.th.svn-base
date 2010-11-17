@@ -1,0 +1,17 @@
+{
+  class C(){
+     o = ord();
+     def pok(n){
+        o @= n;
+     }
+     def plotz(){
+        for(i <- 1 .. 10) this.pok(i);
+     }
+     def ooh() = o.lst();
+  }C
+  
+  c = C();
+  c.plotz();
+  ~!@eq(c.ooh(), [1,2,3,4,5,6,7,8,9,10])@!~  ;
+  
+}

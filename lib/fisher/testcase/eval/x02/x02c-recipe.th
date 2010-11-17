@@ -1,0 +1,82 @@
+{
+  import TECHNIQUES.*;
+  import INGR.*;
+
+  class Step(technique, ingrs, text) {}
+  
+/*
+  fun step(technique: Technique, 
+    ingrs && [ (_:Ingredient) ... ],
+    text: string) = 
+    Step(technique, ingrs, text);    
+*/
+
+  fun step(technique, ingrs, text) {
+    ~!@assert(technique :? Technique)  ;
+    ~!@assert(ingrs ~ [ _:Ingredient ... ])  ;
+    ~!@assert(text ~ _:string) ;
+    Step(technique, ingrs, text);
+    }
+    
+
+  class Recipe{
+    val ingr;
+    val steps; 
+    val name;
+    val description;
+    new Recipe(name':string, 
+      ingr' && [ (_:Ingredient)... ],
+      steps' && [ (_:Step)... ],
+      description': string
+      ){
+         ingr = ingr';
+         steps = steps';
+         name = name';
+         description = description';
+         // TODO -- once object equality works, do this: 
+         /*
+         ~!@assert(
+           %every(s.ingrs.subset(ingr) | for s <- steps)
+         )@!~  ;
+         */
+      }
+    def preheat() = 
+      %first( temp %none null
+            | for {: technique: (it.uses?(oven))? && {: temp :}  :} <~ steps 
+            );
+  }Recipe
+  
+  recipes = table(name){map recipe; val contributor;};
+
+  fun make_recipe(name, ingr', steps, contributor, desc) {
+    recipe = Recipe(name, ingr', steps, desc);
+    recipes(name) := {: recipe, contributor :};
+    recipe;
+  }
+  
+  shortbread = make_recipe("shortbread", 
+      [flour, sugar, butter],
+      [
+        step(mix, [flour, sugar, butter], "in a bowl, 'til smooth"),
+        step(bake(350, 15), [flour, sugar, butter], "in the oven")
+      ],
+      "Timeless Jane",
+      "Simple, rich, and delicious."
+      );
+
+  ~!@eq(shortbread.preheat(), 350)@!~  ;
+  
+  fried_eggs = make_recipe("fried eggs",
+       [egg * 2, oil],
+       [
+          step(fry(7), [egg], "sizzly!")
+       ],
+       "Emeril",
+       "A true classic.");
+       
+       
+  
+  ~!@eq(fried_eggs.preheat(), null)@!~  ;
+    
+
+}

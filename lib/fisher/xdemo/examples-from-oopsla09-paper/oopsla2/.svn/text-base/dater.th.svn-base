@@ -1,0 +1,70 @@
+spawn DateService {
+  import dating.*;
+  var done := false;
+  val customers = table(name) {
+      val source, profile; var picked;
+  };
+
+  async stop() { done := true; }
+
+  sync register(name, profile) from sender {
+    if (customers(name)==null) 
+      customers(name) := 
+        {:source:sender,name,profile,picked:[name]:};
+    null;
+  }
+
+  sync makeMeAMatch(name) {
+    if (customers(name) ~ +r) findMatchFor(r);
+    else {: fail: "Please register first!" :};
+  }
+
+  fun findMatchFor({:profile:pr,name:nm,picked:}) {
+    first(
+      for {:profile:pr',name:nm':} <~ customers,
+      if pr.compatible?(pr') && !(nm' in picked)) {
+        customers(nm).picked := nm' :: picked;
+        return {: date: nm' :};
+      } else return {: fail: "No match":};
+  }findMatchFor
+
+  body {
+    registry() <-> registerDateSvc(thisComp());
+    while(!done) serve;
+  }
+}DateService;
+
+###   spawn DateService {
+###     import dating.Profile;
+###   
+###     customers = table(name){ val source, profile; var picked;};
+###     var done := false;
+###   
+###     async stop() { done := true; }
+###   
+###     sync register(name, profile) from sender {
+###        customers(name) :=  {:source:sender, name, profile, picked: [name]:};
+###        0;
+###     }
+###   
+###     sync matchFor(name) {
+###        if (customers(name) ~ +r) return findMatchFor(r);     
+###        {: fail: "Please register first!" :};
+###     }
+###   
+###     fun findMatchFor({:profile, name, picked:}) {
+###          first(
+###            for {:profile: profile', name: name':} <~ customers,
+###            if   profile.compatible?(profile') && ! (name' in picked)
+###          ){
+###             customers(name).picked := name' :: picked;
+###             return {: date: name' :};
+###          }
+###          {: fail: "Sorry, no more dates":};
+###     }
+###   
+###    body{
+###       server()<-> setDateService(thisComp());
+###       while(!done)  serve;   
+###     }
+###   };

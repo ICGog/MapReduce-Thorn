@@ -1,0 +1,21 @@
+module MATH {
+  javaly fun sqrt(x) = fisher.runtime.lib.Math.sqrt;
+  javaly fun abs(x) = fisher.runtime.lib.Math.abs;
+  javaly fun acos(x) = fisher.runtime.lib.Math.acos;
+  javaly fun asin(x) = fisher.runtime.lib.Math.asin;
+  javaly fun atan(x) = fisher.runtime.lib.Math.atan;
+  javaly fun cbrt(x) = fisher.runtime.lib.Math.cbrt;
+  javaly fun cos(x) = fisher.runtime.lib.Math.cos;
+  javaly fun cosh(x) = fisher.runtime.lib.Math.cosh;
+  javaly fun exp(x) = fisher.runtime.lib.Math.exp;
+  javaly fun expm1(x) = fisher.runtime.lib.Math.expm1;
+  javaly fun floor(x) = fisher.runtime.lib.Math.floor;
+  javaly fun log(x) = fisher.runtime.lib.Math.log;
+  javaly fun log10(x) = fisher.runtime.lib.Math.log10;
+  javaly fun log1p(x) = fisher.runtime.lib.Math.log1p;
+  javaly fun sin(x) = fisher.runtime.lib.Math.sin;
+  javaly fun sinh(x) = fisher.runtime.lib.Math.sinh;
+  javaly fun tan(x) = fisher.runtime.lib.Math.tan;
+  javaly fun tanh(x) = fisher.runtime.lib.Math.tanh;
+  javaly fun ulp(x) = fisher.runtime.lib.Math.ulp;
+}

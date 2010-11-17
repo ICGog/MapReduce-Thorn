@@ -1,0 +1,33 @@
+{
+  if ([1,2,3] ~ ((it.len() == 3)? && [_, (it==2)?, _])) {
+    ~!@hit()@!~  ;
+  }
+  else {
+    { ~!@hit()@!~ 0 ; }
+  }
+
+  fun wooden(s) = s.index("wood") ~ +_;
+
+  ~!@assert(wooden("elwood"))@!~  ;
+  ~!@assert(!wooden("oak"))@!~  ;
+  
+  fun hygenic(x) = x ~ ( (it.len().prime?())? && [(it.prime?())?,dummy...] );
+
+  ~!@assert(hygenic([2,true]))@!~  ;
+  ~!@assert(!hygenic([2,2,2,2]))@!~  ;
+  ~!@assert(!hygenic([4,2]))@!~  ;
+  
+  ~!@assert(
+     [2,true] ~ (hygenic(it))? 
+  )@!~  ;
+  
+  ~!@assert(
+    !([2,2,2,2] ~ ( (hygenic(it))? ) )
+  )@!~  ;
+  
+  ~!@assert(
+    !([4,2] ~ (hygenic(it))?)
+  )@!~  ;
+  
+
+}

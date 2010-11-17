@@ -1,0 +1,31 @@
+spawn pasta {
+  var goon := true;
+  var counter := 0;
+  sync trek(b) {
+    goon := b;
+    [counter, "heckle"];
+  }
+  body{
+    ~!@testStartLatch();
+    while(goon){
+      serve
+        before(msg, sender) {
+          n = ({counter += 1;});
+          forcer = spawn forcer {
+            body{
+              sender <<< [n, "force"];
+            }body
+          }forcer;
+        }before
+        after(msg, sender){
+          n = counter;
+          foreboder = spawn forboder {
+            body{
+              sender <<< [n, "forbode"];
+            }
+          }forboder;
+        }after
+    }
+  }body
+
+}pasta;

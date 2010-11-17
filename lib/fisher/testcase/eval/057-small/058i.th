@@ -1,0 +1,40 @@
+{
+  class A{ var a; }
+  class B extends A {
+    def a() = [super.a()];
+  }
+  class C extends A {
+    def `a:=`(b) { super.`a:=`( -b); }
+  }
+  class D extends B, C{
+    def a() = super@B.a();
+    def `a:=`(b) = super@C.`a:=`(b);
+  }
+  
+  {
+    x = A();
+    x.a := 1;
+    ~!@eq(x.a, x.a(), 1)@!~  ;
+  }
+
+  {
+    x = B();
+    x.a := 1;
+    ~!@eq(x.a, x.a(), [1])@!~  ;
+  }
+
+
+  {
+    x = C();
+    x.a := 1;
+    ~!@eq(x.a, x.a(), -1)@!~  ;
+  }
+
+
+  if (true){
+    x = D();
+    x.a := 1;
+    ~!@eq(x.a, x.a(), [-1])@!~  ;
+  }
+
+}

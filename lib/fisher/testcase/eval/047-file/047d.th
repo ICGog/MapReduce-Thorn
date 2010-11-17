@@ -1,0 +1,14 @@
+{
+  import WHERE.*;
+  reset();
+  f = tmp.file("sludge");
+  ~!@assert(! f.exists?())@!~  ;
+  f.writeln("ow");
+  ~!@assert(f.exists?())@!~  ;
+  e = tmp.file("endurable");  
+  b1 = f.rename(e);
+  ~!@assert(b1)@!~  ;
+  ~!@assert(! f.exists?())@!~  ;
+  ~!@assert(e.exists?())@!~  ;
+  reset();
+}

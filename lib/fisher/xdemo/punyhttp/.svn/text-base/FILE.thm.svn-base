@@ -1,0 +1,18 @@
+module FILE {
+ javaly class File = fisher.runtime.lib.File {
+     new File(filename);
+     def abs() = abs;
+     def clear() = clear;
+     def contents() = contents;
+     def del() = del;
+     def dir?() = dirp;
+     def exists?() = exists;
+     def flush() = flush;
+     def parent() = parent;
+     def path() = path;
+     def rename(newname) = rename;
+     def writeln(obj) = writeln;
+     def writeBytes(obj) = writeBytes;
+     def readBytes() = readBytes;
+  }File
+}

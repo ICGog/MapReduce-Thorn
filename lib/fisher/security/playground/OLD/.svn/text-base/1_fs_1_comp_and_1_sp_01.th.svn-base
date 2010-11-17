@@ -1,0 +1,78 @@
+module SECURITYPROVIDER {
+  javaly fun make_token(msg, k, c, spRef) = fisher.runtime.`security`.SecurityProviderModule.makeToken;
+  javaly fun grant(k, c, spRef) = fisher.runtime.`security`.SecurityProviderModule.grantCapability;
+  javaly fun init_sp(spRef) = fisher.runtime.`security`.SecurityProviderModule.initSecurityProvider;
+  javaly fun gen_new_cap(spRef) = fisher.runtime.`security`.SecurityProviderModule.generateNewCapability;
+  javaly fun gen_and_grant(c, spRef) = fisher.runtime.`security`.SecurityProviderModule.generateAndGrantNewCapability;
+  javaly fun grant_new_cap(k, c, spRef) = fisher.runtime.`security`.SecurityProviderModule.grantNewCapability;
+}module
+
+spawn full_security_provider_01 {
+  body {
+    sp = spawn sp {
+      body {
+        import SECURITYPROVIDER.*;
+        init_sp(thisComp());
+        try {
+          while (true) {
+            recv {
+              {: grant:"grant", c: c, k: k :} from y => {
+                grant(k, c, thisComp());
+                c <<< k;
+	          }
+	          | {: login2:"login" :} from y => {
+	            k = "write_cap";
+	            grant(k, y, thisComp());
+	            y <<< k;
+	          }
+	          | {: make_token:"make_token", msg, capability :} from y => {
+	             t = make_token(msg, capability, y, thisComp());
+	             y <<< t;
+	          }
+	        }recv
+	      }while
+        }try
+        catch {
+          Z => {println("Security Violation! $Z!");}
+        }catch
+      }body
+    }sp;
+    
+    B = spawn B {
+      body {
+        while (true) {
+          recv {
+            {: login2:"login" :} from y => {
+              sp <<< {: grant:"grant", c: y, k: "write_cap" :};
+            }
+            | x from y envelope e && it.securityInfo ~ +si checked => {
+              for (st <- si) {
+                t = st.k;
+                if (t == "write_cap") {
+                  println("going to write: $x");
+                }
+              }
+            }
+          }recv
+        }while
+      }body
+    }B;
+    
+    A = spawn A {
+      body {
+        B <<< {: login2:"login" :};
+        recv {
+          k from y1 => {
+            message = "do something";
+            sp <<< {: make_token:"make_token", msg:message, capability:k :};
+            recv {
+              t from y2 => {
+                B <<< message security [t];
+              }
+            }recv
+          }
+        }recv
+      }body
+    }A;
+  }body
+};

@@ -1,0 +1,109 @@
+module ID {
+   var idcounter := 0;
+   class Id {
+     val id;
+     new Id(){
+       idcounter += 1;
+       id = idcounter;
+     }new
+   }Id
+}ID
+
+module INGR {
+  class Unit(name) {}
+  
+  class QuantalUnit(name) extends Unit(name){}
+  
+  cup = Unit("cup");
+  ounce = Unit("ounce");
+  one = QuantalUnit("one");
+  
+        
+  class Ingredient {
+    val name;
+    val allergen?;
+    val unit; 
+    val quantity;
+    new Ingredient(n':string,  a': bool, u': Unit, q') {
+       name = n';
+       allergen? = a';
+       unit = u';
+       quantity = q';
+    }
+    new Ingredient(n', a', u') {
+      new(n', a', u', 1);
+    }
+    def str() = name;
+    def `*`(k) = Ingredient(name, allergen?, unit, quantity * k);
+  }
+  
+  ingredients = table(name) {ingredient;};
+  
+
+
+   fun make_ingr(name:string,  allergen?: bool, unit: Unit) {
+      ingredient = Ingredient(name, allergen?, unit);
+      ingredients.insNew({: name, ingredient :});
+      ingredient;
+    }make_ingr
+
+    egg = make_ingr("egg", true, one);
+    flour = make_ingr("flour", true, cup);
+    milk = make_ingr("milk", true, ounce);
+    sugar = make_ingr("sugar", false, cup);
+    butter = make_ingr("butter", true, ounce);
+    vanilla = make_ingr("vanilla", true, ounce);
+    oil = make_ingr("oil", true, ounce);
+    
+    
+    //~!@bad(({make_ingr("sugar", false, cup);}))@!~  ;
+  
+
+}
+
+
+module TECHNIQUES {
+
+  import ID.*;
+  class Tool() extends Id{
+    val name;
+    new Tool(name') {
+      new@Id();
+      name = name';
+    }
+    }Tool
+  oven = Tool("oven");
+  stove = Tool("stove");
+  frying_pan = Tool("frying pan");
+  
+  
+  // Not every Technique will use temp.
+  // In other examples, it'd be a subclass, not a field.
+  class Technique(name, tools, temp, time) {
+    def invariant() = 
+          (name ~ _:string)
+       && (tools ~ _:list)
+       && time ~ _:int
+       && %every(t :? Tool | for t <- tools)
+       ;
+     // The following is a hack to avoid using object ==
+     // because I haven't implemented object == yet.
+     def uses?(tool) = 
+       %some(tool.id == t.id | for t <- tools);
+  }
+  fun make_tech(name, tools, temp, time) {
+    t = Technique(name, tools, temp, time);
+    ~!@assert(t.invariant())  ;
+    t;
+    }
+  
+  fun fry(time) = make_tech("fry", [frying_pan, stove], "high", time);
+  fun sauté(time) = make_tech("sauté", [frying_pan, stove], "high", time);
+  fun bake(temp, time) = make_tech("bake", [oven], temp, time);
+  fun roast(temp, time) = make_tech("roast", [oven], temp, time); 
+  add = make_tech("add", [], null, 1);
+  mix = make_tech("mix", [], null, 1);  
+
+  
+
+}

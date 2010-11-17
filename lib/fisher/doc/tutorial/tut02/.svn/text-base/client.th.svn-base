@@ -1,0 +1,9 @@
+// file: tut02/client.th
+spawn client {
+  body{
+    server = site("localhost", 4260);
+    userName = readln("Your name: ");
+    response = server <-> hello(userName);
+    println("The server said '$response'");
+  }body
+}client;

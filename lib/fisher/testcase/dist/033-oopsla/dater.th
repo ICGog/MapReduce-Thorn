@@ -1,0 +1,50 @@
+spawn DateService {
+  import PROFILE.Profile;
+  customers = table(name){
+     val source, profile;
+     var picked;};
+
+  sync register(name, profile) from sender {
+     if (customers(name) == null) {
+       customers(name) := 
+          {:source:sender, name, profile, 
+            picked: [name]:}; # to avoid dating self.
+       "$name, welcome to DateService!";
+       }
+     else {
+       "We're sorry, but $name is taken. Please choose another.";
+       }
+     }register  
+
+  sync makeMeAMatch(name) {
+     if (customers(name) ~ +r) 
+        findMatchFor(r);
+     else {: fail: "Please register first!" :};
+   }makeMeAMatch
+
+   fun findMatchFor({:profile, name, picked:}) {
+       first(
+         for {:profile: profile', name: name':} <~ customers,
+         if   profile.compatible?(profile') 
+           && profile'.compatible?(profile) 
+           && ! (name' in picked)
+         ){
+          customers(name).picked := name' :: picked;
+          return {: date: name' :};
+          }
+       else {
+          return {: fail: "Sorry, you've dated everyone matching your profile":};
+       }
+       }findMatchFor
+
+   var goon := true;
+   async stop() { goon := false; }
+
+   body{
+     # Regrettable startup code to be commented out in paper
+     ~!@testStartLatch();
+     {: serverComp : server :} = ~!@recOfPorts();
+     server <-> registerDateSvc(thisComp());
+     while(goon) serve;
+   }body
+}DateService;

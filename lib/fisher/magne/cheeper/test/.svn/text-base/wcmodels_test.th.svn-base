@@ -1,0 +1,123 @@
+import unittest.*;
+import webdatastore.*;
+import wcmodels.*;
+
+import cheepindexerhelpers.*;
+
+println("wcmodels test");
+
+flush("persons");
+flush("users");
+
+/** Users */
+fun should_add_some_users(){
+  for(i <- 0..9){
+    user = db.users.new_instance();
+    user['username'] := "Jakob $i";
+    user['key'] := "$i";
+    db.users.put(user);
+  }
+  u0 = db.users.get("0");
+  assertEquals(u0['key'], "0");
+  assertEquals(u0['username'], "Jakob 0");
+}
+
+test(should_add_some_users);
+
+fun should_add_a_follower(){
+  var u0 := db.users.get("0");
+  var u1 := db.users.get("1");
+
+  assertTrue(u0['followerkeys'].setEq(["0"]), "L1: " + u0['followerkeys'] + ' L2: ["0"]' );
+  assertTrue(u0['followingkeys'].setEq(["0"]));
+
+  assertTrue(u1['followerkeys'].setEq(["1"]));
+  assertTrue(u1['followingkeys'].setEq(["1"]));
+
+  db.users.follow(u0, u1);
+  
+  u0 := db.users.get("0");
+  u1 := db.users.get("1");
+
+  assertTrue(u0['followingkeys'].setEq(["0", "1"]));
+  assertTrue(u1['followerkeys'].setEq(["0", "1"]));
+}
+test(should_add_a_follower);
+
+fun should_unfollow_user(){
+  u0 = db.users.get("0");
+  u1 = db.users.get("1");
+  db.users.unfollow(u0, u1);
+
+  u0_updated = db.users.get("0");
+  u1_updated = db.users.get("1");
+
+  u1_should_not_have_u0 = %first(k | for k <- u1_updated['followerkeys'], if k == u0['key']);
+  assertEquals(u1_should_not_have_u0, null);
+
+  u0_should_not_have_u1 = %first(k | for k <- u0_updated['followingkeys'], if k == u1['key']);
+  assertEquals(u0_should_not_have_u1, null);
+}
+
+test(should_unfollow_user);
+
+
+/** Messages */
+fun user_1_should_add_message(){
+  // add the follower again
+  should_add_a_follower();
+  u = db.users.get("1");
+
+  message_key = db.messages.add_message(u, "Cheep1");
+  // refresh
+  mes = db.messages.get(message_key);
+
+  assertEquals(mes['text'], "Cheep1");
+  assertEquals(mes['senderkey'], u['key']);
+}
+
+test(user_1_should_add_message);
+
+fun user_0_and_self_should_have_the_message(){
+  u0 = db.users.get("0");
+  msgs0 = db.users.messages(u0); 
+  assertEquals(msgs0.num, 1);
+
+  u = db.users.get("1");
+  msgs1 = db.messages.get_user_related_messages(u['key']);
+  assertEquals(msgs1.num, 1);
+}
+
+test(user_0_and_self_should_have_the_message);
+
+fun should_get_messages_since_a_certain_time(){
+  flush("users");
+  flush("messages");
+  user = db.users.new_instance();
+  user['username'] := "Jakob";
+  user['key'] := "jakob";
+  db.users.put(user);
+
+  m1_key = db.messages.add_message(user, "m1");
+  m2_key = db.messages.add_message(user, "m2");
+
+  m1 = db.messages.get(m1_key);
+  m2 = db.messages.get(m2_key);
+
+  messages = db.messages.get_messages_since(user, m1['createdat']);
+  
+  assertEquals(1, messages.len());
+  assertEquals("m2", m2['text']);
+}
+
+test(should_get_messages_since_a_certain_time);
+
+fun should_extract_tags(){
+  tags1 = extract_tags('hey #you in #nyc');
+  assertTrue(tags1.setEq(['you', 'nyc']));
+  tags2 = extract_tags('hey');
+  assertTrue(tags2.setEq([]));
+  
+}
+test(should_extract_tags);
+

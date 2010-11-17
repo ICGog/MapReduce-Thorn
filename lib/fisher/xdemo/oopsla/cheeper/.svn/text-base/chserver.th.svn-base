@@ -1,0 +1,41 @@
+spawn chserver {
+import CHEEPER.*;
+
+phils = table(phil){var chirps;};
+chirps = table(n){chirp; var plus, minus;};
+
+sync chirp!(text, phil){
+  n = chirps.num;
+  c = Chirp(text,phil,n);
+  chirps(n) := {: chirp:c, plus:0, minus:0 :};
+  if (phils.has?(phil)) 
+    phils(phil).chirps ::= c;
+  else 
+    phils(phil) := {: chirps:[c] :};
+  "You chirped '$c'";
+  }chirp!
+
+fun love({: plus, minus :}) = plus - minus;
+
+sync read() = 
+  %sort[row
+    %> love(row)
+    %< chirp.n  
+    | for row && {: chirp :} <- chirps] ;
+
+sync vote(n, plus?) {
+  if (plus?) 
+     chirps(n).plus += 1;
+  else 
+     chirps(n).minus += 1;
+  "Thanks";
+  }
+
+body{
+  println("Cheeper server here!");
+  while(true) {
+    println("Server ready...");
+    serve;
+  }
+}body
+}chserver;

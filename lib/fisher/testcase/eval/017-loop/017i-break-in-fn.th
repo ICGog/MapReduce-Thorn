@@ -1,0 +1,29 @@
+{
+  var f;
+  var i := 0;
+  wooden: while (i < 10) {
+    i := i + 1;
+    f := fn(3) {~!@hit()@!~1; continue wooden; ~!@hit()@!~0;}
+          |(6) {~!@hit()@!~1; break wooden;    ~!@hit()@!~0;}
+          |(x) {~!@hit()@!~4;};
+    f(i);
+  }while
+  
+  // unlabelled version
+  i := 0; 
+  while (i < 10) {
+    i := i + 1;
+    // The following function has two hit counts of 2: 
+    // 1 hit count comes from inside the loop;
+    // the other is  due to the calls to ~!@bad(f(3)) and ~!@bad(f(6)) 
+    // following the loop.
+    f := fn(3) {~!@hit()@!~2; continue; ~!@hit()@!~0;}
+          |(6) {~!@hit()@!~2; break;    ~!@hit()@!~0;}
+          |(x) {~!@hit()@!~4;};
+    f(i);
+  }while
+  
+  ~!@bad(f(3))@!~;
+  ~!@bad(f(6))@!~;
+  ~!@hit()@!~ 1;
+}

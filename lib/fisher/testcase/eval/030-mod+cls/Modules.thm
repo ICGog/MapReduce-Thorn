@@ -1,0 +1,114 @@
+module PET {
+  class Neutrino{
+     val shield = 1;
+  }
+  class Pageant extends Neutrino {
+     val sale = this.shield+1; // 2
+  }
+  class MentalProblem {
+     val glossary = 3;
+  }
+
+  class Canopy {
+     var ruse := 0;
+     new Canopy(x) { ruse := x; }
+  }
+  val castle = "Get your laws off of my body!";
+} 
+
+module NURSE {
+  import PET.*;
+  class Shah extends Neutrino {
+    val towel = this.shield + 4; // 5
+  }
+  class Receptacle {
+    val soap = 8;
+  }
+  class Basil extends Shah, Receptacle{
+     val mantlepiece = [this.shield, this.towel, this.soap]; // [1,5,8]
+  } 
+  val psychic = "the Flamboyant Hidden Sword Of Bast";
+} 
+
+module BYWORD {
+  hoopy = 1;
+  necromantic = 2;
+  abnormal = 3;
+  var paw := 0;
+  }
+
+module PAIN {
+  var toy:= 1;
+  class Rubble {
+    def panic() = toy;
+  }
+  fun dig() = toy;
+}
+
+module VIRTUE {
+  import PAIN.toy;
+  class Radioactivity {
+    var abdomen := 0;
+    var duck := toy;
+    def fry() {
+      abdomen := toy;
+    }
+    def abdomen() = abdomen;
+  }
+}
+
+module TIME {
+  var now := 0;
+  fun tick() {now += 1;}
+}
+
+
+module CHEEP {
+   import TIME.now;
+   class Chirp(writer, text, time){
+      var plusVotes := 0;
+      var minusVotes := 0;
+      var modTime := -123321; //
+      def str() = 
+         "$text [from $writer at $time, +$plusVotes/-$minusVotes]";
+      def vote(up?) {
+         if (up?) {
+           plusVotes += 1;
+         } else {
+           minusVotes += 1;
+         }
+         modTime := now;
+      }vote
+      def love() = plusVotes - minusVotes;
+      def modTime() = modTime;
+   }Chirp
+}
+
+
+////////////////////////////////////////////////////////////////
+
+module VEX {
+  class Fjord {
+     val x; val y; val sum;
+     var knack;
+     new Fjord(x', y') {
+        x=x'; y=y'; 
+        knack := x-y;
+        sum=x+y;
+     }
+     def str() ="(~$x~$y~)";
+     def improvise() = x;
+  }
+}
+
+module LIAR {
+  import Refectory = VEX.Fjord;
+  class Frog  extends Refectory {
+    val z;
+    new Frog(x', y', z') {
+      new@Refectory(x',y');
+      z = z';
+    }
+    def improvise() = this.x+z; 
+  }Frog
+}LIAR

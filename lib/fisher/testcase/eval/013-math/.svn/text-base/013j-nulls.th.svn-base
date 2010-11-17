@@ -1,0 +1,73 @@
+{
+// + 
+  ~!@exn(1 + null);
+  ~!@exn(null + 1);
+// - 
+   
+  ~!@exn(1 - null);
+  ~!@exn(null - 1);
+   
+   
+// unary +
+  + null;
+ 
+// unary -
+  ~!@exn(- null);
+
+//  !
+    ~!@exn(- null);
+
+
+// *
+    ~!@exn(null * 12);
+    ~!@exn(12 * null);
+// /
+    ~!@exn(null / 12);
+    ~!@exn(12 / null);
+
+
+// div
+    ~!@exn(null div 12);
+    ~!@exn(12 div null);
+
+// mod
+    ~!@exn(null mod 12);
+    ~!@exn(12 mod null);
+
+// ^^
+
+  ~!@exn(true ^^ null);
+  ~!@exn(null ^^ true);
+  true ^^ true ^^ null;
+
+
+// &&
+ ~!@exn(null && true);
+ ~!@exn(true && null);
+ false && null;
+
+
+// ||
+ ~!@exn(null || true);
+ ~!@exn(false || null);
+ true || null;
+
+// ..
+ ~!@exn( null .. 1);
+  ~!@exn( 1 .. null);   
+
+// @
+  ~!@exn(null @ [1]);
+  ~!@exn([1] @ null);
+
+// ::
+ ~!@exn( 1 :: null );
+ null :: [];
+
+// @=
+ ~!@exn( null @= 1 );   
+
+// \=
+ 
+
+}

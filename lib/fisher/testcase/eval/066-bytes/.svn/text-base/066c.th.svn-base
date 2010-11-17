@@ -1,0 +1,5 @@
+{
+  ~!@bad([-129].asBytes())@!~  ;
+  ~!@bad([128].asBytes())@!~  ;
+  [-128].asBytes(); // no error here
+}

@@ -1,0 +1,18 @@
+module webthapp{
+
+ /** Mapping between reg.exp and functions */
+ class url(re, handler){}
+
+// /** Response to a request **/ 
+ class response{
+ }
+
+ /** A wep application */
+ class application(urls){
+
+   var r := response();
+  
+   
+  
+ }
+}

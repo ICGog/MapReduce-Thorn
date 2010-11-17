@@ -1,0 +1,17 @@
+{
+powers = %table(n=n){
+           sq = n*n; 
+           cube = n*n*n;
+           | for n <- 1 .. 10};
+
+~!@eq(
+  %find(n | for {: cube: 8, n :} <~ powers),
+  2
+)@!~  ;
+
+primes = %group(prime = n.prime?()) {
+           numbers = %list n;
+           | for n <- 3 .. 6};
+~!@eq(primes(true).numbers, [3,5])@!~  ;
+       
+}

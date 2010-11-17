@@ -1,0 +1,6 @@
+{
+  class A(var x: int); 
+  A(1);
+  ~!@bad(A("too!"))@!~  ;
+  
+}

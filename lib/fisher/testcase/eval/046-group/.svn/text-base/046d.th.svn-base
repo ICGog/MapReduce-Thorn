@@ -1,0 +1,25 @@
+{
+  words = [
+    "arc",
+    "asp",
+    "arctic",
+    "argh",
+    "mighty",
+    "mold",
+    "mung",
+    "weasel",
+    "woad",
+    "wooley"
+  ];
+  
+  nl = %group(l = ww(0), n = ww.num()) {
+    c = %count;
+    w = %list ww;
+    | for ww <- %sort(ww %< ww | for ww <- words)
+    };
+
+  ~!@eq(nl("a", 3), ‹l:"a", n:3, c:2, w:["arc", "asp"]›)@!~  ;
+  ~!@eq(nl("a", 4), ‹l:"a", n:4, c:1, w:["argh"]›)@!~  ;
+  ~!@eq(nl("w", 6), ‹l:"w", n:6, c:2, w:["weasel", "wooley"]›)@!~  ;
+
+}

@@ -1,0 +1,13 @@
+spawn {
+  body{
+  import FISHMONGER.Turban;
+  `Lenin` = spawn Turban("Lenin", 1);
+  `Dr. Helen Confucius` = spawn Turban("Dr. Helen Confucius", 2);
+  ~!@eq((Lenin<->name()), "Lenin")@!~  ;
+  ~!@eq((Lenin<->size()), 1)@!~  ;
+  ~!@eq((`Dr. Helen Confucius`<->name()), "Dr. Helen Confucius")@!~  ;
+  ~!@eq((`Dr. Helen Confucius`<->size()), 2)@!~  ;
+  ~!@checkphase(
+    )@!~  ;
+  }
+};

@@ -1,0 +1,6 @@
+#/bin/bash/!
+BASEDIR=`dirname $0`
+if [ ! -d "$BASEDIR/classes" ]; then
+  mkdir $BASEDIR/classes
+fi
+javac -d $BASEDIR/classes *.java

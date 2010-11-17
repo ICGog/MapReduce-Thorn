@@ -1,0 +1,16 @@
+{
+  butchery = ord();
+  class Meathook(art) {
+    def init() {
+      butchery @= this;
+    }
+    def `==`(Meathook($(art))) = true;
+      | `==`(_) = false;
+  }
+  
+  ~!@eq(butchery.lst(), [])@!~  ;
+  m1 = Meathook("You're a seamy example of a faded foulmouthed belching cigar-smoking man-starved parody of Juliet.");
+  ~!@eq(butchery.lst(), [m1])@!~  ;
+  m2 = Meathook('''Eat Hyper N -- the maroon cereal intensely shaped like a N!''');
+  ~!@eq(butchery.lst(), [m1, m2])@!~  ;
+}

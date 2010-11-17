@@ -1,0 +1,15 @@
+{
+  o = ord{map var a : string;};
+  o @= "by Stheno's beard";
+  ~!@bad(({ o @= false; }))@!~  ;
+  ~!@bad(({ o.add({:a:false:}); }))@!~  ;
+  ~!@bad(o.addAll([ {:a:"by Lemminkainen's seemly paper":}, {: a:false:}]))@!~  ;
+  ~!@bad(o.add1(false))@!~  ;
+  ~!@bad(o.add1All(["by Connmid's quarrelsome cyberspace", false]))@!~  ;
+  ~!@bad(o.addAfter(0, {:a:false:}))@!~  ;
+  ~!@bad(o.addBefore(0, {:a:false:}))@!~  ;
+  
+//  ~!@bad(({ }))@!~  ;
+//  ~!@bad(({ }))@!~  ;
+//  ~!@bad(({ }))@!~  ;
+}

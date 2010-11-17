@@ -1,0 +1,63 @@
+module UNICODE {
+  MAX_UNICODE = "10FFFF".intHex(); 
+
+}
+
+module UNITEST {
+  thorn = "DE".intHex;
+  hebrew = "05D0".intHex;
+  arabic = "0680".intHex;
+  fun X(n) = n.char.str;
+  stuffs = [
+    {: n:32,      s: " ",      cat: "",  p:[]:},
+    {: n:116,     s: "t",      cat: "",  p:[]:},
+    {: n:0xDE,    s: "Þ",      cat: "",  p:[] :},
+    ];
+  
+
+// f = flags.  Clues: 
+//   d - digit
+//   í - identifierIgnorable
+//   c - control
+//   l - letter
+//   ł - lowercase
+//   m - mirrored
+//   w - whitespace
+//   t - titlechar
+//   p - unicode identifier part
+//   s - unicode identifier start 
+//   u - upper case  
+  detailed = [
+    ‹n: 0x002D,  s:"-",  cat: "Pd", dird:["ES"] ,blk:"BASIC_LATIN", f:"" ›,
+    ‹n: 0x002B,  s:"+",  cat: "Sm", dird:["ES"] ,blk:"BASIC_LATIN", f:"" ›,
+    ‹n: 0x0020,  s:" ",  cat: "Zs", dird:"WS"   ,blk:"BASIC_LATIN", f:"w" ›,
+    ‹n: 0x0021,  s:"!",  cat: "Po", dird:"ON"   ,blk:"BASIC_LATIN", f:"" ›,
+    ‹n: 0x0024,  s:"\$", cat: "Sc", dird:"ET"   ,blk:"BASIC_LATIN", f:"" ›,
+    ‹n: 0x0028,  s:"(",  cat: "Ps", dird:"ON"   ,blk:"BASIC_LATIN", f:"m" ›,
+    ‹n: 0x0029,  s:")",  cat: "Pe", dird:"ON"   ,blk:"BASIC_LATIN", f:"m" ›,
+    ‹n: 0x0030,  s:"0",  cat: "Nd", dird:"EN"   ,blk:"BASIC_LATIN", f:"dp" ›,
+    ‹n: 0x003C,  s:"<",  cat: "Sm", dird:"ON"   ,blk:"BASIC_LATIN", f:"m" ›,
+    ‹n: 0x0041,  s:"A",  cat: "Lu", dird:"L"    ,blk:"BASIC_LATIN", f:"lpus", lower: "a".char(0)›,
+    ‹n: 0x0061,  s:"a",  cat: "Ll", dird:"L"    ,blk:"BASIC_LATIN", f:"lłps", upper: "A".char(0) ›,
+    ‹n: 0x005e,  s:"^",  cat: "Sk", dird:"ON"   ,blk:"BASIC_LATIN", f:"" ›,
+    ‹n: 0x0080,          cat: "Cc", dird:"BN"   ,blk:"LATIN_1_SUPPLEMENT", f:"ícp" ›,
+    ‹n: 0x00A0,          cat: "Zs", dird:"CS"   ,blk:"LATIN_1_SUPPLEMENT", f:"" ›,
+    ‹n: 0x00C2,  s:"Â",  cat: "Lu", dird:"L"    ,blk:"LATIN_1_SUPPLEMENT", f:"lpus", lower: "â".char(0) ›,
+    ‹n: 0x02c9,          cat: "Lm", dird:"ON"   ,blk:"SPACING_MODIFIER_LETTERS", f:"lps" ›,
+    ‹n: 0x01c5,          cat: "Lt", dird:"L"    ,blk:"LATIN_EXTENDED_B", f:"tlps", title: 0x01c5.char, lower: 0x01c6.char, upper:0x01C4.char ›,//LATIN CAPITAL LETTER D WITH SMALL LETTER Z WITH CARON
+    ‹n: 0x0001,          cat: "Cc", dird:"BN"   ,blk:"BASIC_LATIN", f:"ícp" ›,
+    ‹n: 0x05d0,          cat: "Lo", dird:"R"    ,blk:"HEBREW", f:"lps" ›, // Hebrew alef
+    ‹n: 0x062c,          cat: "Lo", dird:"AL"   ,blk:"ARABIC", f:"lps" ›, // Arabic jeem
+
+
+// This seems currently unassigned to Java's knowledge, though Unicode says differently ‹n: 0x2b3f,          cat: "Sm", dird:"",blk:"", f:"" ›, // Wave arrow pointing dirdectly left
+
+
+
+
+  ];
+  
+  import UNICODE;
+  // Some non-legal-unicode chars
+  undefineds = [UNICODE.MAX_UNICODE];
+}

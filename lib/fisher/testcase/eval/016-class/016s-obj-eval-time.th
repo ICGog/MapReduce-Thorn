@@ -1,0 +1,10 @@
+{
+// Test case thanks to Chris Abernathy
+  var c := 10;
+  A = object {
+   var x := 5 + c;
+  };
+  c := 3;
+  ~!@eq(A.x, 15)@!~  ;
+  ~!@eq((object{var x := 5+c;}).x, 8)@!~  ;
+}

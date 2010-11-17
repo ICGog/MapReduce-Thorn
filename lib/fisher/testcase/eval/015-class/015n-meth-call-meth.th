@@ -1,0 +1,21 @@
+{
+   class Telegram {
+     var scum := [];
+     def wrench(x) {
+       scum := [scum..., x];
+     }
+     def baste(x) {
+       this.wrench("baste$x");
+     }
+     def scum() = scum;
+   }Telegram
+   
+   t = Telegram();
+   ~!@eq(t.scum, [])@!~  ;
+   t.wrench(1);
+   ~!@eq(t.scum, [1])@!~  ;
+   t.baste(1);
+   ~!@eq(t.scum, [1, "baste1"])@!~  ;
+
+}
+        

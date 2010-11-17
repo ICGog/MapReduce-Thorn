@@ -1,0 +1,55 @@
+{
+  import ZEAL = PAIN; // shared
+    import Zubble = ZEAL.Rubble;
+    import zig = ZEAL.dig;
+  import own VEAL = PAIN; // non-shared
+    import Vubble = VEAL.Rubble;
+    import vig = VEAL.dig;
+  import own WEAL = PAIN; // non-shared.
+    import Wubble = WEAL.Rubble;
+    import wig = WEAL.dig;
+  import TEAL = PAIN; // shared
+    import Tubble = TEAL.Rubble;
+    import tig = TEAL.dig;
+
+  import VEAL.*;
+
+  class Tap extends Tubble {}
+  tow = Tap();
+  
+  class Zap extends Zubble {}
+  zow = Zap();
+  
+  class Wap extends Wubble {}
+  wow = Wap();
+  
+  class Vap extends Vubble {}
+  vow = Vap();
+  
+  ~!@eq(TEAL.toy, ZEAL.toy, toy, VEAL.toy, WEAL.toy, zow.panic(), vow.panic(), wow.panic(), tow.panic(), zig(), vig(), wig(), tig())@!~  ;
+
+  VEAL.toy := 2;
+  ~!@eq(VEAL.toy, toy, vow.panic(), 2, vig())@!~  ;  
+  ~!@eq(WEAL.toy, wow.panic(), 1, wig())@!~  ;
+  ~!@eq(ZEAL.toy, zow.panic(), 1, TEAL.toy, tow.panic(), tig())@!~  ;
+  
+  WEAL.toy := 3;
+  ~!@eq(VEAL.toy, toy, vow.panic(), 2, vig())@!~  ;  
+  ~!@eq(WEAL.toy, wow.panic(), 3, wig())@!~  ;
+  ~!@eq(ZEAL.toy, zow.panic(), 1, TEAL.toy, tow.panic(), tig())@!~  ;
+
+  ZEAL.toy := 4;
+  ~!@eq(VEAL.toy, toy, vow.panic(), 2, vig())@!~  ;  
+  ~!@eq(WEAL.toy, wow.panic(), 3, wig())@!~  ;
+  ~!@eq(ZEAL.toy, zow.panic(), 4, TEAL.toy, tow.panic(), tig())@!~  ;
+
+  
+  TEAL.toy := 5;
+  ~!@eq(VEAL.toy, toy, vow.panic(), 2, vig())@!~  ;  
+  ~!@eq(WEAL.toy, wow.panic(), 3, wig())@!~  ;
+  ~!@eq(ZEAL.toy, zow.panic(), 5, TEAL.toy, tow.panic(), tig())@!~  ;
+
+  
+  
+  
+}

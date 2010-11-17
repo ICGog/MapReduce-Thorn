@@ -1,0 +1,42 @@
+spawn PingoPongo {
+  driver = thisComp();
+  body {
+    fun pp(name) = spawn PP{
+      var other;
+      var goon := true;
+      body{
+        while(goon) {
+          recv{
+            [n, me, you] = {
+              ~!@phase(n,name)  ;
+              if (n > 0) {
+                 you <<< [n-1, you, me];
+                 goon := n>1;
+              }
+              else {
+                 goon := false;
+              }
+            }
+            timeout (10) {
+            }
+          }recv
+        }while
+        driver <<< name;
+      }body
+    }PP ;
+
+    pi = pp("pi");
+    po = pp("po");
+    pi <<< [5, pi, po];
+    recv{ "pi" = {}}
+    recv{ "po" = {}}
+    ~!@checkphase(
+    {: phase:5 , bag: ["pi"]:},
+    {: phase:4 , bag: ["po"]:},
+    {: phase:3 , bag: ["pi"]:},
+    {: phase:2 , bag: ["po"]:},
+    {: phase:1 , bag: ["pi"]:},
+    {: phase:0 , bag: ["po"]:}
+    )@!~;
+  }body  
+}PingoPongo;

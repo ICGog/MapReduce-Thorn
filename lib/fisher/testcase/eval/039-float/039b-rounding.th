@@ -1,0 +1,18 @@
+{
+  a = 1.0;
+  ~!@eq(a.floor(), a.ceil(), a.round(), 1)@!~  ;
+  b = 1.1;
+  ~!@eq(b.floor(), b.round(), 1)@!~  ;
+  ~!@eq(b.ceil(), 2)@!~  ;
+  c = 1.51;
+  ~!@eq(c.floor(), 1)@!~  ;
+  ~!@eq(c.ceil(), c.round(), 2)@!~  ;
+  d = -0.9;
+  ~!@eq(d.floor(), d.round(), -1)@!~  ;
+  ~!@eq(d.ceil(), 0)@!~  ;  
+  
+  ~!@assert(
+    %all( n == n.round() == n.floor() == n.ceil() 
+         | for n <- (-4) .. 4 )
+  )@!~  ;
+}

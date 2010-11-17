@@ -1,0 +1,43 @@
+import unittest.*;
+import twitter.*;
+import json.*;
+
+println("twitter test");
+
+KLEENE_STAR = "([\\w]|[^\\w])*";
+
+fun should_get_public_timeline(){
+  client = Twitter();
+  response = client.public_timeline();
+  assertEquals(response.status, 200);
+  statuses = decode(response.content);
+  status = statuses(0);
+  assertTrue(status['user']['screen_name'] != null);
+}
+
+test(should_get_public_timeline);
+
+fun should_get_user_timeline(){
+  client = Twitter();
+  response = client.user_timeline('BARACKOBAMA');
+  assertEquals(response.status, 200);
+  statuses = decode(response.content);
+  status = statuses(0);
+  assertEquals(status['user']['screen_name'], "BarackObama");
+}
+
+test(should_get_user_timeline);
+
+fun should_get_friends_timeline(){
+  client = Twitter('thornlang', '20JiNYC10');
+  tweets = client.friends_timeline('thornlang');
+  tweet = tweets(0);
+  println(tweet);
+  assertTrue(tweet['text'] != null, "message was: " + tweet['text']);
+  assertTrue(tweet['senderkey'] != null, "senderkey was: " + tweet['senderKey']);
+  assertTrue(tweet['createdat'] != null, "time was: " + tweet['time']);
+  
+}
+
+test(should_get_friends_timeline);
+

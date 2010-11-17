@@ -1,0 +1,38 @@
+{
+  tbl = table(a,b,c) {var d;};
+  fun it's(l) {
+    st = %sort( r %< r.a %< r.b %< r.c | for r <- tbl );
+    ~!@eq(st, l);
+    }
+  fun hey(a, b, c, d) {
+    tbl(a,b, c) := {: d :};
+    {: a, b, c, d :};
+    }
+
+  var t := hey(1,1,1,"by Grome's ten-incher");
+  var a := hey(2,2,2,"by Nuggete-Clif's manure!");
+  var r := hey(3,3,3,"by Tutankhamen's tycoon!");
+  var p := hey(4,4,4,"by Mr. Temptation-Face's mystical donor!");
+  it's([t,a,r,p]);
+  tbl(1,1,1) := null;
+  it's([a,r,p]);
+  t := hey(4,4,4,"by Iraz Varuun's syringe!");
+  it's([a,r,t]);
+  // Rows not in the table.
+  tbl(1,2,3) := null;
+  tbl(2,2,4) := null;
+  tbl(0,0,0) := null;
+  tbl(0,0,0) := null;
+  tbl(0,0,8) := null;
+  tbl(0,8,0) := null;
+  tbl(8,0,0) := null;
+  it's([a,r,t]);
+  tbl(4,4,4) := null;
+  it's([a,r]);
+  t := hey(1,7,3,"by Typhon's speck!");
+  it's([t,a,r]);
+  
+
+
+
+}

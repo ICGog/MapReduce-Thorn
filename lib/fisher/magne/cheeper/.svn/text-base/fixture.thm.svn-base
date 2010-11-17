@@ -1,0 +1,48 @@
+module wcfixture{
+
+  import webdatastore.flush;
+  import wcmodels.*;
+
+  fun addUsers(){
+    for(i <- ['jakob', 'hans', 'peter', 'john', 'sam', 'alice']){
+      u = db.users.new_instance();
+      u['key'] := "$i";
+      u['username'] := "$i";
+      u['password'] := "$i";
+      db.users.put(u);
+    }
+  }
+
+  fun addFollowers(){
+    jakob = db.users.get('jakob');
+    users = db.users.find_({::});
+    for(follower <- users){
+      if(follower == jakob)
+        continue;
+      db.users.follow(follower, jakob);
+    }
+  }
+
+  fun addMessages(){
+    users = db.users.find_({::});
+    for(u <- users){
+      message_key = db.messages.add_message(u, "An Example Cheep!");
+    }
+  }
+
+  fun addCheep(){
+    u = db.users.get('jakob');
+    db.users.cheep(u['key'], "This is a cheap!");
+  }
+
+  fun installFixture(){
+    addUsers();
+    addFollowers();
+    addCheep();
+  }
+
+  fun flushAll(){
+    flush("users");
+    flush("messages");
+  }
+}

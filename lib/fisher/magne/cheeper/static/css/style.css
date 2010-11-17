@@ -1,0 +1,271 @@
+/*
+CSS based on Satorii, http://yukei.net
+*/
+
+@import url(reset-fonts-grids.css);
+@import url(base-min.css);
+
+body{
+text-align:left;
+color:#555;
+font-family:'Liberation Sans',FreeSans,'Helvetica Neue LT Std','Helvetica LT Std',Helvetica,Arial,Tahoma,'Lucida Grande','Lucida Sans',sans-serif;
+}
+
+#content{
+clear:both;
+margin:1em auto 3em;
+overflow:hidden;
+width:50em;
+padding:1em 0;
+overflow:hidden;
+}
+
+ul li{list-style-type:none;}
+
+dl{
+    color:#666666;
+    font-size:85%;
+    text-align:right;
+}
+dt{
+    font-weight: bold;
+}
+dd{
+    margin-left: 0;
+}
+#header,#access{
+width:80%;
+padding:1em 10%;
+}
+h2,#page-title a,h2.page-title,h3{
+font-family: 'ITC Avant Garde Gothic Std','URW Gothic L','Century Gothic', 'Avant Garde', 'Trebuchet MS', sans-serif;
+}
+
+#page-title{
+margin-bottom:0.35em;
+}
+#page-title a{
+color:#000;
+font-weight:normal;
+text-decoration:none;
+font-size:197%;
+}
+
+#description{
+font-size:77%;
+color:#868F83;
+text-transform:uppercase;
+letter-spacing:0.15em;
+}
+
+#access{
+text-align:center;
+}
+
+#menu ul{
+overflow:hidden;
+text-align:center;
+}
+#menu li{
+display:inline;
+padding:1em 2em;
+border-left:1px solid #BBC1BC;
+line-height:2.2;
+}
+#menu li:first-child{
+border-left:none;
+}
+#menu li a{
+color:#868F83;
+text-decoration:none;
+font-size:138.5%;
+}
+#menu li a:hover{
+color:#555;
+}
+
+h2,h3{
+margin-bottom:0.5em;
+color:#000;
+font-size:161%;
+font-weight:normal;
+}
+h3{
+font-size:138.5%;
+}
+h2 a,h3 a{
+color:#000;
+text-decoration:none;
+}
+h2 a:hover,h3 a:hover{
+border-bottom:2px solid #000;
+}
+
+h2.page-title{
+width:80%;
+color:#333;
+margin:0 auto;
+font-weight:normal;
+}
+h2.page-title a{
+color:#000;
+}
+h3.page-links-title{
+padding-left:1em;
+}
+
+table{
+font-size:93%;
+}
+
+caption{
+text-transform:uppercase;
+text-align:left;
+letter-spacing:0.10em;
+font-weight:bold;
+}
+th,td{
+border:none;
+}
+tr.odd{
+border:1px solid #EBE5D9;
+border-width:1px 0;
+background:#F7F4EE;	
+}
+th{
+background:#f7f4ee;
+}
+tr.odd th{
+background:#F3EEE4;
+}
+thead,thead th,tfoot,tfoot th,thead a,tfoot a{
+background:#963 !important;
+color:#fff !important;
+}
+
+#container{
+overflow: hidden;
+background:#eeeedc;
+}
+
+#cheeps-list h3{
+margin-left:28%;
+}
+#cheeps-list .yui-u{
+width:72%;
+border-left:2px solid #e3e2c9;
+padding:1em 0 1em 1.5%;
+}
+
+#cheeps-list .first{
+width:24%;
+border-left:none;
+padding-left:0;
+padding-top:1.2em;
+}
+.cheep{
+clear:both;
+margin:1.5em 0;
+}
+.cheep:first-child{
+margin-top:0;
+}
+#cheeps-list .cheep-author,#cheeps-list img.avatar{
+text-align:right;
+}
+.cheep-author a{
+text-decoration:none;
+font-weight:bold;
+color:#636257 !important;
+}
+.cheep-meta a{
+    color:#7D7C6E !important;
+    text-decoration:underline;
+    cursor:pointer;
+}
+#cheeps-list .cheep-author span{
+display:block;
+}
+#cheeps-list .cheep-meta{
+font-size:85%;
+color:#979584;
+}
+.cheep-text{
+line-height:1.5;
+}
+
+p#cheep-notes{margin-bottom:2em}
+#respond div.yui-gf div.first{
+text-align:right;
+}
+input[type=text],input[type=password], textarea{
+margin-bottom:1em;
+background:#F5F5EC;
+border:1px solid #E3E2C9;
+width:95%;
+padding:3px;
+-moz-border-radius:0.25em;
+color:#636257;
+}
+input[type=checkbox]{
+margin-bottom:1em;
+}
+
+textarea#cheep{
+line-height:1.7
+}
+
+label{
+color:#979584;
+margin-bottom:0.35em;
+}
+
+#form-textarea{
+width:73%;
+}
+#form-textarea div{
+margin-left:2.5%;
+}
+
+input[type=submit]{
+background:#979584;
+border:2px solid;
+border-top-color:#B0AF9C;
+border-left-color:#B0AF9C;
+border-bottom-color:#636257;
+border-right-color:#636257;
+color:#fff;
+padding:0.35em;
+font-weight:bold;
+font-size:85%;
+text-transform:uppercase;
+letter-spacing:0.1em;
+-moz-border-radius:0.25em;
+}
+
+.cheep form{
+margin-top:1em;
+}
+#cheeps-list form .yui-u{
+border:none 0;
+}
+
+#footer{
+clear:both;
+padding:2em;
+color: #979584;
+font-size: 85%;
+text-align:right;
+}
+#footer p{
+margin: 0.25em 0;
+}
+
+#footer a{
+color:#636257;
+text-decoration:none;
+}
+#footer a:hover{
+text-decoration:underline;
+}
+

@@ -1,0 +1,33 @@
+{
+  tag = table(x){var y; val z;};
+  tap = table(x){val y; var z;};
+  tad = table(y,z){var x;};
+  tup = table(x){map var y; val z;};
+  
+  ~!@eq(tag, tap, tad, tup)@!~  ;
+  
+  tag(1) := {: y:2, z:3 :};
+  ~!@eq(tag, tag)@!~  ;
+  ~!@ne(tag, tap)@!~  ;
+  ~!@ne(tag, tad)@!~  ;
+  ~!@ne(tag, tup)@!~  ;
+  
+  tap(1) := {: y:2, z:3 :};
+  ~!@eq(tag, tap)@!~  ;
+  ~!@ne(tap, tad)@!~  ;
+  ~!@ne(tap, tup)@!~  ;
+  
+  tad(2,3) := {: x:1 :};
+  ~!@eq(tag, tap, tad)@!~  ;
+  ~!@ne(tad, tup)@!~  ;
+  
+  tup(1) := {: y:2, z:3 :};
+  ~!@eq(tag, tap, tad, tup)@!~  ;
+  
+  L = [tag, tap, tad, tup];
+  for(i <- L.range) for (j <- L.range) {
+    ~!@eq(L(i).same?(L(j)), i==j)  ;
+  }
+   
+
+}

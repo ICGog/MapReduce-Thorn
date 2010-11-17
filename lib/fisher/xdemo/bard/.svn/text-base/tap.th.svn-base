@@ -1,0 +1,7 @@
+spawn tap {
+body{
+   s = site("localhost", 4260);
+// This works:   s <-> ow(123);
+   s <-> ow();
+}body
+}tap;

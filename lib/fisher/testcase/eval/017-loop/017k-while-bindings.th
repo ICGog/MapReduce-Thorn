@@ -1,0 +1,18 @@
+// How bindings work in while-loops
+
+{
+  var psychic := [1,2,3,4,5];
+  while (psychic ~ [x,y...]) {
+     ~!@breaker();
+     ~!@ne(psychic, y)@!~5;
+     psychic := y;
+     z = x;
+     ~!@hit()@!~ 5;
+  }
+  ~!@eq(psychic, [])@!~;
+  ~!@undef(bloop)@!~;
+  ~!@undef(x)@!~;
+  ~!@undef(y)@!~;
+  
+  ~!@undef(x,y,z)@!~;  
+}

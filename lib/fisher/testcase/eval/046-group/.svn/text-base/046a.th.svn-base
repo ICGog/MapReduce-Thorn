@@ -1,0 +1,15 @@
+{
+  p2 = %group(prime = i.prime?()) {
+		map numbers = %first [i] 
+                              %then [i, numbers...] 
+                              %after numbers.reversed();
+                sumsq = %first i*i %then sumsq + i*i;
+		| for i <- 2 .. 11 
+		};
+ 
+  ~!@eq(p2[true], [2,3,5,7,11])@!~  ;
+  ~!@eq(p2[false], [4,6,8,9,10])@!~  ;
+  ~!@eq(p2(true).sumsq, 2*2 + 3*3 + 5*5 + 7*7 + 11*11)@!~  ;
+  mathTable = %table(x=x, y=y) {sum = x+y; prod = x*y; | for x <- 1 .. 20, for y <- 1..20};
+
+}

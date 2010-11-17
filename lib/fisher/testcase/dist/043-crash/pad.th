@@ -1,0 +1,7 @@
+spawn plod {
+  body{
+     ~!@testStartLatch();
+     {: srvrComp:srvr :} = ~!@recOfPorts();
+     srvr <<< "gawk";
+  }body
+}plod;

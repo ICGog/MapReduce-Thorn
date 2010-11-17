@@ -1,0 +1,143 @@
+module ID {
+  var id__cnt := 0;
+  class Identity {
+    val id;
+    new Identity() {
+       id = ({id__cnt += 1;});
+    }
+    def `==`(other:Identity) = id == other.id;
+      | `==`(_) = false;
+  }Identity
+}ID
+
+module RECIPE {
+  class Amount {
+    val name;
+    val number;    
+    val quantal?;
+    new Amount(name':string,  number', quantal?':bool) {
+      name = name';
+      number = number';
+      quantal? = quantal?';
+    }
+    def str() = ("$number $name" unless quantal? else "$number");
+    def `==`(other: Amount) = 
+         name == other.name && 
+         (number == other.number if number :? int 
+           else number.within?(other.number,0.05) );
+      | `==`(_) = false;
+    def `*`(n) = Amount(name, this.dequant(n*number), quantal?);
+    def dequant(num') {
+      if (quantal?) {
+         nr = num'.round();
+         if (nr < 1) 1; else nr;
+         }
+      else num';
+      }dequant
+    def of(sing, plural) {
+      if (quantal? && number == 1)
+        "one $sing";
+      else if (quantal?) 
+        "$number $plural";
+      else ({n = this.str(); "$n $sing";});      
+    }of
+
+  }Amount
+
+
+  class Ingredient {
+     val name;
+     val plural;
+     val unit;
+     new Ingredient(name':string, unit':Amount) {
+       new(name', name', unit');
+     }
+     new Ingredient(name':string, plural': string, unit' : Amount) {
+       name = name';
+       plural = plural';
+       unit = unit';
+     }
+     def str() = unit.of(name, plural);
+     def `*`(n) = Ingredient(name, plural, unit*n);
+     def `==`(i:Ingredient) = this.name == i.name && this.unit == i.unit;
+       | `==`(_) = false;
+  }Ingredient
+  
+  
+  class Step {
+    val ingredients; // new ingredients that this step introduces;
+    val instructions; // string.  
+      // "@" indicates where ingredients go, if not at the end.      
+    new Step(instr) { new(instr, null); }
+    
+    new Step(instr, ing) {
+      ingredients = 
+             null if ing == null
+        else [ing] if ing :? Ingredient
+        else ing if ing ~ [(_:Ingredient) ...]
+        else ({throw "Bad ingredients: $ing";});
+      instructions = instr : string;
+    }
+    
+    def str() {
+       if (ingredients != null) {
+         ingr = ingredients.and();
+         if (instructions.contains?("@"))
+            instructions.replace("@", ingr);
+         else "$instructions $ingr";
+       }
+       else instructions;
+       }str
+  }Step
+  
+  class Recipe {
+    val ingredients;
+    val steps;
+    /*
+      Usually a recipe will not repeat ingredients.  But once in a 
+      while you do wind up with, say, 2 cups of oil appearing two times
+      in two steps, for a total of 4 cups of oil in the recipe.  
+      In this case, set check? to false.  If check? is true, 
+      this step will complain if you have appeared to 
+      mention an ingredient twice.
+    */
+    new Recipe(check?, steps') {
+      unless (steps' ~ [(_:Step)...]) {
+        throw "steps must be Steps!";
+      }
+      steps = steps';
+      ingredients = %[ step.ingredients ... | for step <- steps, if step.ingredients != null ];
+      if (check?) {
+        if (%first(i1 | for t <- ingredients.tails(1),
+                               val i1 = t.head(),
+                               for i2 <- t.tail(),
+                               if i1 == i2) ~ +i1) {
+           throw "Two occurrances of $i1.  Set check == false if you mean it.";
+        }if
+      }if
+    }new
+    
+  }Recipe
+  
+}RECIPE
+
+
+module PANTRY {
+  import RECIPE.*;
+   
+  one = Amount("one", 1, true);
+  tsp = Amount("tsp", 1, false);
+  tbsp = Amount("tbsp", 1, false);
+  cup = Amount("cup", 1, false);
+
+  
+  egg = Ingredient("egg", "eggs", one);
+  flour = Ingredient("flour", cup);
+  black·pepper = Ingredient("black pepper", tsp);
+  baking·powder = Ingredient("baking powder", tsp);
+  butter = Ingredient("butter", tbsp);
+  whole·milk = Ingredient("whole milk", cup);
+  currants = Ingredient("currants", cup);
+  egg·yolk = Ingredient("egg yolk", one);
+  sugar·T = Ingredient("sugar", tbsp);
+}

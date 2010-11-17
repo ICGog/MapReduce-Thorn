@@ -1,0 +1,7 @@
+{
+  import ADAGE.*;
+  s = "/tmp/thorntest/053";
+  f = File(s);
+  ~!@eq(f.str(), s)@!~  ;
+  reset();
+}

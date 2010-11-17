@@ -1,0 +1,24 @@
+import webmimetype.*;
+import unittest.*;
+
+fun should_split_url_at_last_dot(){
+  ex1 = getUrlExtension('http://example.com/a.png');
+  assertEquals(ex1, ".png");
+  ex2 = getUrlExtension('http://example.com/.png');
+  assertEquals(ex2, null);
+  ex3 = getUrlExtension('http://example.com/a.tar.gz');
+  assertEquals(ex3, ".gz");
+}
+
+test(should_split_url_at_last_dot);
+
+
+fun url_with_png_extension_shoul_return_image_png(){
+  mimetype1 = guessType('http://example.com/a.png');
+  assertEquals(mimetype1, 'image/png');
+  mimetype2 = guessType('http://example.com/a.zip');
+  assertEquals(mimetype2, 'application/zip');
+}
+
+test(url_with_png_extension_shoul_return_image_png);
+

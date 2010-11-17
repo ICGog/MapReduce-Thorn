@@ -1,0 +1,18 @@
+module PROFILE {
+  fun sum([]) = 0;
+    | sum([x,y...]) = x + sum(y);
+  class Profile(interests, pickiness) : pure {
+    # interests is  [{: topic:_:string, weight:_:int :}...],
+    def compatible?(other:Profile){
+      othInt = other.interests;
+      matchTotal = sum(%[weight 
+        | for {:topic, weight:} <- interests,
+          if %exists(true | for {:topic:$(topic):} <~ othInt)]);
+      matchTotal >= pickiness;
+    }compatible?
+  }Profile
+}
+
+
+
+

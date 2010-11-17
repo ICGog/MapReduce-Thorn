@@ -1,0 +1,23 @@
+{
+  import RECIPE.*;
+  import PANTRY.*;
+  
+  // http://allrecipes.com/Recipe/Brunch-Scones/Detail.aspx
+  brunch·scones = Recipe(
+    true,
+    [
+      Step("Preheat oven to 400 F.  Lightly grease a cookie sheet."),
+      Step("Sift @ into a bowl", [flour * 1.75, baking·powder * 4]),
+      Step("Rub @ into flour mixture to form a fine crumble", 
+        [butter * 5, sugar·T * 5]),
+      Step("Make a well in center, and add @.  Knead gently together. Dough will be sticky", 
+        [whole·milk * 0.66, currants * 0.5]),
+      Step("Beat @.", egg·yolk),
+      Step("""On a generously floured surface, roll dough to 3/4 inch thickness.
+         Stamp out 2.5-inch rounds with a pastry cutter.  Transfer to baking 
+         sheet, and brush tops with beaten egg yolk. Let stand 15 min."""),
+      Step("Bake until risen and lightly golden, 12-15 min.  Cool on a rack.")
+    ]
+  );
+  
+}

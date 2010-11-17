@@ -1,0 +1,2 @@
+This is based on the "Programming Examples" chapter of the SETL programming
+language, in which they code a topological sort. 

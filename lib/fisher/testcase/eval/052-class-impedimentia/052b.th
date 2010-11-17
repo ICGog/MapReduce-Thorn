@@ -1,0 +1,68 @@
+{
+class Assistant{
+ def m() = 0;
+}
+
+a = Assistant();
+~!@eq(a.m(), 0)@!~  ;
+~!@bad(a.m(111))@!~  ;
+~!@bad(a.m(11,22))@!~  ;
+
+class Desperado extends Assistant {
+ def m(x) = 1;
+}
+d = Desperado();
+~!@eq(d.m(), 0)@!~  ;
+~!@eq(d.m(111), 1)@!~  ;
+~!@bad(d.m(11,22))@!~  ;
+
+class Baseball {
+  def m(_,_) = 2;
+}
+
+b = Baseball();
+~!@bad(b.m())@!~  ;
+~!@bad(b.m(111))@!~  ;
+~!@eq(b.m(11,22), 2)@!~  ;
+
+class Issue extends Desperado, Baseball {
+}
+
+i = Issue();
+~!@eq(i.m(), 0)@!~  ;
+~!@eq(i.m(111), 1)@!~  ;
+~!@eq(i.m(11,22), 2)@!~  ;
+
+class Jacket extends Issue {
+  def m() = [];
+}
+ 
+j = Jacket();
+
+~!@eq(j.m(), [])@!~  ;
+~!@eq(j.m(111), 1)@!~  ;
+~!@eq(j.m(11,22), 2)@!~  ;
+
+
+
+class Romance extends Issue {
+  def m() = this.m(1) + this.m(2,2);
+}
+
+r = Romance();
+~!@eq(r.m(), 3)@!~  ;
+~!@eq(r.m(111), 1)@!~  ;
+~!@eq(r.m(11,22), 2)@!~  ;
+
+class Logic extends Issue {
+  def m() = [super.m()];
+}
+l = Logic();
+
+~!@eq(l.m(), [0])@!~  ;
+~!@eq(l.m(111), 1)@!~  ;
+~!@eq(l.m(11,22), 2)@!~  ;
+
+
+
+}

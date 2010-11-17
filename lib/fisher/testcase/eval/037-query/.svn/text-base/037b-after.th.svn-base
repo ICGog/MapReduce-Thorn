@@ -1,0 +1,48 @@
+{
+/*
+  ~!@qeq( %after(x | for i <- 1 .. 5, var x := i %> i+x), 15)@!~  ;
+  ~!@qeq( %after(x | for i <- 1 .. 5, var x := 0 %< i+x), 15)@!~  ;
+  ~!@qeq( %after(x | for i <- [], var x := 0 %< i+x), 0)@!~  ;
+  // the following test assumes uninitialized vars are null,
+  // and x (though a query-control var) is like that.
+  ~!@qeq( %after(x | for i <- [], var x := i %> i+x), null)@!~  ;
+  
+  fun prod(L) = %after(p | for i <- L, var p := 1 %< p*i);
+  ~!@eq(prod(1..5),120)@!~  ;
+  ~!@eq(prod(1..1),1)@!~  ;
+*/
+  ({
+    ~!@undef(blurb)@!~  ;
+    1;
+  });
+
+
+  ~!@qeq(
+    %after(
+      ({
+         ~!@undef(i,j)@!~  ;
+         s;
+      })
+    | 
+      for i <- 1..5,
+      val j = i*i,
+      var s := j %then1 s+j
+    )
+    , 1 + 4 + 9 + 16 + 25
+    )@!~  ;
+
+  ~!@qeq(
+    %after(
+      ({
+         ~!@undef(i,j)@!~  ;
+         s;
+      })
+    | 
+      for i <- 1..5,
+      val j = i*i,
+      var s := 37 %then0 s+j
+    )
+    , 37 + 1 + 4 + 9 + 16 + 25
+    )@!~  ;
+
+}

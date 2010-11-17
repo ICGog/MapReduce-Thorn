@@ -1,0 +1,39 @@
+module NET {
+  val UseHTTP = "HTTP";
+  val UseLINE = "LINE";
+  class Protocol {
+     def encode(msg) = (throw "Protocol.encode is abstract! Can't encode $msg";);
+     def decode(msg) = (throw "Protocol.encode is abstract! Can't decode $msg";);
+     // val pleaseEndWithNewline = true;    
+     def input() = UseHTTP;
+  }Protocol
+  
+  javaly class ListenOn = fisher.runtime.lib.sox.ListenOn {
+     new ListenOn(port, protocol);
+  }
+  javaly class NetSite = fisher.runtime.lib.sox.NetSite {
+     new NetSite(nodeName, port, protocol);
+  }
+
+  javaly class HTTPResponse = fisher.runtime.lib.http.HTTPResponse {
+    new HTTPResponse(responseCode, meaning, extraHeaders, content);
+    def headers() = headers;
+    def content() = content;
+    def protocolVersion() = protocolVersion;
+    def responseCode() = responseCode;
+    def meaning() = meaning;
+  }
+
+  javaly class HTTPRequest = fisher.runtime.lib.http.HTTPRequest {
+    new HTTPRequest(verb, resource, params, headers, content);
+    def headers() = headers;
+    def params() = params;
+    def verb() = verb;
+    def content() = content;
+    def resource() = resource;
+    def protocolVersion() = protocolVersion;
+  }
+  
+  javaly fun parseJSON(x) = fisher.runtime.lib.json.JSON.parse;
+
+}

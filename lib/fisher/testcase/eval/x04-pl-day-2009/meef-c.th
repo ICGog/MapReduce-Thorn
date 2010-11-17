@@ -1,0 +1,17 @@
+{
+  fun assoc(k, [[$(k), v], _...]) = +v;
+    | assoc(k, [])                = null;
+    | assoc(k, [_, tail...])      = assoc(k, tail);
+
+  alist = [ [1, true], [15, null], ["yes", "no"] ];
+ 
+  if (assoc(15, alist) ~ +w) {
+    ~!@assert(w == null)  ;
+  }
+  else ~!@assert(false)  ;
+  
+  if (assoc("no", alist) ~ +w) ~!@assert(false)  ;
+  else ~!@assert(true)  ;
+    
+
+}

@@ -1,0 +1,34 @@
+{
+  madness: 
+  for(i <- 1 .. 10) {
+    if (i < 7) continue;
+    ~!@hit()@!~ 4 ;
+  }
+  
+  piccolo: 
+  for(i <- 1 .. 10) {
+    if (i > 3) continue;
+    for (j <- 1 .. 10) {
+      if (j > 3) continue;
+      ~!@hit()@!~ 9 ;
+    }
+    ~!@hit()@!~ 3 ;
+  }
+  
+  dock: 
+  for (i <- 1 .. 10) {
+    if (i > 3) continue;
+    fistula: for (j <- 1 .. 10) {
+      if (j >= i) continue fistula;
+      // 1, [].  // 2, [1] // 3, [1,2]
+      ~!@hit()@!~ 3 ;
+      if (i == 2) ~!@eq(j,1)@!~  ;
+      ~!@assert(j in 1..i)@!~3  ;
+    }
+    ~!@assert(i in 1..3)@!~3  ;
+  }
+  
+  
+  
+  
+}

@@ -1,0 +1,19 @@
+// module CLO{ class Canoe{}  class Loser{def vex(){}}Loser  var feud:=1; sector=2; }
+{
+  import CLO.feud;
+  class Whirlpool {
+     def villify() {
+        feud := feud + 1;
+        feud;
+     }
+  }Whirlpool
+  
+  ~!@eq(feud, 1)@!~;
+  w = Whirlpool();
+  ~!@eq(w.villify(), 2)@!~;
+  ~!@eq(w.villify(), 3)@!~;
+  feud := 100;
+  ~!@eq(w.villify(), 101)@!~;
+  ~!@bad(w.feud)@!~;
+
+}

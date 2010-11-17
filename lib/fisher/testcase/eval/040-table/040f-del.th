@@ -1,0 +1,22 @@
+{
+  t = table(k){v;};
+  fun it's(l) {
+     st = %sort( r %< r.k | for r <- t );
+     ~!@eq(st, l)  ;
+  }
+
+  var a := {: k: 1, v: "by Bufa-Wheety's maple revenge!" :};
+  t .ins( a);
+  it's([a]);
+  t .del( a );
+  it's([]);
+  t .ins( a);
+  var b := {: k: 2, v: "by Gandalf's hangover!" :};
+  t .ins( b);
+  it's([a,b]);
+  t .del( {: k: 1 :} );
+  it's([b]);
+  t .del( {: k:2, v: "This is not Gandalf's hangover, but should work anyways" :} );
+
+
+}

@@ -1,0 +1,9 @@
+spawn wobblegram{
+  initially {
+    ~!@hit()@!~  ;
+  }
+  body {
+     ~!@hit()@!~ 1 ;
+     ~!@eq(1,1,1,1,1)@!~  ;
+  }
+};

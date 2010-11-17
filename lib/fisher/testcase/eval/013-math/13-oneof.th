@@ -1,0 +1,20 @@
+{
+	fun diverge() = diverge();
+	
+	~!@eq(true ^^ true, false)@!~;
+    ~!@eq(true ^^ false, true)@!~;
+    ~!@eq(false ^^ true, true)@!~;
+    ~!@eq(false ^^ false, false)@!~;
+	
+	
+    ~!@eq(true ^^ true ^^ true, false)@!~;
+    ~!@eq(true ^^ true ^^ false, false)@!~;
+    ~!@eq(true ^^ false ^^ true, false)@!~;
+    ~!@eq(true ^^ false ^^ false, true)@!~;
+    ~!@eq(false ^^ true ^^ true, false)@!~;
+    ~!@eq(false ^^ true ^^ false, true)@!~;
+    ~!@eq(false ^^ false ^^ true, true)@!~;
+    ~!@eq(false ^^ false ^^ false, false)@!~;
+    
+    ~!@eq(true ^^ true ^^ diverge(), false)@!~;
+}

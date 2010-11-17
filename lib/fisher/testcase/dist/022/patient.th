@@ -1,0 +1,18 @@
+spawn patient {
+  // patient in the sense of "willing to wait"
+  var alarmer; var patient; var delayer;
+  initially{
+    ~!@testStartLatch();
+    {: alarmerComp: a, patientComp: p, delayerComp: d :} = ~!@recOfPorts();
+    alarmer := a; patient := p; delayer := d;
+  }
+  
+  body{
+    delayer <<< "pook";
+  
+  ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body
+
+}patient;

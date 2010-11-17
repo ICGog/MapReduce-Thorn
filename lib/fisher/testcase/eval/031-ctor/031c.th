@@ -1,0 +1,11 @@
+{
+
+   class Lame {
+      val nosy; 
+      new Lame(x) { nosy = x; }
+   }
+   
+   l = Lame(4);
+   ~!@eq(l.nosy, 4)@!~  ;
+
+}

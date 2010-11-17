@@ -1,0 +1,19 @@
+// How until-loops work in with bindings.
+
+{
+   var L := [];
+   var i := 1;
+   until ( L ~ [a,b,c,d,e]) {
+     L := [L..., i];
+     i := i + 1;
+     `sneaky oration` = i;
+   }
+   // variables in until-test are in scope here.
+   ~!@eq(a, 1)@!~;
+   ~!@eq(b, 2)@!~;
+   ~!@eq(c, 3)@!~;
+   ~!@eq(d, 4)@!~;
+   ~!@eq(e, 5)@!~;
+   ~!@undef(`sneaky oration`)@!~;
+   
+}

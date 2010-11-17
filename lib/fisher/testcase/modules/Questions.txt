@@ -1,0 +1,49 @@
+If a Thorn file imports yog: 
+   import yog.*;
+Where does Thorn look for yog: what directory, what files, etc?
+
+It sounds as if the interpreter is given a list of module files.  
+
+------------------------------------------------------------------------------
+
+I think I want to use positional arguments rather than keyword, for
+consistency with the rest of Thorn
+
+
+------------------------------------------------------------------------------
+
+"Source files do not define their own namespaces", 
+yet
+"Aliases in a source file are only visible to that file."
+
+So ... um ... is the intent that source files define some kind of
+semi-namespace, which applies to aliases but no other names?
+
+Also, 
+"Aliases introduce names in the same namespace as member entities..."
+
+But /that/ suggests that a source file /is/ a namespace.
+
+
+------------------------------------------------------------------------------
+
+The 'member' directive of a module file and the 'from' clause in an import
+statement seem to suggest that modules refer to each other via absolute file
+names as one ordinary means of referring to each other.  
+
+I guess relative file urls are intended to give files in the same or adjacent
+directories. 
+
+------------------------------------------------------------------------------
+
+We want URLs, don't we?  We need to be able to locate the module (that's the L
+in URL), not just identify them (that's the I in URI).
+
+
+------------------------------------------------------------------------------
+
+True or false: 'import' always imports a module?
+
+
+------------------------------------------------------------------------------
+

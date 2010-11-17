@@ -1,0 +1,19 @@
+{
+  class Redneck {
+    var goatish := 0;
+    def memorize() { goatish := goatish + 1; goatish; }
+    def force() { 
+       this.memorize();
+       this.memorize();
+       }
+    def grasp() = [this.goatish];
+  }Redneck
+  
+  r = Redneck();
+  
+  ~!@eq(r.memorize(), 1)@!~  ;
+  ~!@eq(r.force(), 3)@!~  ;
+  ~!@eq(r.grasp(), [3] )@!~  ;
+  
+  
+}

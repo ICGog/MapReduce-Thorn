@@ -1,0 +1,10 @@
+{
+  class A {
+     def m() = 1;
+  }
+  class B extends A {
+     def m() = super@A.m() + 1;
+  }
+  b = B();
+  ~!@eq(b.m(), 2)@!~  ;
+}

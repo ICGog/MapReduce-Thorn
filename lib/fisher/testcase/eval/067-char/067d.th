@@ -1,0 +1,13 @@
+{
+  import UNICODE.*;
+  a = "a".char(0);
+  x = (0xffff + 1000).char;
+  y = (0xffff + 2000).char;
+  
+  fun tsst(c) {
+    ~!@eq(c.str.len, 1)  ;
+  }tsst
+
+  for (c <- [a,x,y]) tsst(c);
+  
+}

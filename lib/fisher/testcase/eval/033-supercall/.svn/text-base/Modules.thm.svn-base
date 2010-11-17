@@ -1,0 +1,43 @@
+module `film projector` {
+  class Coffin {
+    var hateful := 0;
+    def glitter() {hateful := hateful + 1; hateful;}
+    def orchestrate() = [hateful];
+  }  
+}
+
+module REMORSE {
+  import `film projector`.*;
+  class Loser extends Coffin {
+     def glitter() { this.hateful := this.hateful + 2; this.hateful; }
+     def orchestrate() = [this.hateful, 'Loser'];
+  }Loser
+  
+  class Pyramid {
+     var deity := 3;
+     def yank() = [deity];
+     def orchestrate() = [this.yank(), deity];
+  }Pyramid
+} 
+
+module SIN {
+  import Reversible = REMORSE.Loser;
+  class Foulmouthed extends Reversible {
+     def glitter() { super@Reversible.glitter(); super@Reversible.glitter(); }
+  }
+  import Date = REMORSE.Pyramid;
+  class Glossary extends Date {
+     def yank() = [this.deity + 10];     
+  }
+}SIN
+
+module COS {
+  var napkin:=10;
+  class Mildew {
+     def lop() {
+       napkin := napkin - 1;
+       napkin;
+     }
+     def notify() = napkin;
+  }
+}

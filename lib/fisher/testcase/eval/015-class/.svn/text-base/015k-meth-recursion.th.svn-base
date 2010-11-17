@@ -1,0 +1,37 @@
+{
+  class C{
+    def m(n) = (1 if n <= 0 else n*this.m(n-1));
+  }
+  c = C();
+  ~!@eq(c.m(1), 1)@!~  ;
+  ~!@eq(c.m(2), 2)@!~  ;
+  ~!@eq(c.m(3), 6)@!~  ;
+  
+  class D{
+    var v;
+    def m(n) {
+      v := 1;
+      for(i <- 1 .. n) {v *= i;}
+      v;
+    }
+  }
+  d = D();
+  ~!@eq(d.m(1), 1)@!~  ;
+  ~!@eq(d.m(2), 2)@!~  ;
+  ~!@eq(d.m(3), 6)@!~  ;
+  
+  
+  class E{
+    def m(n) {
+      v := 1;
+      for(i <- 1 .. n) {v *= i;}
+      v;
+    }
+    var v;
+  }
+  e = E();
+  ~!@eq(e.m(1), 1)@!~  ;
+  ~!@eq(e.m(2), 2)@!~  ;
+  ~!@eq(e.m(3), 6)@!~  ;
+  
+}

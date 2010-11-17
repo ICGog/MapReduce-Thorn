@@ -1,0 +1,25 @@
+{
+  class Cons(x,y){}
+  class Nil(){}
+  
+  nil = Nil();
+  c1n = Cons(1,nil);
+  c21n = Cons(2, c1n);
+  c12 = Cons(1,2);
+  
+  ~!@assert(nil ~ _:Nil)@!~  ;
+
+  ~!@assert(nil ~ Nil())@!~  ;
+  
+  ~!@assert(c1n ~ Cons(1, Nil() ))@!~  ;
+  
+  ~!@assert(! (nil ~ Cons(_,_)) )@!~  ;
+  ~!@assert(!(c1n ~ Nil()))@!~  ;
+  
+  ~!@assert(c1n ~ Cons(x,y) && x == 1 && y ~ Nil())@!~  ;
+  
+  ~!@assert(c21n ~ Cons(2, Cons(1,Nil())))@!~  ;
+  
+  ~!@assert(c21n ~ Cons(a, Cons(b, c)) && a == 2 && b == 1 && c ~ Nil())@!~  ;
+
+}

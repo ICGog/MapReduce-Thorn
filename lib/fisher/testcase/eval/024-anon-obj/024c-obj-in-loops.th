@@ -1,0 +1,45 @@
+{
+  var annals := [];
+  // emacs says I must do weapons!
+  pistol = object {
+    var scimitar;
+    var shots := 6;
+    def attack() { 
+       if (shots > 0) {
+         annals := [ ['bang', shots], annals...];
+         shots := shots - 1;
+         }
+       else {
+         scimitar.attack();
+         }
+       }
+  }object;
+
+  pistol.scimitar := object {
+    var slashes := 0;
+    def attack() {
+      slashes := slashes + 1;
+      annals := [ ['slash', slashes], annals...]; 
+      }
+  };
+
+  ~!@eq(annals, [])@!~  ;
+  pistol.attack();
+  ~!@eq(annals, [['bang', 6]])@!~  ;
+  pistol.attack();
+  ~!@eq(annals, [['bang', 5],['bang', 6]])@!~  ;
+  pistol.attack();
+  pistol.attack();
+  pistol.attack();
+  pistol.attack();
+  ~!@eq(annals, [['bang', 1],['bang', 2],['bang', 3],['bang', 4],['bang', 5],['bang', 6]])@!~  ;
+  pistol.attack(); 
+  // out of bullets!
+  ~!@eq(annals, [['slash', 1],['bang', 1],['bang', 2],['bang', 3],['bang', 4],['bang', 5],['bang', 6]])@!~  ;
+  pistol.attack();
+  ~!@eq(annals, [['slash', 2], ['slash', 1],['bang', 1],['bang', 2],['bang', 3],['bang', 4],['bang', 5],['bang', 6]])@!~  ;
+  
+  if (pistol ~ ‹shots: 0›) { ~!@hit()@!~ 1 ; } else { ~!@hit()@!~ 0 ; }
+  if (pistol.scimitar ~ ‹slashes:s›) { ~!@eq(s, 2)@!~  ;} else { ~!@hit()@!~ 0 ; }
+
+}

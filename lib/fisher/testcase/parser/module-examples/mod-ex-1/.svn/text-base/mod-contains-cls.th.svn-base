@@ -1,0 +1,6 @@
+//MODU
+module `eldrich bunsen burner` {
+  class `plucky jail`{}
+  var pastlife := "by Baba Yaga's strong ooze!";
+  fun baffle() = "by Myrddyn's pillow!";
+}

@@ -1,0 +1,7 @@
+#!/bin/bash
+source ~/.bashrc
+ch=$FISHERDEMO/2ch
+th -m $ch/Modules.thm -s $ch/cheeper2-client.th -p 4386 -- $*
+
+    
+

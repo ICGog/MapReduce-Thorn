@@ -1,0 +1,14 @@
+{
+  class A {
+    val aed;
+    new A() {aed = true;}
+  }
+  
+  class B extends A {
+    new B(x) {
+      if(true) {
+         new@A();
+      }
+    }new
+  }B
+}

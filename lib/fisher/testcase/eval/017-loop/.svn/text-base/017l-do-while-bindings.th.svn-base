@@ -1,0 +1,14 @@
+// How bindings work in do-while loops.
+
+{
+  var L := [5,4,3,2,1];
+  do {
+     [car, cdr...] = L;
+     L := cdr;
+     ~!@undef(x, y)@!~ 5; 
+  }
+  while(L ~ [x,y...]) 
+  ~!@undef(x, y)@!~ 1;
+  ~!@undef(car, cdr)@!~; 
+  ~!@eq(L, [])@!~;
+}

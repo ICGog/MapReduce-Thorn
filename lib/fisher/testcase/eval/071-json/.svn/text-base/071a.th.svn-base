@@ -1,0 +1,19 @@
+{
+  import JSON.*;
+
+   ~!@eq(jsonParse('"Παλλαδ Αθενειν, Κυδριν θεον!"'), 'Παλλαδ Αθενειν, Κυδριν θεον!')@!~  ;
+
+   // Strings 
+
+  ~!@eq(jsonParse('"\\u0041"'), 'A')@!~  ;
+
+  ~!@eq(jsonParse('""'), "")@!~  ;
+  ~!@eq(jsonParse('"\\"\\\\\\/"'), "\"\\/")@!~  ;
+  ~!@eq(jsonParse('"\\bard\\failed\\nastily\\rather\\thoroughly"'), "\bard\failed\nastily\rather\thoroughly")@!~  ;
+  
+  // Things that don't really parse
+  
+  ~!@eq(jsonParse('Παλλαδ Αθενειν, Κυδριν θεον!'), null)@!~  ;
+  
+
+}

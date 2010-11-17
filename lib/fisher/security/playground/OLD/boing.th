@@ -1,0 +1,27 @@
+spawn boing {
+
+  body{
+   println("Hi!  I'm Boing!  You're not!");
+   marco = spawn marco {
+     body {
+      try {
+        recv {
+          x from y checked => {
+             println("Marco says: '$y says $x'");
+          }
+        }recv
+      }try
+      catch {
+        Z => {println("Oh, nose! $Z!");}
+      }catch
+     }body
+   }marco;
+   
+   sal = spawn sal {
+     body{
+       marco <<< "Hi!" security ["Owie!"];
+     }
+   }sal;
+   
+  }body
+}

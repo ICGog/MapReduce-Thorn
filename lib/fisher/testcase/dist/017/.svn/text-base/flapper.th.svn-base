@@ -1,0 +1,28 @@
+spawn flapper {
+    
+  body{
+     ~!@testStartLatch();
+     {: liberComp: liber :} = ~!@recOfPorts();
+     r1 = liber <-> tap();
+     ~!@eq(r1, {: nScenic:1, nUgly:0, total: 0 :})@!~  ;
+     
+     r2 = liber <-> tap();
+     ~!@eq(r2, {: nScenic:2, nUgly:0, total: 1 :})@!~  ;
+
+     r3 = liber <-> flap();
+     ~!@eq(r3, {: total: 2, nscenic: false :} )@!~  ;
+     
+     r4 = liber <-> tap();
+     ~!@eq(r4, {: nScenic: 3, nUgly: 1, total: 3 :})@!~  ;
+     
+     ~!@eq((liber<->tap()), {: nScenic: 3, nUgly: 2, total: 4 :})@!~  ;
+     ~!@eq((liber<->flap()), {: total: 5, nscenic: true:})@!~  ;
+     ~!@eq((liber<->tap()), {: nScenic: 4, nUgly:3 , total: 6 :})@!~  ;
+
+     
+     liber <-> zap();
+     ~!@checkphase(
+//     {: phase: , bag: []:},
+    )@!~  ;
+  }
+}flapper;

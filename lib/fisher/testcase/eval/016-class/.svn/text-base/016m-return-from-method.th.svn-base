@@ -1,0 +1,16 @@
+{
+  class Charlatan {
+    var v := 0;
+    def implicate(n) {
+       if (n == 1) return v;
+       v := v + n;
+       v;       
+    }
+  }
+  
+  c = Charlatan();
+  ~!@eq(c.implicate(1), 0)@!~  ;
+  ~!@eq(c.implicate(2), 2)@!~  ;
+  ~!@eq(c.implicate(2), 4)@!~  ;
+  ~!@eq(c.implicate(1), 4)@!~  ;
+}

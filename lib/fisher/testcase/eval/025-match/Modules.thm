@@ -1,0 +1,5 @@
+module OCTOPUS {
+ class Excerpt {
+   def str() = "xce";
+ }
+}

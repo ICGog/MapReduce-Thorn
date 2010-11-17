@@ -1,0 +1,16 @@
+//STMT
+{
+
+A = table (a) { val b; var c; map d; };
+B = table (a,b){
+      var c, d, e;
+      };
+M = table (k) { map var v;};
+
+N = map();
+//O = map{ 1 => 2,  x+1 => x+2};
+
+A += {: a:1, b:2, c:3 :};
+A -= {: a:1, b:2, c:3 :};
+
+}

@@ -1,0 +1,265 @@
+/* -*- mode: java; c-file-style: "ellemtel" -*- */ 
+module wctemplates{
+   
+   // FIXME: Do something that will make templating more easy / pretty. 
+
+   import webhtml.*;
+   import wcmodels.db;
+
+   import wcformtemplates.cheep_form;
+   import wcformtemplates.follow_form;
+   import wcformtemplates.unfollow_form;
+
+   // FIXME: importing this will cause a stackoverflow???
+   //  import wccontrollers.*;
+  
+   fun div_gf(content) = div_({: `class`: 'yui-gf' :}, content); 
+   fun div_u(content) = div_({: `class`: 'yui-u' :}, content);
+   fun div_u_first(content) = div_({: `class`: 'yui-u first' :}, content);
+  
+   fun scripts(){
+      return div_([
+         script({: src: "/static/js/jquery.min.js", type: "text/javascript":}),
+         script({: src: "/static/js/jquery.form.js", type: "text/javascript":}),
+         script({: src: "/static/js/webcheeper.js", type: "text/javascript":}),
+         script({: type: "text/javascript" :}, """
+\$(document).ready(function() { 
+  main();
+});"""
+            )]);
+   }
+
+   fun header_tpl(){
+      return 
+         div_({: id:"header" :}, [
+            h1({: id:"page-title" :}, [
+               span([
+                  a({: href: "/", title: "Web Cheeper" :}, "Web Cheeper")])]),
+            div_({: id: "description" :}, [
+               "Powered by ",
+               a({: href: "http://www.thorn-lang.org/" :}, "Thorn")])]);
+   }
+
+   fun menu_tpl(context){
+      user = u if context ~ {: user:u :} else null;
+
+      home    = li([a({: href: "/", title: "Home" :},"Home")]);
+      users   = li([a({: href: "/users/", title: "Users" :}, "Users")]); 
+      about   = li([a({: href: "/about/", title: "About" :}, "About")]);
+      signout = li([a({: href: "/signout/", title: "Sign Out" :}, "Sign Out")]);
+      signup  = li([a({: href: "/signup/", title: "Sign Up" :}, "Sign Up")]);
+      settings= li([a({: href: "/settings/", title: "Settings" :}, "Settings")]);
+
+      import wccontrollers.*;
+      links = [ home, users, settings, about, signout ] if user != null else [ home, signup, about ];
+
+      return
+         div_({: id: 'access':}, [
+            div_({: id: 'menu' :}, 
+            ul(links))
+            ]);
+   }
+
+   fun container_tpl(content){
+      return 
+         div_({: id: 'container' :}, [
+            div_({: id: 'content' :},[
+               div_({: id: "message" :},[]),
+               div_({: `class`: "yui-u", id: "cheeps-list":}, content)
+               ])
+            ]);
+   }
+
+   fun message_tpl(cheep){
+      sender_key = cheep['senderkey'];
+      cheep_text = cheep['text'];
+      createdat = cheep['createdat'];
+
+      return li({: `class`: "cheep yui-gf", id: "cheep-time-$createdat" :}, [
+         div_({: `class`: "cheep-author yui-u first" :}, [
+            img({: width: 32, height: 32, src: "/avatar/$sender_key", alt: "avatar" :},""), 
+            div_(a({: href: "/$sender_key/" :}, "$sender_key"))]),
+         div_({: `class`: "yui-u":}, [ 
+            p("$cheep_text"),
+            div_({: `class`: "cheep-meta" :}, [
+               "Thorn Time: $createdat"])
+            ])
+         ]);
+   }
+
+   fun tweet_tpl(cheep){
+      sender_key = cheep['senderkey'];
+      cheep_text = cheep['text'];
+      createdat = cheep['createdat'];
+
+      // id of messages (li) are used in JS to sort, and get new messages
+      // when posting a new one.  Here we're making the number negative
+      // for tweets so cheeps will be inserted.
+      
+      return li({: `class`: "cheep yui-gf", id: "cheep-time--" + cheep['key'] :}, [
+         div_({: `class`: "cheep-author yui-u first" :}, [
+            img({: width: 32, height: 32, src: cheep['avatar'], alt: "avatar" :},""), 
+            div_(a({: href: "http://twitter.com/$sender_key/" :}, "$sender_key"))]),
+         div_({: `class`: "yui-u":}, [ 
+            p("$cheep_text"),
+            div_({: `class`: "cheep-meta" :}, [
+               "Time: $createdat"
+               ])
+            ])
+         ]);
+   }
+
+   fun messages_tpl(context){
+      cheeps = context.messages;
+      if(cheeps.len() > 0){
+         messages = ord();
+         for(c <- cheeps){
+            if(c['twitter'] ~ +_){
+               messages @= tweet_tpl(c);
+            }
+            else{
+               messages @= message_tpl(c);
+            }
+         }
+         return ul({: id: 'cheeps' :}, messages.lst());
+      }
+      else {
+         return ul({: id: 'cheeps' :}, li([]));
+      }
+   }
+
+   fun user_tpl(context){
+      user = context.user;
+      other = context.other;
+      username = other['username'];
+      userkey = other['key'];
+      cheeps = other['cheeps'];
+      followers = other['followerkeys'];
+      followees = other['followingkeys'];
+
+      is_user_following = true if %find(k | for k <- followers, if k == user['key']) ~ +_ else false;
+      var action := null;
+      if(is_user_following){
+        action := unfollow_form({: user, other:});
+      }
+      else{
+        action := follow_form({: user, other :});
+      }
+
+
+       return li({: `class`: "yui-gf" :}, [
+         div_({: `class`: "cheep-author yui-u first" :}, [
+            img({: width: 32, height: 32, src: "/avatar/$userkey", alt: "avatar" :},""), 
+            div_(a({: href: "/$userkey/" :}, "$username"))]),
+         div_({: `class`: "yui-u":}, [ 
+            p(["Followers: ",
+            span({: `class`: "followers" :}, followers.len()-1),
+            " following: ",
+            span({: `class`: "followees" :}, followees.len()-1)]),
+            div_({: `class`: "cheep-meta" :}, [
+               action                                
+               ])
+            ])
+         ]);
+   }
+
+   fun users_tpl(context){
+      println("context:" + context);
+      user = context.user;
+      users = context.users;
+      
+      other_users = %[user_tpl({:user, other:c :}) | for c <- users, if c['key'] != user['key']];
+      if(other_users.len() > 0){
+         return ul(other_users);
+      }
+      else {
+         return h2("No other users yet!");
+      }
+   }
+
+   fun cheepsPage(context){
+      messages = context.messages;
+      own_messages = context.own_messages;
+      user = context.user;
+
+      name = user['name'];
+      followersNum = user['followerkeys'].num;
+      followingNum = user['followingkeys'].num;
+    
+      var html_ := "";
+    
+      html_ += "<h3>$name Followers: $followersNum Following: $followingNum</h3>";
+      html_ += "<h3>Cheep Something</h3>";
+      html_ += cheep_form(user);
+      html_ += "<h3>Cheeps</h3>";
+      html_ += '<ul class="cheeps">';
+
+      for(m <- messages){
+         sender = db.users.get(m['senderkey']);
+         senderName = sender['name'];
+         senderKey = sender['key'];
+         cheep = m['text'];
+         html_ += "<li><a href=/$senderKey/>$senderName</a> $cheep</li>";
+      }
+      html_ += "</ul>";
+      html_ += "<h3>Own Cheeps</h3>";
+      html_ += '<ul class="cheeps">';
+      for(m <- own_messages){
+         cheep = m['text'];
+         deleteLink = messages.get_delete_form(m);
+         html_ += "<li>$cheep $deleteLink</li>";
+      }
+      html_ += "</ul>";
+
+      return html([
+         head("Cheeps"),
+         body_(html_)]
+         ).str();
+   }
+
+   fun head_tpl(title_){
+      return 
+         head([
+            title("$title_"),
+            meta({: `http-equiv`:"content-type", content: "text/html; charset=UTF-8" :}, ""),
+            link({: rel: "stylesheet", type: "text/css", href: "/static/css/style.css" :}, "")
+            ]);
+   }
+
+
+   fun body_tpl(context, content){
+      return 
+         body_([
+            div_({: id:"wrapper" :},[
+               header_tpl(), 
+               menu_tpl(context), 
+               container_tpl(content),
+               scripts()
+               ])]);
+   }
+
+
+
+   fun page_tpl(context, page_title, content){
+      return 
+         html([
+            head_tpl(page_title),
+            body_tpl(context, content)
+            ]);
+   }
+
+   fun searchPageBottom(context){
+      return "".join([
+         h2("Search Result"),
+         messages_tpl(context)
+         ]);
+   }
+
+   fun userBottom(context){
+      return "".join([
+         h2("Recent Cheeps"),
+         messages_tpl(context)
+         ]);
+   }
+}
+

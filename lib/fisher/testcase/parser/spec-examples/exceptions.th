@@ -1,0 +1,16 @@
+//STMT
+{
+   try {
+     x := 1;
+   }
+   catch {
+     "Doom!" = {print("doom");}
+   | "Mood?" = {}
+   }
+   finally {
+     x := 2;
+   }
+   
+   throw 1;
+
+}

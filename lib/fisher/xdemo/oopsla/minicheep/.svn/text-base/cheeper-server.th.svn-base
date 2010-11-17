@@ -1,0 +1,84 @@
+ spawn cheeper {
+   import CHEEP.*;
+   import TIME.*;
+   
+   users = table(username){var password;};
+   chirps = ord(); 
+
+   var goon := true;
+
+
+   sync register(who && {:username, password:})  {
+     if (users(username) == null) {
+       users(username) := {:password:};
+       println("Registering $username (pw=$password)");
+       true;
+     }
+     else if (passwordOK?(who)) {
+       // Multiple identical registration: a no-op
+       false;
+     }
+     else {
+       println("Someone is trying to get into $username's account.");
+     }
+   }
+   
+   fun passwordOK?({:username, password:}) = 
+      users(username) ~ {:password:$(password):};
+   
+   sync chirp(text, who && {:username, password:} )  {
+      if (passwordOK?(who)) {
+        c = Chirp(username, text, tick());
+        chirps @= c;
+        println("New chirp: $c");
+        "You chirped $text.";
+        }
+      else {
+        ["You're not $username!"];
+      }
+   }
+ 
+   sync vote(n, up, who && {:username:} && (passwordOK?(who))? ) {
+     // We don't protect against multiple voting.
+            // WAS    if (%first(c %none null | for c && Chirp(_,_,$(n)) <~ chirps.lst()) ~ +c){
+      find(for c && Chirp(_,_,$(n)) <~ chirps) {
+        c.vote(up);
+        println("$username voted $n $up: $c");
+        return c.str();
+        }
+     else {
+       np = n + 1;
+       "Sorry, no chirp $n.";
+     }%if
+   }vote
+   
+   sync topChirps(n) {
+     inOrder = %sort(c %> c.love() | for c <- chirps);
+     topN = inOrder.left(n);
+     %[c.str() | for c <- topN];
+   }topChirps
+
+   
+   sync allChirps() =  %[c.str() | for c <- chirps.lst()];
+   
+   // The kill signal is high-priority.
+   async plz_die() prio 1 {
+     println("Oh, yay, I get to die now!");
+     goon := false;
+   }
+   
+   
+   body{
+     println("Cheeper server is up and running.");
+     while(goon){
+       try {
+         serve;
+       }
+       catch {
+         problem => {
+            println("\n\nProblem: $problem");
+         }
+       }
+     }
+   }body
+ }cheeper;

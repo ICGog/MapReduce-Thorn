@@ -1,0 +1,70 @@
+spawn server {
+  var goon := true;
+  import CHEEPER.*;
+  chirps = table(number){val chirp; var plusVotes, minusVotes;};
+  var maxChirp := 0;
+  users = table(name){val user; var chirps;};
+  
+  sync register!(u: User) {
+    name = u.name;
+    if (users(name) ~ {: user:priorUser :}) {
+      if (u.password != priorUser.password) {
+        println("register! -- denied $u");
+        return "Sorry, but the name '$name' is taken.";
+      }
+      else {
+        println("register -- duplicate for $u");
+        return "Hi, $name, welcome back to Cheeper.";
+      }
+    }
+    else {
+      users(name) := {: user: u, chirps: [] :};
+      println("register!ed $u");
+      return "Hi, $name. Welcome to Cheeper!";
+    }
+  }register!
+
+  fun badUser(u:User) {
+         if (users(u.name) ~ {:user: {:password:p:} :} && u.password == p) {null;}
+         else {
+           println("badUser: $u is bad.");
+           "$u is not a properly-registered user.";
+         }
+       }
+    | badUser(_) = "Please sign in, O philosopher.";
+
+
+  sync chirp!(u:User, s:string) {
+    if (badUser(u) ~ +msg) {return msg;}
+    maxChirp += 1;
+    chirp = Chirp(s, maxChirp, u.name);
+    chirps(maxChirp) := {: chirp, plusVotes: 0, minusVotes: 0 :};
+    println("chirp! -- $u chirped '$s'");
+    "Thank you for chirping!";
+  }chirp!
+
+  sync vote!(u:User, n:int, plus:bool) {
+     if (badUser(u) ~ +msg) {return msg;}
+     if(plus) chirps(n).plusVotes  += 1;
+     else     chirps(n).minusVotes += 1;
+println("after vote! " + chirps(n));
+     "Voted";
+  }vote!
+  
+  sync fullList(u:User) = 
+    %sort[row %< number | for row && {:number:} <- chirps];
+
+  sync about(u:User, regexp:string) {
+    unanchoredRegexp = ".*(?:" + regexp + ").*"; 
+    %sort[row %< number | for row && {:number, chirp:{:text: unanchoredRegexp/[]:}:} <~ chirps];
+  }
+
+  sync rowsForNumbers(u:User, numbers: list) = %[chirps(n) | for n <- numbers];
+
+
+  body{
+    println("I'm the server, I am I am.");
+    while(goon) serve;
+
+  }body
+}server;

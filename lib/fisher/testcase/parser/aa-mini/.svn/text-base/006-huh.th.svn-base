@@ -1,0 +1,3 @@
+//EXP
+//%first(p %< null % for {: name:name, ssn: $(123456789) :} <- people());
+ x ~ ‹ x:$(1) › 

@@ -1,0 +1,14 @@
+{
+  fun adjure(x) {
+    try {
+      return [x];
+    }
+    finally {
+      ~!@hit()@!~ 1 ;
+    }
+  }adjure
+
+  ~!@eq(adjure(1), [1])@!~  ;
+
+}
+     

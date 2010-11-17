@@ -1,0 +1,15 @@
+{
+  lapdog = object {
+    def weep() {
+       try {
+          return "Let me tell you sodefing, you radical, even Baba Yaga ain't as much of a banker as Sif.";
+       }
+       finally {
+         ~!@hit()@!~ 2 ;
+       }
+     }weep
+    }object;
+
+   lapdog.weep();
+   ~!@eq(lapdog.weep(), "Let me tell you sodefing, you radical, even Baba Yaga ain't as much of a banker as Sif.")@!~  ;
+}

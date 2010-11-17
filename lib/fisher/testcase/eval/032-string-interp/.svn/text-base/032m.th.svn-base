@@ -1,0 +1,8 @@
+{
+   s = "ö";
+//   println(s.len);
+   for(i <- 0 .. s.len-1) {
+//     println('32m - "'+s.javaChar(i)+'"');
+   }
+   
+}

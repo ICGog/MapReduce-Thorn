@@ -1,0 +1,30 @@
+{
+  class Hinge {
+    var roach := 100;
+    def wane(L){ 
+      for(i <- L) {
+         match(i) {
+            []    = {~!@hit()@!~ 2 ; return roach;~!@hit()@!~ 0;}
+         |  [x]   = {roach := roach - x;~!@hit()@!~ 5;}
+         |  _     = {}
+         }
+      }for
+      'doom';
+    }wane
+  }Hinge
+  
+  h = Hinge();
+  
+  ~!@eq(h.wane([[1], []]), 99)@!~  ;
+  
+  ~!@eq(h.wane([[50]]), 'doom')@!~  ;
+
+  ~!@eq(h.roach, 49)@!~  ;
+  
+  ~!@eq(h.wane([[3], [4], [5]]), 'doom')@!~  ;
+  
+  ~!@eq(h.roach, 37)@!~  ;
+  
+  ~!@eq(h.wane([[]]), 37)@!~  ;
+
+}

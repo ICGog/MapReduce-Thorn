@@ -1,0 +1,157 @@
+\section{Resolved Syntax Changes}
+
+\newlength{\itemboxwidth}
+\newcommand{\itembox}[2]{%
+\settowidth{\itemboxwidth}{#1}%
+\parbox{\itemboxwidth}{\hfill#2}%
+}
+\newcommand{\yes}{\ensuremath{\checkmark}}
+\newcommand{\no}{\ensuremath{\times}}
+\newcommand{\maybe}{?}
+\newcommand{\accept}[1]{\item[\yes\itembox{11.}{\ref{#1}.}]}
+\newcommand{\reject}[1]{\item[\no\itembox{11.}{\ref{#1}.}]}
+\newcommand{\pending}[1]{\item[\maybe\itembox{11.}{\ref{#1}.}]}
+
+Legend: \yes\ marks adopted changes, \no\ marks rejected changes, and \maybe\ marks proposals that need further discussion.
+
+\begin{enumerate}
+
+\accept{syntax:pure} Purity is marked by the prefix modifier \kw{pure}. 
+
+\reject{syntax:assignment}  Do not allow `=' to be used for assignments.
+
+\accept{syntax:semicolons as separators} \hypertarget{resolved:semicolons as separators}{}Semicolons should be treated as (optional) separators rather than terminators.
+
+\accept{syntax:modifiers} \kw{checked}, \kw{from}, \kw{envelope}, and \kw{prio} clauses on method and function definitions
+are allowed in arbitrary order. 
+
+\accept{syntax:super} Adopt the proposed change but use the keyword \kw{super} instead of \kw{new}.  That is, the constructor supercall should allow \kw{super}(...) as well as \kw{super}$@$A(...).
+
+\accept{syntax:import own} Remove \kw{import own} in its current form.  However, we may re-introduce the functionality of \kw{import own} when we revise the module system.
+
+\accept{syntax:module:private/public} \kw{private} must be a modifier on a member declaration. A member may not be marked as \kw{private} in a separate statement, after it has been declared.  We must allow \kw{public} to be used in a separate statement as a way to re-export specific members of imported modules. 
+
+\accept{syntax:expressions as statements} \hypertarget{resolved:expressions as statements}{} Every Thorn statement should be usable as an expression.  Braces and parentheses can be used interchangeably to delimit expressions and eliminate ambiguity.  Braces introduce a new name scope; parentheses don't.  
+
+\accept{syntax:records} Record syntax is now 
+\begin{lstlisting}
+<x = 1, y = 2> 
+\end{lstlisting}
+
+\accept{syntax:.nice(x)} Remove the `.nice(x)' pattern.
+% The `.nice(x)' pattern can be useful, e.g.:
+%\begin{lstlisting}
+%[.int(arg1), .int(arg2)] = argv();
+%\end{lstlisting}
+
+
+\reject{syntax:case} Allow the following alternative syntax for cases in all matching contexts (e.g., match statement, receive statement, etc.): 
+\begin{quote}
+\begin{lstlisting}
+try {
+	x := 1;
+} catch {
+	case ``Doom!'' => {print(``doom'');}
+	case ``Mood?'' => {} 
+}
+\end{lstlisting}
+\end{quote}
+
+\accept{syntax:table decls} Replace semicolons with commas and braces with angle brackets in table, ord and map declarations.  The keyword \kw{val} should be disallowed (it is the default), and the last comma should be optional.  For example:
+\begin{lstlisting}
+t2 = table(x,y)<var fg, bg, zog : int>
+\end{lstlisting}
+
+
+\reject{syntax:type constraints} Retain `:' for the type constraint operation. 
+
+\reject{syntax:conditional expressions} Since if-statements can be used as expressions (see  \hyperlink{resolved:expressions as statements}{Resolved Changes \getrefnumber{syntax:expressions as statements}}), we don't need  C-style conditional expressions.
+
+
+\pending{syntax:queries} Eliminate \% as a prefix to query keywords.  Adopt the current proposal except in the following cases:
+
+\begin{description}
+
+\item[Vars] \hfill \\ Query control in 'var' needs adaptation, but the current proposal to use double commas (instead of \kw{\%then1} and \kw{\%then0}) does not look nice.
+
+
+\item[Quantifiers]  \hfill \\ 
+Consider using \kw{cnt} or \# to replace \%\kw{count}.  Rethink the use of braces vs. parentheses vs. angle brackets to ensure consistency with other constructs.
+
+
+\item[Table Comprehension]  \hfill \\  
+Clarify the current proposal.
+
+\item[Sorting]  \hfill \\   
+Use \kw{inc} or \kw{increasing} instead of \kw{\%<}.
+Use \kw{dec} or \kw{decreasing} instead of \kw{\%>}.
+
+
+\item[Group queries]  \hfill \\   
+Adopt the proposal except for the use of double commas `,,' to replace \%\kw{then} and \%\kw{after}.
+
+\end{description}
+
+
+\accept{syntax:timeout} Timeout clauses in \kw{recv} statements should have the same syntax as other clauses, e.g.: 
+\begin{lstlisting}
+  msg = (recv{
+   x => { x; }
+   | timeout 1000 =>  { "timed out"; }
+  });
+\end{lstlisting}
+
+
+\accept{syntax:trailing semi-colons} See \hyperlink{resolved:semicolons as separators}{Resolved Changes \getrefnumber{syntax:semicolons as separators}}.
+
+\pending{syntax:spawn}  Parts of this proposal may be applicable if we allow spawning of arbitrary code.
+
+
+\reject{syntax:implicit initializer}  Do not allow initializer blocks in classes.
+%If we allow initializer blocks in classes, they should have a keyword. We even have an \kw{init} keyword already in the language which we can reuse here: 
+%\begin{lstlisting}
+%var SnargCounter := 0;
+%class Snarg{
+%  val n;
+%    init{
+%      SnargCounter += 1; 
+%      n = SnargCounter;
+%    }
+%}
+%\end{lstlisting}
+
+\reject{syntax:ellipses in patterns} Retain the functionality of the `...' patterns since they are strictly more expressive than `x::xs'.  However, replace the `...' syntax for these patterns with double dots (`..').
+
+\accept{syntax:variables in patterns} \$(k) in patterns should be writable as \$k, where k is a simple identifier (alphanumeric characters only).  \$(e), where e is an expression, should be allowed in both strings and patterns.
+
+\accept{syntax:newline as terminator} If $\backslash$n is allowed as a synonym for the semicolon, we need conventions to deal with incomplete expressions broken up over multiple lines.  For example
+\begin{lstlisting}
+e1 
++e2
+\end{lstlisting}
+One solution is to use a continuation character (e.g., '$\backslash$') to break up expressions over multiple lines.  For consistency, the same solution should be used for strings that are broken over multiple lines.
+
+\reject{syntax:singleton objects} Not applicable to the Fisher version of Thorn.
+
+\reject{syntax:function def matching} Keep the matching in function definitions. Ê 
+ 
+%\item Eliminate triple dots completely, e.g., in list patterns.
+\end{enumerate}
+
+
+%\section{Pending Syntax Changes}
+%\begin{enumerate}
+
+%\item Is every Thorn expression  usable as a statement?
+
+%\item Braces are required in the following constructs (in a non-expression contexts).  Should we revisit these?
+%\begin{itemize}\renewcommand{\labelitemi}{--}
+
+%\item Table-style queries.
+%\item \kw{spawn} and stuff that goes inside of \kw{spawn} (e.g., \kw{body})
+
+%\end{itemize}
+
+%\item Can we use '*' to mean an arbitrary number of things (instead of '..')?
+
+%\end{enumerate}

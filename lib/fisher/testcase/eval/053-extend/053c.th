@@ -1,0 +1,9 @@
+{
+  import ADAGE.*;
+  w = Whatnot(); 
+  ~!@eq(w.zero(), ["a?", "b?"])@!~  ;
+  ~!@eq(w.one(1), ["a?", 1, "b?"])@!~  ;
+  ww = Whatnot(true, false);
+  ~!@eq(ww.zero(), [true, false])@!~  ;
+  ~!@eq(ww.one(1), [true, 1, false])@!~  ;
+}

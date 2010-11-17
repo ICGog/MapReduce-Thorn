@@ -1,0 +1,13 @@
+{
+  class A {
+    def m() = 0;
+    def m(x) = 1;
+    def m(x,y) = 2;
+  }
+  
+  a = A();
+  ~!@eq(a.m(), 0)@!~  ;
+  ~!@eq(a.m("yup"), 1)@!~  ;
+  ~!@eq(a.m("yup", true), 2)@!~  ;
+
+}

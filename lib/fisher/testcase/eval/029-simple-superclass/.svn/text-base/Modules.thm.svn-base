@@ -1,0 +1,12 @@
+module PET {
+  class Neutrino{
+     val shield = 1;
+  }
+  class Pageant extends Neutrino {
+     val sale = this.shield+1; // 2
+  }
+  class MentalProblem {
+     val glossary = 3;
+  }
+}
+

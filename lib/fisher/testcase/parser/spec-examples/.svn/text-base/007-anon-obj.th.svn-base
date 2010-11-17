@@ -1,0 +1,10 @@
+//EXP
+
+object extends This,That{
+   var a := 0;
+   b = "const";
+   def bump() { a := a+1; a; }
+//    pat positive(aa) {
+//       if (a > 0) aa = a; else fail;
+//    }
+}

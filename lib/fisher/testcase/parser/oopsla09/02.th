@@ -1,0 +1,5 @@
+//STMT
+{
+  %[n*n | for n <- 1 .. 100, if prime?(n)] ;
+    
+}

@@ -1,0 +1,55 @@
+spawn quiz {
+import HTTP.*;
+import XML.*;
+import QUIZ.*;
+import BEE_QUIZ.*;
+
+
+// Configuration
+host = "localhost";
+port = 4385;
+
+
+fun makeQuiz() = makeBeeQuiz();
+
+fun respond(req, quiz) {
+  say = quiz.html();
+//println("say=$say");
+  req.respond(OK, say, {::});
+}
+
+fun produceAnswer(req ) {
+  t = req.params.toMap();
+  answers = %[ byNum[v] | for {:v:} <- t ];
+  println("answers=$answers");
+  r = BeeResponse();
+  for(a <- answers) {
+    println("before $a, r=$r");
+    a.respond(r);
+    println("after $a, r=$r");
+  }
+  req.respond(OK, r.responseText, {::});
+}
+
+body{
+  sock = HTTPSocketeer(port);
+  var goon := true;
+
+  quiz = makeQuiz();
+  
+  println("Quizlip starting!");
+  while(goon) {
+    recv{ 
+      req && (req.params != {::})?  => {
+        produceAnswer(req);        
+      }
+      |
+      req => {
+        println("Oh, no!  $req");
+        println("oh nose! params=" + req.params);
+        respond(req, quiz);
+      }
+    }
+  }
+}body
+}quiz;

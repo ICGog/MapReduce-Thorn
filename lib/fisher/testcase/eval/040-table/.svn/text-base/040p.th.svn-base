@@ -1,0 +1,19 @@
+{
+  // Testing tbl(k).f := v;
+
+  // Make sure that the funcall+select still works.
+  o = object{var x := 1;};
+  var fo;
+  fo := fn(x')=o; // constant fun
+  ~!@eq(o.x, 1)@!~  ;
+  // Here it is, not mutating a table...
+  fo(1).x := 2;
+  ~!@eq(o.x, 2)@!~  ;
+  
+  fo := table(a){var x;};
+  fo(1) := {: x:"not two!" :};
+  // Same code as before, but now it mutates a table.
+  fo(1).x := 2; 
+  ~!@eq(fo.rows(), [ {: a:1, x:2 :} ])@!~  ;
+  
+}

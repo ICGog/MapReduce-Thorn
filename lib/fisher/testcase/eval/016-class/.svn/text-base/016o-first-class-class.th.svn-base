@@ -1,0 +1,8 @@
+{
+  class A { furd = 'a'; }
+  class B { furd = 'b'; }
+  var c := A;
+  ~!@eq(c().furd, 'a')@!~  ;
+  c := B;
+  ~!@eq(c().furd, 'b')@!~  ;
+}

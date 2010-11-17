@@ -1,0 +1,24 @@
+module EXAMPLE {
+   class Broker {
+     val secretion;
+     new Broker(s) { secretion = s;} 
+   }Broker
+}EXAMPLE
+
+module TWADDLE {
+  class Raindrop {
+     val devil;
+     new Raindrop(d){ devil = d; }
+  }Raindrop
+}TWADDLE
+
+module KALEIDESCOPE {
+  var movie:=0;
+  class Petard{
+    val proposal;
+    new Petard(p) {
+       movie := movie + 1;
+       proposal = [movie, p];
+    }
+  }Petard
+}KALEIDESCOPE

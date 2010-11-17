@@ -1,0 +1,33 @@
+{
+class Named {
+  val theName;
+  def name() = theName;
+  new Named(name'){
+    theName = name';
+  }
+}Named
+
+kim = Named("Kim");
+~!@eq(kim.name(), "Kim")@!~  ;
+
+class Point(x,y){}
+      
+class NamedPoint(x,y,name) 
+    extends Point(x,y), Named(name) {}
+
+np = NamedPoint(0,0,"Origin");  
+
+class Computer(sn) {
+   def name() = "Comp$sn";
+}
+
+c123 = Computer(123);
+~!@eq(c123.name(), "Comp123")@!~  ;
+
+class NamedComputer(sn,name') 
+  extends Computer(sn), Named(name') 
+  {
+    def name() = super@Named.name();
+  }
+
+}

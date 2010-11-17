@@ -1,0 +1,2 @@
+// file:  tut01-hello-world/hw2.th
+println("Hello, world!");

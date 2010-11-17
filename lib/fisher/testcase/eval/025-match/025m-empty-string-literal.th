@@ -1,0 +1,4 @@
+{
+  // There was a report that "" wasn't working as a pattern literal.
+  if ("" ~ "") ~!@hit()@!~  ; else { ~!@hit()@!~ 0 ; }
+}

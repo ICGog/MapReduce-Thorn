@@ -1,0 +1,13 @@
+{
+  import JSON.*;
+  ~!@eq(jsonParse('[]'), [])@!~  ;
+  ~!@eq(jsonParse('[1]'), [1])@!~  ;
+  ~!@eq(jsonParse('[1,2]'), [1,2])@!~  ;
+  ~!@eq(jsonParse('[1,2,3]'), [1,2,3])@!~  ;
+  ~!@eq(jsonParse('[true,false,null]'), [true,false,null])@!~  ;
+  ~!@eq(jsonParse('[[1]]'), [[1]])@!~  ;
+  ~!@eq(jsonParse('[[[]]]'), [[[]]])@!~  ;
+  ~!@eq(jsonParse('[[],[],[]]'), [[],[],[]])@!~  ;
+  ~!@eq(jsonParse('["ow",["ow"]]'), ["ow", ["ow"]])@!~  ;
+
+}

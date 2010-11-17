@@ -1,0 +1,30 @@
+{
+  class Basilisk(rude,pain) {
+     // rude?() is boolean.
+     def rude?() = rude;
+     // tortured is null-or-useful
+     def tortured() {
+        if (pain ~ [a,_...]) +a; else null;
+     }
+  }
+  
+  rudeling = Basilisk(true, []);
+  ~!@assert(rudeling ~ .rude?())@!~  ;
+  ~!@assert(rudeling ~ ! .tortured())@!~  ;
+
+  victim = Basilisk(false, ["comfy chair"]);
+  
+  ~!@assert(victim ~ !.rude?())@!~  ; 
+  ~!@assert(victim ~ .tortured("comfy chair"))@!~  ; 
+  ~!@assert(victim ~ !.tortured("league"))@!~  ; 
+
+  wanker = Basilisk(null, null);
+  ~!@assert(wanker ~ !.rude?())@!~  ;
+  ~!@assert(wanker ~ !.tortured("barrette"))@!~  ;
+  
+  ~!@assert(null ~ ![])@!~  ;
+  ~!@assert(null ~ !{:  :})@!~  ;
+  ~!@assert(null ~ !0)@!~  ;
+  ~!@assert(!(null ~ +_))@!~  ;
+  
+}

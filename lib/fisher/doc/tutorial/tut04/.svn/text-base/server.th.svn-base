@@ -1,0 +1,59 @@
+// File: tut04/server.th
+spawn server {
+  import CHEEPER.*;                                        
+      
+  users = table(name){password;};  
+  
+  chirps = table(number){chirp;};                          
+  
+  var chirpNumber := 0;                                    
+                       
+  sync login({:name: n, password: pw:}) {                 
+     userRow = users(n);                                  
+     if (userRow == null) {
+        // No row there, so register a new user.
+        users(n) := {: password:pw :};                    
+        println("Registering $n with $pw");
+        return "Hi, $n! Welcome to Cheeper!";             
+     }
+     else if (userRow ~ {: password: $(pw) :}) {          
+        println("$n logged back in.");
+        return "Hi, $n! Welcome back to Cheeper!";
+     }
+     else {
+        // Wrong password.
+        println("Someone thought $n's password was \'$pw\', the loon!");
+        return null;
+     }
+  }
+
+  fun invalid({:name, password:}) =                             // (4P)
+     (null if users(name) ~ {: password: $(password) :}         // (4Q)
+          else +"You are not logged in as $name.");             // (4R)
+
+  sync doChirp(identity, wisdom) {
+     if (invalid(identity) ~ +msg)                              // (4S)
+        msg;
+     else {
+        chirp = Chirp(identity.name, wisdom, chirpNumber);      // (4T)
+        chirps(chirpNumber) := {: chirp :};
+        println("doChirp: $chirp");
+        chirpNumber += 1;                
+        "Thank you for your wisdom.";
+     }
+  }doChirp
+
+  sync listChirps(identity){
+     if (invalid(identity) ~ +msg) msg;
+     else {
+        %[chirp | for {: chirp :} <- chirps];                   // (4U)
+     }
+  }
+  
+  body{
+    println("Cheeper server starting.");
+    while (true) {                                         
+      serve;
+    }
+  }body
+}server;

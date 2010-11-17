@@ -1,0 +1,53 @@
+{
+  ~!@assert("abc".matchRE?(".b."))@!~  ;
+  ~!@assert(! "abc".matchRE?(".d."))@!~  ;
+  
+  {
+    m = "by Kaschei's sliming oven" . matchRE(".*(a([^e]*)e).*");
+    ~!@eq(m, [
+      {: start: 0, end: 25, text: "by Kaschei's sliming oven" :},
+      {: start: 4, end: 9, text: "asche" :},
+      {: start: 5, end: 8, text: "sch" :}
+      ])@!~  ;
+  }
+
+  {
+    ~!@eq(null, "urx".matchRE("xur"))@!~  ;
+  }
+  
+  {
+    s = "mandrake mandrill man";
+    m0 = s.matchREAfter("[^m]*(man).*", 0);
+    ~!@eq(m0, 
+       [
+          {: start: 0, end: s.len(), text: s :},
+          {: start: 0, end: 3, text: "man" :}
+       ]
+    )@!~  ;
+    m1 = s.matchREAfter("[^m]*(man).*", 1);
+    ~!@eq(m1, 
+       [
+          {: start: 1, end: s.len(), text: s.butleft(1) :},
+          {: start: 9, end: 12, text: "man" :}
+       ]
+    )@!~  ;
+    m7 = s.matchREAfter("[^m]*(man).*", 7);
+    ~!@eq(m7, 
+       [
+          {: start: 7, end: s.len(), text: s.butleft(7):},
+          {: start: 9, end: 12, text: "man" :}
+       ]
+    )@!~  ;
+    m14 = s.matchREAfter("[^m]*(man).*", 14);
+    ~!@eq(m14, 
+       [
+          {: start: 14, end: s.len(), text: s.butleft(14) :},
+          {: start: 18, end: 21, text: "man" :}
+       ]
+    )@!~  ;
+    r = "[^m]*man.*";
+    ~!@assert(s.matchREAfter?(r, 14))@!~  ;
+    ~!@assert(!s.matchREAfter?(r, -1))@!~  ;
+  }
+  
+}

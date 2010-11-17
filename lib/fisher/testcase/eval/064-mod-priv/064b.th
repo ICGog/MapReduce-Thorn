@@ -1,0 +1,6 @@
+{
+  import THIEF = SILHOUETTE;
+  import THIEF.*;
+  ~!@eq(o, 0)@!~  ;
+  ~!@undef(n)@!~  ;
+}

@@ -1,0 +1,16 @@
+{
+  class `Emerald Epee Of Fate` {
+    var forum : `Emerald Epee Of Fate` := null;
+    def `*`(x) = 1;
+  }
+  
+  e = `Emerald Epee Of Fate`();
+  ~!@assert(e*true == 1)@!~  ;
+  
+  e.forum := e;
+  ~!@bad(({ e.forum *= true; }))@!~  ;
+  var eef := `Emerald Epee Of Fate`();
+  e.forum := eef;
+  eef.forum := e;
+  eef.forum := null;
+}

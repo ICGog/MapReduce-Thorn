@@ -1,0 +1,38 @@
+{
+  import XML.*;
+  origSrc = '<a b="1"> <c>d</c> <e f="2"><g/><h/></e></a>';
+  x = parseXML(origSrc);
+
+  ~!@eq(x.str(), '''<a b="1"> <c>d</c> <e f="2">
+<g/>
+<h/>
+</e>
+</a>
+''')@!~  ;
+
+ ~!@eq((x.str({:`omit-xml-declaration`: "yes":}).trim()), 
+'''<a b="1"> <c>d</c> <e f="2">
+<g/>
+<h/>
+</e>
+</a>
+'''.trim());
+
+xomit = (x.str({:`omit-xml-declaration`: "no":}).trim());
+
+fun xomitShouldBe(y) = '''<?xml version="1.0" encoding="UTF-8"$y?>
+<a b="1"> <c>d</c> <e f="2">
+<g/>
+<h/>
+</e>
+</a>
+'''.trim;
+
+
+ ~!@assert(xomit == xomitShouldBe("") 
+  || xomit == xomitShouldBe(' standalone="no"')
+);
+
+  ~!@eq(x.str({::}), x.str(), x.str({:indent: "yes":}))@!~  ;
+
+}

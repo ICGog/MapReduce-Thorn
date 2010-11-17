@@ -1,0 +1,10 @@
+module XML {
+  javaly class Elem(tag, attrs, children) = fisher.runtime.lib.Elem {
+    def tag() = tag;
+    def attrs() = attrs;
+    def children() = children;
+    def str(ctrl) = str;
+    new XML(tag, attrs, children);
+  }
+  javaly fun parseXML(source) = fisher.runtime.lib.XMLFuns.parse;
+}

@@ -1,0 +1,3 @@
+module MAPREDUCE {
+    javaly fun scrieDracu(a, b) = fisher.runtime.mapreduce.MapReduce.scrieDracu;
+}

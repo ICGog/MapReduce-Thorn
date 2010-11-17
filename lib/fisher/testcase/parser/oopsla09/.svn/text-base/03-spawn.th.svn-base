@@ -1,0 +1,37 @@
+{
+journaler = spawn{
+  journals = table(user, number){var entry, comments;
+     };
+  sync newUser(name) {
+     if ( %some(true | for {: user:$(name) :} <~ journals) ) {
+       return false; // name taken
+     }
+     else {
+       // Ooh, bad database design here.
+       journals(name, 0) := {: entry: "Started journal.", comments :[] :};
+     }
+     }newUser
+  sync getEntry(user, number) {
+    if(journals(user,number) ~ +{:entry, comments:}) 
+       return +entry;
+    else 
+       return null;
+    }getEntry
+  body {
+    while(true) serve;
+  }
+}spawn;
+
+var i := 0;
+var username;
+do {
+   username := "bard"+i;
+} until (journaler <-> newUser(username));
+
+if ((journaler<->getEntry(username, 0)) ~ +e0) {
+   //Yay, I've got an entry.
+}
+
+
+
+}

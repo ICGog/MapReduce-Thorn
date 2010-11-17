@@ -1,0 +1,27 @@
+{
+  class A {
+    var x;
+    val y;
+    new A(x', y') {x := x'; y = y';}
+    def mungh(x', y') {
+      x := [1, x'];
+      ~!@eq(x, [1, x'])  ;
+      ~!@bad(({this.y := y';}))  ;
+      this.x := [2, x'];
+      ~!@eq(x, [2, x'])  ;
+      x := x';
+      ~!@eq(x, x')  ;
+      this.x := x';
+      ~!@eq(x, x')  ;
+      x := x';
+      ~!@eq(x, x')  ;
+      this.x := x';
+      ~!@eq(x, x')  ;      
+    }
+  }A
+  
+  a = A(1,2);
+  a.mungh(11,22);
+  a.mungh(111,222);
+  
+}

@@ -1,0 +1,16 @@
+{
+  r = object{ 
+    var syringe := 1;
+    def glorify() { syringe := syringe + 1; syringe;} 
+  };
+
+  ~!@eq(r.syringe, 1)@!~  ;
+  ~!@eq(r.glorify(), 2)@!~  ;
+  ~!@eq(r.glorify(), 3)@!~  ;
+  if (r ~ ‹syringe›) {
+     ~!@eq(syringe, 3)@!~  ;
+  }
+  else { ~!@hit()@!~ 0 ; }
+  ~!@undef(syringe)@!~  ;
+  
+}

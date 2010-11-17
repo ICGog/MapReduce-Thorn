@@ -1,0 +1,45 @@
+{
+  import DATA.*;
+  import PRIME.*;
+  ~!@eq(
+   %first(b | for ‹a,b› <- L, if a != b)
+   ,
+   4
+   )@!~  ;
+
+   ~!@eq(%first(111 | for x <- []), null)@!~  ;
+ 
+   ~!@eq(%first(1 %< 0 | for x <- []),0)@!~  ;
+   ~!@eq(%first(1 %< 0 | for x <- ['by Azathoth\'s timepiece']),1)@!~  ;
+
+   ~!@eq(%first(b %none 'oops' | for ‹a,b› <- L, if a == 7), 'oops')@!~  ;
+   ~!@eq(%first(b | for ‹a,b› <- L, if prime?(a)), 2)@!~  ;
+
+   ~!@eq(%first('no' | for x <- []), null)@!~  ;    
+
+   ~!@eq(
+      %first( %count(a==a' | for ‹a,b› <- L)
+       | 
+       for ‹a:a', b:b'› <- L, if b' == 4)
+      ,
+      2
+      )@!~  ;
+
+  ~!@eq(
+    %first(
+      ‹a,b›
+      |
+      for ‹a,b› <- L,
+        if %some(b != b' | for ‹a:a', b:b'› <- L, if a==a'),
+        if a != b
+    )
+    ,
+    ‹a:3,b:4›)@!~  ;
+    
+  ~!@eq(
+    %first(n | for n <- 1 .. 100, var s := 0 %< s+n, if s > 20)
+    ,
+    6
+    )@!~  ;
+
+}

@@ -1,0 +1,18 @@
+// File: tut03/client.th
+spawn client {
+  body{
+    println("Talk is cheap. Wisdom is Cheeper.");
+    name = readln("Name: ");
+    password = readln("Password: ");
+    server = site("localhost", 4260);
+    identity = {: name:name, password:password :};            
+    loginRes = server <-> login(identity);
+    if(loginRes == null) {                                    
+        println("I'm sorry, but that didn't work for some reason.");
+    }
+    else {
+        println(loginRes);
+        println("But Cheeper can't do anything else yet, so ... bye.");
+    }
+  }body
+}client;

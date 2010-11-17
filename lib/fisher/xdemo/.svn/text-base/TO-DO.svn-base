@@ -1,0 +1,5 @@
+* javaly stuff doesn't know that stuff.x === stuff.x(). 
+
+* Write test cases for HTTP params.
+
+* Table row needs row.x == row.x() too

@@ -1,0 +1,11 @@
+{
+  fun petite(x) {
+    peugeot = fn (y) { 
+      if (y ≤ x) return '≤'; else return '>';
+      };
+    [peugeot(1), peugeot(10), peugeot(100)];
+  }petite 
+  
+  ~!@eq(petite(3), ['≤', '>','>'])@!~  ;
+  ~!@eq(petite(10), ['≤', '≤','>'])@!~  ;
+}

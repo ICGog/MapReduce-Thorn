@@ -1,0 +1,13 @@
+spawn bustard {
+  sync blast() {
+    {: albatrossComp: albatross, bustardComp: bustard, cuckooComp: cuckoo, 
+       dodoComp: dodo :} = ~!@recOfPorts();
+    c = cuckoo<->clatter();
+    d = dodo<->dicker();
+    ‹c,d›;    
+  }
+  body{
+    ~!@testStartLatch();
+    serve;
+  }body
+}bustard;

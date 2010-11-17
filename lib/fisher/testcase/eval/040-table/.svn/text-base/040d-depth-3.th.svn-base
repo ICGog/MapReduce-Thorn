@@ -1,0 +1,59 @@
+{
+  t = table(a,b,c){val x,y;};
+  fun it's(l) {
+     st = %sort( r %< r.a %< r.b %< r.c | for r <- t );
+     ~!@eq(st, l)  ;
+     ~!@assert(t.tstCheckInvariant()) ;  
+  }
+  
+  it's([]);
+
+  var D := {: a:1, b:11, c:111, x: 1, y: "by Atropos's nifty nationality!" :};
+  t .ins( D);
+  it's([D]);
+  var X := {: a:2, b:22, c:222, x:2, y:"by Gwydion's flyswatter!" :};
+  t .ins( X);
+  it's([D,X]);
+  
+  D := {: a:1, b:11, c:111, x:1.1, y: "by Iapetus's barking arbiter!" :};
+  t .ins( D);
+  it's([D,X]);
+
+  var E := {: a:1, b:11, c:222, x: [1,1,2], y:"by Fungo-Mal's runner!" :};
+  t .ins( E);  
+  it's([D, E, X]);
+
+  var F := {: a:1, b:22, c:111, x:[], y: "by Ares's zit!" :};
+  t .ins( F);
+  it's([D, E, F, X]);
+  
+  E := {: a:1, b:11, c:222, x: [1,1,2], y:"by Merlin's rebel timer!" :};
+  t .ins( E);  
+  it's([D, E, F, X]);
+  
+  F := {: a:1, b:22, c:111, x:[], y: "by Roofdrak's shower!" :};
+  t .ins( F);
+  it's([D, E, F, X]);
+
+  D := {: a:1, b:11, c:111, x:1.1, y: "by Ygorl's flabby cobweb!" :};
+  t .ins( D);
+  it's([D, E, F, X]);
+
+  X := {: a:2, b:22, c:222, x:2, y:"by Idhunn's satisfactory politics!" :};
+  t .ins( X);
+  it's([D, E, F, X]);
+
+  var G := {: a:1, b:22, c:222, x:[], y: "by Hnalla's doomsome recipe!" :};
+  t .ins( G);
+  it's([D, E, F, G, X]);
+    
+  G := {: a:1, b:22, c:222, x:[], y: "by Tartarus's keg!" :};
+  t .ins( G);
+  it's([D, E, F, G, X]);
+  
+  F := {: a:1, b:22, c:111, x:[], y: "by Cthulhu's cat!" :};
+  t .ins( F);
+  it's([D, E, F, G, X]);
+
+  
+}

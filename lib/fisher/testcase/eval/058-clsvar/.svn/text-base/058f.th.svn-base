@@ -1,0 +1,14 @@
+{
+  class A(x, var y);
+  class B(a,b,var c) extends A(a,b);
+  b = B(1,2,3);
+  ~!@eq(b.x, 1)@!~  ;
+  ~!@eq(b.y, 2)@!~  ;
+  ~!@eq(b.c, 3)@!~  ;
+  ~!@bad(b.a)@!~  ;
+  ~!@bad(b.b)@!~  ;
+  b.y := 4;
+  b.c := 5;
+  ~!@eq(b.y, 4)@!~  ;
+  ~!@eq(b.c, 5)@!~  ;
+}

@@ -1,0 +1,18 @@
+spawn senderliff {
+body{
+
+  me = thisComp();
+  
+  me <<< 1 security ({ ~!@hit()@!~; 123;})  ;
+  
+  recv {
+    1 checked => {
+      ~!@hit()@!~  ;
+    }
+  }
+
+  ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+}body
+}senderliff;

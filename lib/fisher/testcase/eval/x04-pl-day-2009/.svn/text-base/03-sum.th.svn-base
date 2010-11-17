@@ -1,0 +1,24 @@
+{
+  fun sum([]) = 0;
+    | sum([x,y...]) = x+sum(y);
+
+  ~!@eq(sum([1,2,3]), 6)@!~  ;
+
+  fun sum'(L) {
+     if (L ~ [x,y...]) {x + sum(y);}
+     else {0;}    
+  }
+
+  ~!@eq(sum'([1,2,3]), 6)@!~  ;
+
+  var L := [1,2,3]; var s := 0;
+  while (L ~ [x,y...]) {
+     L := y; s += x;     
+  }
+  ~!@eq(s, 6)@!~  ;
+
+
+  fun f([x:int, y:int && (x>y)? ]) = x+y;
+  ~!@eq(f([4,2]), 6)@!~  ;
+
+}

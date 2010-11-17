@@ -1,0 +1,9 @@
+This produces a concordance of sorts.  
+Input: a corpus of HTML text.
+Output: 
+  (a) A version of the corpus with <a name="XXX"/> tags added all over the place.
+  (b) A concordance: a HTML table listing all the words in the corpus, 
+      in alphabetical order, plus columns of 
+      - number of times it appears in the corpus.
+      - Hyperlinks to all the occurrences. 
+     

@@ -1,0 +1,11 @@
+{
+  ot = ord{map a;};
+  ~!@ne(ot, null)@!~  ;
+  ~!@assert(ot.rows() ~ [])@!~  ;
+  ot @= 1;
+  ~!@assert(ot.rows() ~ [{: a:1  :}])@!~  ;
+  ot @= 2;
+  ~!@assert(ot.rows() ~ [{: a:1  :}, {: a:2  :}])@!~  ;
+
+  
+}

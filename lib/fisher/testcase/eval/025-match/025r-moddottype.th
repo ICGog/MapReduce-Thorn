@@ -1,0 +1,19 @@
+/*
+From Susan Eisenbach and students: 
+The interpreter also doesn't implement pattern matching on types from different classes, for example:
+
+    * if(x ~ +y:Module.Class) { ... }
+*/
+
+{
+  import OCTOPUS;
+  e = OCTOPUS.Excerpt();
+  ~!@eq(e.str(), "xce")@!~  ;
+  if (e ~ +x:OCTOPUS.Excerpt) {
+    ~!@hit()@!~  ;
+  }
+  else {
+    { ~!@hit()@!~ 0 ; }
+  }
+  ~!@assert( e ~ OCTOPUS.Excerpt())@!~  ;
+}

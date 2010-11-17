@@ -1,0 +1,112 @@
+import newhttptestserver.*;
+
+// startup test server
+server = spawn NewHttpTestServer(3333);
+
+// Ensuring that the server is ready when starting the test...
+c = spawn test{ 
+  import unittest.*;
+  import NET.*;
+
+  fun should_get_page(){
+    request = http();
+    response = request.get("http://localhost:3333/");
+
+    assertEquals(response.status, 200);
+  }  
+
+  fun should_get_page_with_new_client(){
+    protoclient = object extends Protocol {
+      def encode(msg) = msg;
+      def decode(msg) = msg;
+      def input() = UseHTTP;
+    };
+    s = NetSite("localhost", 3333, protoclient);
+  
+    req = HTTPRequest("GET", "/", {: :}, {: :}, "");
+    s <<< req;
+    receive{
+      response => {
+        assertEquals(response.status, "200");
+      }
+    }
+  }
+
+  fun head_should_get_page_headers(){
+    request = http();
+    response = request.head("http://localhost:3333/");
+
+    assertEquals(response.status, 200);
+  }
+
+  fun should_get_page_and_http_headers(){
+    request = http();
+    response = request.get("http://localhost:3333/");
+
+    assertEquals(response.headers.`cache-control`, "private, max-age=0");
+    assertEquals(response.headers.`content-type`, "text/html; charset=UTF-8");
+  }
+
+  fun should_get_page_with_query_parameters_set_as_record(){
+    request = http();
+    response = request.get("http://localhost:3333/parameters/", {: q: "bla" :});
+
+    assertEquals(response.content.str(), "q=bla\n");
+  }
+
+  fun unicode_query_parameters_should_work(){
+    request = http();
+    response = request.get("http://localhost:3333/parameters/", {: q: "ø" :});
+
+    assertEquals(response.content.str(), "q=ø\n");
+  }
+
+  fun should_post_to_server(){
+    request = http();
+    response = request.post("http://localhost:3333/post/");
+    
+    assertEquals(response.status, 201);
+  }
+
+  fun should_post_form_data_to_server(){
+    request = http();
+    request.content({: r: "foo", s: "bar" :});
+    response = request.post("http://localhost:3333/post/");
+    assertEquals(response.content, "s=bar&r=foo\n");
+  }
+
+  fun should_put_json_data_to_server(){
+    request = http();
+    content = '{"r":foo,"s":"bør"}';
+    request.content(content);
+    request.headers({: `content-type`: "application/json" :}); 
+    response = request.put("http://localhost:3333/put");
+    
+    assertEquals(response.content, content + '\n');
+  }
+
+  body{
+    receive{
+      "test" => {
+        println("newhttp test");
+        test(should_get_page_with_new_client);
+        test(should_get_page);
+        test(should_get_page_and_http_headers);
+        test(should_get_page_with_query_parameters_set_as_record);
+        test(unicode_query_parameters_should_work);
+        test(should_post_to_server);
+        test(should_post_form_data_to_server);
+        test(should_put_json_data_to_server);
+        test(head_should_get_page_headers);
+
+        server <<< {: verb: "stop" :};
+      }
+      | x => {
+        println("Http test rec: $x");
+      }
+    }
+  }
+};
+
+// initiate the test
+server <<< {: verb: "go", comp: c:};

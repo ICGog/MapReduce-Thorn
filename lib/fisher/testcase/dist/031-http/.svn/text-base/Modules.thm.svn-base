@@ -1,0 +1,26 @@
+module HTTP {
+  javaly class StringSocketeer = fisher.runtime.lib.socketeer.StringSocketeer {
+    new StringSocketeer(port);
+  }
+  javaly class ReplySocket = fisher.runtime.lib.socketeer.ReplySocketTh {
+    def `<<<`(x,y) = send;
+  }
+  javaly fun siteForStrings(nodeName, port) = fisher.runtime.lib.SiteForStrings.create;
+  
+  javaly class HTTPSocketeer = fisher.runtime.lib.http.HTTPSocketeer {
+    new HTTPSocketeer(port);
+  }
+  
+  javaly class HTTPRequest(verb, resource) = fisher.runtime.lib.http.HTTPRequest {
+    def verb() = verb;
+    def protocol() = protocol;
+    def resource() = resource;
+    def buildResponse(rcPlusMean, content, extraHeaders) = buildResponse;
+    def respond(rcPlusMean, content, extraHeaders) = respond;
+  }
+  
+  HTTP_404 = {: code: 404, meaning: "Not Found" :};
+  OK =       {: code: 200, meaning: "OK" :};
+  
+}
+

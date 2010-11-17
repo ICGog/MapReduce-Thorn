@@ -1,0 +1,106 @@
+module web{
+
+  import httpserver.*;
+  import webappinfo.*;
+
+  javaly fun sleep(ms) = magne.Sleeper.sleep;
+
+  class Options(){
+    var port := 8080;
+    var memcacheaddress := "thorn://localhost:11210";
+    var datastoreaddress := "thorn://localhost:11200";
+
+    def str(){
+      return "ARGS port=$port, memcacheaddress=$memcacheaddress, datastoreaddress=$datastoreaddress"; 
+    }
+
+    def rec(){
+      return {: port, memcacheaddress, datastoreaddress :};
+    }
+  }
+
+  var ARGS := Options();
+
+  /**
+   * Parse command-line arguments.
+   * 
+   * Args:
+   *   args: arguments list
+   */
+  fun parseArgs(theArgs){
+    
+    if(theArgs ~ +args){
+    for(opt <- args){
+      optRec = parseOption(opt);
+      
+      if(optRec.option == "port"){
+        ARGS.port := optRec.value.int();
+      }
+      
+      else if(optRec.option == "memcacheaddress"){
+        ARGS.memcacheaddress :=  optRec.value;
+      }
+      else if(optRec.option == "datastoreaddress"){
+        ARGS.datastoreaddress := optRec.value;
+      }
+      
+    }
+    }
+    return ARGS;
+  }
+
+  
+
+  /**
+   * Parse the option argument.
+   * 
+   * Args: 
+   *    arg: the option argument.
+   * Returns:
+   *    record option, value
+   */
+  fun parseOption(arg){
+    // remove --
+    var a := arg.sub(2, arg.len());
+
+    if(a.contains?("=")){  
+      // option value pair
+      ov = a.split("=");
+      option = ov(0);
+      value = ov(1).trim();      
+      return {: option:option, value:value :};
+    }
+    else{ // only option
+      return {: option:a :};
+    }
+  }
+
+  /**
+   * Get the settings in argv() parsed.
+   */
+  fun settings{
+    return parseArgs(argv());
+  }
+
+  /**
+   * Spawn a new HTTP server.
+   *
+   * Args:
+   *    router: uri patterns.
+   *    opts: object containing options.
+   * Returns:
+   *    An HTTP server.
+   */
+  fun run(router){
+    import webrequesthandler.*;
+
+    // Theese will not be in effect on AppScale, since nginx
+    // will return static file requests based on the settings 
+    // in app yaml.
+    file_handlers = appYamlFileHandlers();
+    for(h <- file_handlers){
+      router.connect_insert_as_head(h.url + "/(.*)", StaticFilesHandler);
+    }
+    Server(settings().port, router.routes);
+  }
+}

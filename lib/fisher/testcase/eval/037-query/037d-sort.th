@@ -1,0 +1,151 @@
+{
+//  ~!@prq( %sort( i*i %> i | for i <- 1 .. 4) );
+//  ~!@prq( %sort( "i*i" %> i | for i <- 1 .. 4) );
+  ~!@qeq(   %sort( i*i %> i | for i <- 1 .. 4),  [16,9,4,1])@!~  ;
+  ~!@qeq(   %sort( i*i %< i | for i <- 1 .. 4),  [1,4,9,16])@!~  ;
+  ~!@qeq(   %sort[ i*i %< i | for i <- 1 .. 4],  [1,4,9,16])@!~  ;
+
+  L = [
+    {:  a: 1 , b: 1  , c: 5 :},
+    {:  a: 2 , b: 1  , c: 4 :},
+    {:  a: 3 , b: 1  , c: 3 :},
+    {:  a: 4 , b: 2  , c: 2 :},
+    {:  a: 5 , b: 2  , c: 1 :}
+  ];
+
+~!@eq(%sort(a %< b %< c | for ‹a,b,c› <- L), [3,2,1,5,4])@!~  ;
+~!@eq(%sort(a %> b %< c | for ‹a,b,c› <- L), [5,4,3,2,1])@!~  ;
+~!@eq(%sort(a %> b %> c | for ‹a,b,c› <- L), [4,5,1,2,3])@!~  ;
+~!@eq(%sort(a %> b %< c | for ‹a,b,c› <- L), [5,4,3,2,1])@!~  ;
+
+M = [
+      {: a: 1, b: 2, c: 5, d: 4:}, //0
+      {: a: 1, b: 4, c: 5, d: 4:},
+      {: a: 1, b: 2, c: 2, d: 3:}, // 2
+      {: a: 2, b: 1, c: 1, d: 2:},
+      {: a: 3, b: 3, c: 3, d: 1:}, // 4
+      {: a: 3, b: 2, c: 2, d: 4:},
+      {: a: 4, b: 3, c: 3, d: 4:}, // 6
+      {: a: 4, b: 6, c: 3, d: 3:},
+      {: a: 5, b: 3, c: 2, d: 3:}, // 8
+      {: a: 5, b: 2, c: 1, d: 2:},
+      {: a: 6, b: 3, c: 2, d: 1:}, // 10
+      {: a: 4, b: 1, c: 3, d: 3:}, 
+      {: a: 3, b: 1, c: 2, d: 3:}, // 12
+      {: a: 3, b: 4, c: 1, d: 1:}  // 13
+   ];
+
+{
+   s = %sort(r %< a %< b %< c %< d | for r && ‹a,b,c,d› <- M);
+   //~!@println(s);
+   for(i <- 0 .. 12){
+     for(j <- i+1 .. 13) {
+       mi = s(i);
+       mj = s(j);
+       ~!@assert
+          (mi.a < mj.a || 
+           (mi.a == mj.a && 
+             (mi.b < mj.b ||
+               (mi.b == mj.b &&
+                 (mi.c < mj.c ||
+                   (mi.c == mj.c && 
+                     mi.d <= mj.d
+                   )
+                 )
+               )
+             )
+           ),
+           i,mi, j, mj
+         );
+     }for
+   }for
+   
+}
+
+
+{
+   s = %sort(r %< a %>b %< c %> d | for r && ‹a,b,c,d› <- M);
+   //~!@println(s);
+   for(i <- 0 .. 12){
+     for(j <- i+1 .. 13) {
+       mi = s(i);
+       mj = s(j);
+       ~!@assert
+          (mi.a < mj.a || 
+           (mi.a == mj.a && 
+             (mi.b > mj.b ||
+               (mi.b == mj.b &&
+                 (mi.c < mj.c ||
+                   (mi.c == mj.c && 
+                     mi.d >= mj.d
+                   )
+                 )
+               )
+             )
+           ),
+           i,mi, j, mj
+         );
+     }for
+   }for
+   
+}
+
+
+{
+   s = %sort(r %> a %>b %< c %> d | for r && ‹a,b,c,d› <- M);
+   //~!@println(s);
+   for(i <- 0 .. 12){
+     for(j <- i+1 .. 13) {
+       mi = s(i);
+       mj = s(j);
+       ~!@assert
+          (mi.a > mj.a || 
+           (mi.a == mj.a && 
+             (mi.b > mj.b ||
+               (mi.b == mj.b &&
+                 (mi.c < mj.c ||
+                   (mi.c == mj.c && 
+                     mi.d >= mj.d
+                   )
+                 )
+               )
+             )
+           ),
+           i,mi, j, mj
+         );
+     }for
+   }for
+   
+}
+
+
+
+{
+   s = %sort(r %< a %<b %> c %> d | for r && ‹a,b,c,d› <- M);
+   //~!@println(s);
+   for(i <- 0 .. 12){
+     for(j <- i+1 .. 13) {
+       mi = s(i);
+       mj = s(j);
+       ~!@assert
+          (mi.a < mj.a || 
+           (mi.a == mj.a && 
+             (mi.b < mj.b ||
+               (mi.b == mj.b &&
+                 (mi.c > mj.c ||
+                   (mi.c == mj.c && 
+                     mi.d >= mj.d
+                   )
+                 )
+               )
+             )
+           ),
+           i,mi, j, mj
+         );
+     }for
+   }for
+   
+}
+
+
+}

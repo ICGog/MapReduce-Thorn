@@ -1,0 +1,46 @@
+{
+  import RECIPE.*;
+  import PANTRY.*;
+
+  ~!@eq(one, one)@!~  ;
+  ~!@eq(tsp, tsp)@!~  ;
+  ~!@eq(cup, cup)@!~  ;
+  ~!@ne(one, tsp, cup)@!~  ;
+  
+  two = Amount("one", 2, true);
+  ~!@eq(one * 2, one * 2.1, two)@!~  ;
+  ~!@ne(one * 2.1, Amount(one.name, 2.1, true))@!~  ;
+
+  ~!@eq(tsp * 2.5, Amount(tsp.name, 2.5, false))@!~  ; 
+  ~!@ne(tsp * 2.5, Amount(tsp.name, 2, false))@!~  ;
+
+  ~!@eq(one.str(), "1")@!~  ;
+  ~!@eq(tsp.str(), "1 tsp")@!~  ;
+  
+  // Ingredient
+  
+  ~!@eq(egg.str(), "one egg")@!~  ;
+  ~!@eq((egg*2).str(), "2 eggs")@!~  ;
+  ~!@eq((egg * 2.6).str(), "3 eggs")@!~  ;
+  
+  ~!@eq(flour.str(), "1 cup flour")@!~  ;
+  ~!@eq((flour * 1.5).str(), "1.5 cup flour")@!~  ;
+  
+  ~!@eq(black·pepper.str(), "1 tsp black pepper")@!~  ;
+  ~!@eq((black·pepper * 0.25).str(), "0.25 tsp black pepper")@!~  ;
+  
+  s1 = Step("Beat", egg);
+  ~!@eq(s1.str(), "Beat one egg")@!~  ;
+  ~!@eq(Step("Beat", egg*2).str(), "Beat 2 eggs")@!~  ;
+  ~!@eq(Step("Cry over", flour).str(), "Cry over 1 cup flour")@!~  ;
+  ~!@eq(Step("Cry over", flour * 2.5).str(), "Cry over 2.5 cup flour")@!~  ;
+  ~!@eq(Step("Mix @ in", black·pepper).str(), "Mix 1 tsp black pepper in")@!~  ;
+  
+  
+  ~!@bad(
+    Recipe([1], false)
+  )@!~  ;
+  ~!@bad(Recipe([s1, s1], true))@!~  ;
+
+  
+}

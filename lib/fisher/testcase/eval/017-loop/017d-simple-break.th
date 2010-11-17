@@ -1,0 +1,9 @@
+{
+  var a := 1;
+  while (true) {
+     ~!@hit()@!~;
+     break;
+     ~!@hit()@!~0;
+  }
+  ~!@hit()@!~1;
+}

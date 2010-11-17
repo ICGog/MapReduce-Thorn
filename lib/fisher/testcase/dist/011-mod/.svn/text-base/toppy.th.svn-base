@@ -1,0 +1,21 @@
+spawn toppy {
+  import PREDESTINATION.*;
+  import LIBRARY.*;
+  import MAVERICK.*;
+  import own BANDANNA = MAVERICK;
+  import jut = BANDANNA.defame;
+  body {
+     y = Yankee(1);
+     ~!@assert(y ~ Yankee(1))@!~  ;
+     c = Crustacean(1,2);
+     ~!@assert(c ~ Yankee(1))@!~  ;
+     ~!@assert(c ~ Crustacean(1,2))@!~  ;
+     ~!@eq(defame(), 1)@!~  ;
+     ~!@eq(defame(), 2)@!~  ;
+     ~!@eq(defame(), 3)@!~  ;
+     ~!@eq(defame(), 4)@!~  ;
+     ~!@eq(jut(), 1)@!~  ;
+     ~!@eq(jut(), 2)@!~  ;
+     ~!@eq(defame(), 5)@!~  ;
+  }
+};

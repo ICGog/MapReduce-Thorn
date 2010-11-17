@@ -1,0 +1,21 @@
+{
+  import RAINBOW.*;
+  
+  class Spook(diam, color, weapon, vegetable) 
+     extends Doily(diam, color),
+             Aggressor(weapon)
+  {
+     def parry() = "parried with " + this.weapon;
+  }
+
+  s = Spook(10, "blue", "spork", "onion");
+  
+  ~!@eq(s.terminate(), 11)@!~  ;
+  ~!@eq(s.straighten(), "straight spork")@!~  ;
+  ~!@eq(s.parry(), "parried with spork")@!~  ;
+  ~!@eq(s.diam, 10)@!~  ;
+  ~!@eq(s.color, "blue")@!~  ;
+  ~!@eq(s.weapon, "spork")@!~  ;
+  ~!@eq(s.vegetable, "onion")@!~  ;
+
+}

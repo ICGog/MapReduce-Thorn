@@ -1,0 +1,43 @@
+{
+  fun permute([]) = [];
+    | permute([x]) = [x];
+    | permute([x, y...]) {
+        i = (y.len + 1).rand0;
+        [y.left(i) ..., x, y.butleft(i)...];
+      }    
+  fun scramble(s:string) {
+    if (s.len <= 2) return s;
+    else {
+      m = permute(%[ s(i) | for i <- 1 .. s.len-2 ]);
+      s(0) + m.joined("") + s(-1);
+    }
+  }scramble        
+
+  filename = "orig.txt";
+  corpus = filename.file.contents;
+  splut = ord();
+  var p := 0;
+  n = corpus.len;
+  word = "(?s)([a-zA-Z]+).*";
+  nonword = "(?s)([^a-zA-Z]+).*";
+  accum = ord();
+  while(p < n) {
+    oldp = p;
+    x1 = corpus.matchREAfter(word, p);
+    if (x1 ~ [_, r && {:start, end, text:s :}]) {
+       splut  @= {: word: s, start, end :};
+       p := end ;
+       ss = scramble(s); 
+       accum @= ss;
+    }
+    else if (corpus.matchREAfter(nonword, p) ~ [_, r && {:start, end, text:s:}]){
+       splut @= {: nonword: s, start, end:}; 
+       p := end ;
+       accum @= s;
+    }
+    else {
+       p := n;
+    }
+  }while
+  println("SCRAMBLED: " + (accum.lst.joined("")));
+}

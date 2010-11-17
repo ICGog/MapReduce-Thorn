@@ -1,0 +1,25 @@
+{
+
+class Rhododendron {
+  val washcloth;
+  new Rhododendron(washcloth') { washcloth = washcloth';} 
+}Rhododendron
+
+class StrangeSmell extends Rhododendron {
+  val cap;
+  new StrangeSmell(w, c) {
+    new@Rhododendron(w);
+    cap = c;
+    }     
+}StrangeSmell
+        
+r = Rhododendron(111);
+~!@eq(r.washcloth, 111)@!~  ;        
+
+s = StrangeSmell(111,222);
+~!@eq(s.washcloth, 111)@!~  ;
+~!@eq(s.cap, 222)@!~  ;
+
+
+}
+

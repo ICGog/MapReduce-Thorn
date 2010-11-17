@@ -1,0 +1,10 @@
+{
+  L = ord();
+  L.add1All([ 1, 3, 7]);
+  ~!@eq(L.lst(), [1,3,7])@!~  ;
+
+  M = ord{map a; val b;}; 
+  M.add1All([1,3,7]);
+  ~!@eq(%[a | for ‹a,b› <- M.rows()], [1,3,7])@!~  ;
+  ~!@eq(%[b | for ‹a,b› <- M.rows()], [null,null,null])@!~  ;
+}

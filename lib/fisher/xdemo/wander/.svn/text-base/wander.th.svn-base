@@ -1,0 +1,141 @@
+spawn {
+
+
+import XML.*;
+import HTTP.*;
+import HTML.*;
+host = "localhost";
+port = 4385;
+pageTemplate = "pageTemplate.html".file.contents;
+
+// State variables 
+var goon := true;
+var atName : string := null;
+
+
+class Entity(name, to, desc, auto) {
+  def str = "Entity($name)";
+}
+
+// Geography
+geographyXML = parseXML("geog.xml".file.contents);
+places = table(name){desc:Elem; exits:list;};
+entities = table(name){var place: string; entity: Entity;};
+
+fun here() = places(atName);
+fun hereDesc() = (desc if here() ~ {:desc:} else null);
+fun hereExits() = (exits if here() ~ {:exits:} else null);
+
+
+class Exit(name, desc, to){
+  def str = "Exit($name)";
+}class
+
+
+
+fun doom(func, msg) { 
+   println("DOOM! func=$func msg='$msg'");
+}
+
+fun showPage(req: HTTPRequest, features : record) {
+  var pg := pageTemplate;
+  featMap = features.toMap();
+  pg := pg.replace("~ATNAME~", atName);
+  pg := pg.replace("~EXITS~", exitTable());
+  for( {: k, v: value :} <- featMap ){
+    name = "~" + k.toUpper + "~";
+    pg := pg.replace(name, value);
+  }for
+  req.respond(OK, pg, {::});
+}showPage
+        
+// 
+
+fun exitButton(exname) = 
+  Elem("form", {: method: "get", action: "http://$host:$port/exit/$exname" :}, [
+    Elem("input", {:type:"submit", name:exname, value:exname:}, [])
+  ]);
+
+fun exitTable() {
+  if (places(atName) ~ {: exits: e's :}) {
+     exitRows = %[
+       tr([td(exitButton(exname)), td(exdesc)])
+       | for {: name:exname, desc: exdesc :} <- e's 
+     ];
+     Elem("table", {:border: 1:}, exitRows);
+  }
+  else {
+    p("No exits");
+  }
+}exitTable
+
+// Geography
+fun geographize(k, name, kids) {
+  desc = k.kid("desc");
+  exitElems = k.kid("exits").kids("exit");  
+  exits = %[Exit(exitName, exitDesc, to) | 
+            for Elem("exit", {: name:exitName, to :}, exitDesc ) <- exitElems];
+  places(name) := {: desc, exits :};
+}
+
+fun parseGeography() {
+  for(k <- geographyXML.children) {
+     match(k) {
+       s:string => {}
+     | Elem("place", {:name:}, kids) => geographize(k, name, kids)
+     | Elem("entity", {:name, at:}, kids) => println("Ignoring $name")
+     | _ => println("parseGeography: I don't know what to do about $k")
+     }
+  }
+  if (geographyXML.attrs ~ {: start :}) {
+    atName := start;
+  }
+  else {
+    doom("parseGeography", "I don't know where to start!");
+  }
+}
+
+
+////////////////
+
+fun doMove(req, params, xit) {
+  if (hereExits() ~ +exits) {
+     find(for Exit($(xit), _, to) <~ exits) {
+        atName := to;
+        showPage(req, {: title:"Moved to $atName", msg: "You just got to $atName!":});
+     }
+     else {
+       showPage(req, {:title: atName, msg: "No exit '$xit' -- how did you get it?":});   
+     }
+  }
+  else {
+    showPage(req, {:title: atName, msg: "No exits at all here -- how did you get here?":});
+  }
+}
+
+body{
+  socketeer = HTTPSocketeer(port);
+  parseGeography();  
+
+  println("I like wandering");
+  while(goon) {
+    recv{
+      HTTPRequest("GET", _, "/favicon.ico") => {}
+    |
+      req && HTTPRequest("GET", params, "/exit/(.*)"/[xit]) from who => {
+        doMove(req, params, xit);
+      }
+    |
+      req && HTTPRequest("GET", params, stuff) from who => {
+        println("Wander: $who wants to GET $params of $stuff.");
+        showPage(req, {: title: atName, msg: "":});
+      }
+    |
+      other => {
+        println("Wander: I do not grok the message '$other'.");
+      }
+    }
+  }while
+
+}body
+};

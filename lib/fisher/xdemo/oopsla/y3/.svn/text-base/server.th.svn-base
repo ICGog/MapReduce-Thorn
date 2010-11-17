@@ -1,0 +1,72 @@
+spawn server {
+  players = table(cid){name;};
+  
+  var cidWithBall := null;
+  var goon := true;
+
+  fun join!(cid,name:string) {  //// name:string to avoid swapping args
+     if( %exists(p.name == name | for p <- players )) {
+       cid <<< {: doom: "$name is taken." :};
+     }
+     else {
+       players(cid) := {:name:};
+       println("Server: $name joined from $cid");
+       cid <<< {: ok: "Hi, $name." :};
+     }
+    }join!
+  | join!(x,y) = println("join! -- what is join!($x,$y)?");
+  
+  fun timedOut() {
+    // If no game, start the game.
+    if (cidWithBall == null && players.num > 0)  {
+      {: cid, name :} = players.rows.rand;
+      println("Server says that $name shall start!");
+      cidWithBall := cid;
+      cid <<< {: player: "Server", adv: "startingly" :};
+    }
+  }timedOut
+  
+  fun resolve!(adv) {
+    nBallGoesTo = adv.hashCode mod players.num;
+    getsCid = %sort(p %< p.name | for p <- players)(nBallGoesTo).cid;
+    if (getsCid == cidWithBall) {
+       loser!(adv);
+    }
+    else {
+       sendBallTo!(getsCid, adv);
+    }
+  }resolve!
+  
+  fun loser!(adv) { 
+    cidWithBall <<< {: lose: "You $adv hit the ball to yourself, berk!" :};
+    loserName = players(cidWithBall).name;
+    for( {:cid:c && (c != cidWithBall)?:} <~ players) {
+      c <<< {: win: "$loserName $adv hit the ball to themself, and lost." :};
+    }
+    goon := false;
+  }loser!
+  
+  fun sendBallTo!(getsCid, adv) {
+    hitName = players(cidWithBall).name;
+    getsName = players(getsCid).name;
+    cidWithBall <<< {:msg: "You hit the ball $adv to $getsName.":};
+    getsCid <<< {:player: hitName, adv :};
+    for ( {:cid: c && (!(c in [cidWithBall, getsCid]))?:} <~ players) {
+      c <<< {: msg: "$hitName $adv hit the ball to $getsName." :};
+    }
+    
+    cidWithBall := getsCid;
+  }sendBallTo!
+  
+  body{
+    while(goon){
+      println("Server respectfully waiting.");
+      receive{
+        {:join:name:} from cid => join!(cid, name)
+      | {:adv:} from $(cidWithBall) => resolve!(adv)
+      | other => println("Server: what is $other?")
+      timeout(5000) { timedOut(); }
+      }receive
+    }while
+  }body
+}server;

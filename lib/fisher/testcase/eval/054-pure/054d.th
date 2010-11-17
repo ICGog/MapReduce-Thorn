@@ -1,0 +1,14 @@
+{
+~!@eq(same_type_and_all_fields_equal?({:a:1,b:2:}, {:b:2, a:1:}), true)@!~  ;
+~!@eq(same_type_and_all_fields_equal?({:a:1,b:2:}, {:a:1, b:2:}), true)@!~  ;
+~!@eq(same_type_and_all_fields_equal?({:a:1,b:2:}, {:b:1, a:3:}), false)@!~  ;
+~!@eq(same_type_and_all_fields_equal?({:a:1,b:2:}, {:b:1, aa:2:}), false)@!~  ;
+  
+
+class Oaf(a);
+
+~!@eq(same_type_and_all_fields_equal?(Oaf(1), Oaf(1)), true)@!~  ;
+~!@eq(same_type_and_all_fields_equal?(Oaf(1), Oaf(2)), false)@!~  ;
+~!@eq(same_type_and_all_fields_equal?(Oaf(1), {:a:1:}), false)@!~  ;
+
+}

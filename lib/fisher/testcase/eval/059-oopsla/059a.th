@@ -1,0 +1,21 @@
+{
+  import DATER.*;
+  porpoise = Profile([
+        {: topic: "swimming",           weight: 15:},
+        {: topic: "sushi",              weight: 12:},
+        {: topic: "moon",               weight: 7:},
+        {: topic: "watersports",        weight: 10:}],
+        0);
+  cat = Profile([
+        {: topic: "mice", weight: 8 :},
+        {: topic: "sushi", weight: 8 :},
+        {: topic: "moon", weight: 3 :},
+        {: topic: "naps", weight: 6:}], 
+        12);
+  ~!@assert(porpoise.compatible?(porpoise))@!~  ;
+  ~!@assert(! cat.compatible?(porpoise))@!~  ;
+  ~!@assert(porpoise.compatible?(cat))@!~  ;
+  ~!@assert(cat.compatible?(cat))@!~  ;
+  
+  
+}

@@ -1,0 +1,70 @@
+.body {
+    background-color:#FFFFFF;
+}
+
+.center {
+    text-align:center;
+    color: #000000;
+}
+
+#evalButton {
+    width:10%;
+    height:27px;
+    margin-left:88%;
+    margin-right:2%;
+}
+
+#thornspace {
+    background-color: #5F9F9F;
+    height:85%;
+    width:76%;
+    margin-left:12%;
+    margin-right:12%;    
+    -moz-border-radius:10px;
+    -webkit-border-radius:10px;
+}
+
+#emptytop {
+    height:2%;
+}
+
+#termout {
+    background-color: #EFDFDF;
+    color: #000000;
+    width:95%;
+    height:48%;
+    border-width:2px;
+    border-color:#000000;
+    border-style:solid;
+    margin-left:2%;
+    margin-top:2%;
+    margin-right:3%;
+    overflow:auto;
+    font-family:monospace;
+    white-space:pre;
+}
+
+#inputmsg {
+    color:#000000;
+    width:96%;
+    height:19px;
+    margin-left:2%;
+    margin-right:2%;
+}
+
+#termin {
+    background-color:#FFFFFF;
+    color:#000000;
+    width:96%;
+    height:30%;
+    border-width:2px;
+    border-color:#000000;
+    border-style:solid;
+    margin-bottom:1%;
+    margin-left:2%;
+    margin-right:2%;
+    overflow:auto;
+    font-family:monospace;
+    white-space:pre;
+}
+

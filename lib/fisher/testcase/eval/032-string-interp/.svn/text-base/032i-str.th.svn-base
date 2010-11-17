@@ -1,0 +1,9 @@
+{
+  class Ow {
+    def str() {
+      return "ow!";
+    }
+  }Ow
+  x = Ow();
+  ~!@eq(x.str, x.str(), "ow!")@!~  ;
+}

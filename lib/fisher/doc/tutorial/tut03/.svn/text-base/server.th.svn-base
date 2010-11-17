@@ -1,0 +1,28 @@
+// File: tut03/server.th
+spawn server {
+  users = table(name){password;};                         // (C)
+  sync login({:name: n, password: pw:}) {                 // (D)
+     userRow = users(n);                                  // (E)
+     if (userRow == null) {
+        // No row there, so register a new user.
+        users(n) := {: password:pw :};                    // (F)
+        println("Registering $n with $pw");
+        return "Hi, $n! Welcome to Cheeper!";             // (G)
+     }
+     else if (userRow ~ {: password: $(pw) :}) {          // (H)
+        println("$n logged back in.");
+        return "Hi, $n! Welcome back to Cheeper!";
+     }
+     else {
+        // Wrong password.
+        println("Someone thought $n's password was \'$pw\', the loon!");
+        return null;
+     }
+  }
+  body{
+    println("Cheeper server starting.");
+    while (true) {                                        // (I) 
+      serve;
+    }
+  }body
+}server;

@@ -1,0 +1,41 @@
+@Override
+public void replace(int field, int index, Object newval) {
+	// TODO Auto-generated method stub
+	switch(field) {
+	case 0: super.replace(field, index, newval); break;
+	case 1: this.one = (Cmd) newval; break;
+	case 2: this.more = (Cmd) newval; break;
+	case 3: this.none = (Cmd) newval; break;
+	default: Error.internal("Bad field in replace", this, field, index, newval);
+	// and parent will be, except for the -100:
+	case -100: controls.set(index, (QueryControl) newval); break;
+	}
+}
+
+public Object getChild(int field, int index) {
+	Object ret; 
+	switch(field) {
+	case 0: ret = controls.get(index); break;
+	case 1: ret = this.one; {if (ret == null) Error.internal("non-nullable was null", src, notes);} break;
+	case 2: ret = this.more; break;
+	case 3: ret = this.none; break;
+	}
+	return ret;
+	
+}
+
+Might want to use 'nullable' to check when getting/setting null values.
+
+@Override
+	public List<SynPtr> synPtrs() {
+		List<SynPtr> ptrs = new ArrayList<SynPtr>();
+		// 0: start
+		ptrs.add(new SynPtr(this, 0, -1));
+		// ...
+		// 2: controls
+		for(int i = 0; i < this.controls.size(); i++) {
+			ptrs.add(new SynPtr(this, 2, i));
+		}
+		// remember to skip non-children.
+		return ptrs;
+	}

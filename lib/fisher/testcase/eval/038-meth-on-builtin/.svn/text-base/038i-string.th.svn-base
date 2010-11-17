@@ -1,0 +1,64 @@
+{
+  ~!@eq("".num(),0)@!~  ;
+  ~!@eq("j".num(),1)@!~  ;
+  ~!@eq("Pu".num(),2)@!~  ;
+
+  ~!@eq("".len(),0)@!~  ;
+  ~!@eq("j".len(),1)@!~  ;
+  ~!@eq("Pu".len(),2)@!~  ;
+
+
+  {
+    ~!@assert("ab".`<=>`('abc') < 0);
+    ~!@assert("ab".`<=>`('a') > 0);
+    ~!@assert("ab".`<=>`('ab') == 0);
+    ~!@assert("ab".`<=>`('AB') != 0);
+  }
+  {
+    ~!@assert("ab".compareToIgnoreCase('abc') < 0);
+    ~!@assert("AB".compareToIgnoreCase('abc') < 0);
+    ~!@assert("ab".compareToIgnoreCase('Abc') < 0);
+    ~!@assert("ab".compareToIgnoreCase('A') > 0);
+    ~!@assert("ab".compareToIgnoreCase('a') > 0);
+    ~!@assert("Ab".compareToIgnoreCase('aB') == 0);
+    ~!@assert("ab".compareToIgnoreCase('ab') == 0);
+    ~!@assert("ab".compareToIgnoreCase('AB') == 0);
+  }
+
+  {
+    s = "I hope Mr. Lyndon Hitler poisons your stout!";
+    ~!@assert(s.contains?("hope"))@!~  ;
+    ~!@assert(not(s.contains?("poisoneth")))@!~  ;
+    ~!@assert(not(s.contains?("lyndon")))@!~  ;
+    ~!@assert(s.contains?(""))@!~  ;
+    ~!@assert("".contains?(""))@!~  ;
+ }
+
+ {
+   s = "I wanted to ask you, didn't you read MAGISTER LUDI?";
+   ~!@assert(s.endsWith?(""))@!~  ;
+   ~!@assert(s.endsWith?("?"))@!~  ;
+   ~!@assert(s.endsWith?("LUDI?"))@!~  ;
+   ~!@assert(not(s.endsWith?("ludi?")))@!~  ;
+   ~!@assert(s.endsWith?(s))@!~  ;
+   
+   ~!@assert(s.startsWith?(""))@!~  ;
+   ~!@assert(s.startsWith?("I"))@!~  ;
+   ~!@assert(s.startsWith?("I wanted"))@!~  ;
+   ~!@assert(s.startsWith?(s))@!~  ;
+   ~!@assert(not(s.startsWith?("i")))@!~  ;
+   
+  }
+  
+  {
+    ~!@assert("squid".equalsIgnoreCase?("SQUID"))@!~  ;
+    ~!@assert("squid".equalsIgnoreCase?("Squid"))@!~  ;
+    ~!@assert("squid".equalsIgnoreCase?("squid"))@!~  ;
+    ~!@assert("squid".equalsIgnoreCase?("sqUid"))@!~  ;
+    ~!@assert(not("squid".equalsIgnoreCase?("sqUidx")))@!~  ;
+    ~!@assert(not("squid".equalsIgnoreCase?("sq.*")))@!~  ;
+  }   
+
+
+
+}

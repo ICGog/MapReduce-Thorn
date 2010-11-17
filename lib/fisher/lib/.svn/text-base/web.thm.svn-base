@@ -1,0 +1,79 @@
+module HTTP {
+  javaly class StringSocketeer = fisher.runtime.lib.socketeer.StringSocketeer {
+    new StringSocketeer(port);
+  }
+  javaly class ReplySocket = fisher.runtime.lib.socketeer.ReplySocketTh {
+    def `<<<`(x,y) = send;
+  }
+  javaly fun siteForStrings(nodeName, port) = fisher.runtime.lib.SiteForStrings.create;
+  
+  javaly class HTTPSocketeer = fisher.runtime.lib.http.HTTPSocketeer {
+    new HTTPSocketeer(port);
+  }
+  
+  javaly class HTTPRequest(verb, params, resource) = fisher.runtime.lib.http.HTTPRequest {
+    def verb() = verb;
+    def protocol() = protocol;
+    def resource() = resource;
+    def content() = content;
+    def params() = params;
+    def buildResponse(rcPlusMean, content, extraHeaders) = buildResponse;
+    def respond(rcPlusMean, content, extraHeaders) = respond;
+  }
+  
+  HTTP_404 = {: code: 404, meaning: "Not Found" :};
+  OK =       {: code: 200, meaning: "OK" :};
+  
+}
+
+module XML {
+  javaly class Elem(tag, attrs, children) = fisher.runtime.lib.Elem {
+    def tag() = tag;
+    def attrs() = attrs;
+    def children() = children;
+    def str(ctrl) = str;
+    new XML(tag, attrs, children);
+  }
+  javaly fun parseXML(source) = fisher.runtime.lib.XMLFuns.parse;
+}
+
+
+module HTML {
+  import XML.*;
+  fun aslist(s:string) = [s];
+    | aslist(s:list)   = s;
+    | aslist(null)     = [];
+    | aslist(s:Elem)   = s;
+    | aslist(s)        = [s.str()];
+  fun P(text) = Elem("P", {::}, aslist(text));
+  fun B(text) = Elem("B", {::}, aslist(text));
+  fun i(text) = Elem("i", {::}, aslist(text));
+//  fun @(text) = Elem("@", {::}, aslist(text));
+  fun LI(text) = Elem("LI", {::}, aslist(text));
+  fun OL(text) = Elem("OL", {::}, aslist(text));
+  fun UL(text) = Elem("UL", {::}, aslist(text));
+  fun TD(text) = Elem("TD", {::}, aslist(text));
+  fun TR(text) = Elem("TR", {::}, aslist(text));
+  fun H1(text) = Elem("H1", {::}, aslist(text));
+  fun H2(text) = Elem("H2", {::}, aslist(text));
+  fun TABLE(mods,text) = Elem("TABLE", mods, aslist(text));
+  fun SPAN(mods,text) = Elem("SPAN", mods, aslist(text));
+  fun HTML(stuff) = Elem("html", {::}, aslist(stuff));
+  fun HEAD(stuff) = Elem("head", {::}, aslist(stuff));
+  fun BODY(stuff) = Elem("body", {::}, aslist(stuff));
+  fun TITLE(stuff) = Elem("title", {::}, aslist(stuff));
+  fun IMG1(link) = Elem("img", {: src:link :}, []);   
+  fun FORM(action, method, stuff) = Elem("form", {:action, method:}, aslist(stuff));
+  fun BUTTON(name,value) = Elem("input", {:type:'button',name,value:}, []);
+  fun LINK(dest,text) = Elem("a", {:href:dest:}, aslist(text));
+  fun SUBMIT(value) = Elem("input", {:type:"submit", value:}, []);
+  fun TEXTAREA(name, cols, rows) = Elem("textarea", {:name, rows, cols:},[]);
+  fun LABEL(For, stuff) = Elem("label", {:`for`:For:}, aslist(stuff));
+  fun INPUT_TEXT(name, size) = Elem("input", {:type:"text", size, name:}, []);
+  fun HIDDEN(name,value) = Elem("input", {:type:"hidden", name, value:}, []);
+  val BR = Elem("br", {::}, []);
+  fun SELECT(name, optionsAsMap) = 
+    Elem("select", {:name:}, 
+      %[ Elem("option", {:value:v:}, aslist(k)) | for {:k,v:} <- optionsAsMap]);
+}
+

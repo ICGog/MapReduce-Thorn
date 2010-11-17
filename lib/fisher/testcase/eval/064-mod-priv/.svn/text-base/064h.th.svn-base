@@ -1,0 +1,5 @@
+//FAIL:
+{
+  import own OIL = SILHOUETTE;
+  import OIL.n;
+}

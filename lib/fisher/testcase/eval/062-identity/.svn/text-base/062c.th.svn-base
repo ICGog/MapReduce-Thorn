@@ -1,0 +1,14 @@
+{
+  import IDENTITY.*;
+  class A extends Identity {
+  }
+  class B extends Identity;
+  class C extends A,B;
+  
+  c1 = C();
+  c2 = C();
+  ~!@ne(c1, c2)@!~  ;
+  ~!@eq(c1.same?(c1))@!~  ;
+  ~!@eq(! c1.same?(c2))@!~  ;
+  
+}

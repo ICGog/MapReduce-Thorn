@@ -1,0 +1,197 @@
+\section{Changes to Syntax}
+
+\begin{enumerate}
+
+\item \label{syntax:pure} Purity is currently marked by \kw{:pure}, which was going to be an instance of
+some general syntax, but is not. Make it some other kind of modifier, like a
+prefix, if we keep it at all. 
+
+\item \label{syntax:assignment} We could allow `\kw{var} x = 4' as a synonym for `\kw{var} x \kw{:=} 4'.  It's not clear that
+this is a good idea, since using `=' for assignments may be confusing.
+
+\item  \label{syntax:semicolons as separators} The `;' after `2' should be optional, but is not:
+\begin{quote}
+\begin{lstlisting}
+fun f(1) = 2;
+|     f(_) = 3;
+\end{lstlisting}
+\end{quote}
+
+\item \label{syntax:modifiers} \kw{from}, \kw{envelope}, and \kw{prio} clauses on method and function definitions
+should be allowed in arbitrary order. 
+
+\item \label{syntax:super} The constructor supercall should allow \kw{new}$@$\kw{super}(...) as well as \kw{new}$@$A(...).
+
+\item \label{syntax:import own} Remove \kw{import own}.
+
+\item \label{syntax:module:private/public} Right now, public/private statements in a module are separate statements: 
+\begin{quote}
+\begin{lstlisting}
+module Moo {
+	var a; var b; var c;
+	private a; private b;
+}
+\end{lstlisting}
+\end{quote}
+Having \kw{private} be a modifier on declarations (and getting rid of \kw{public})
+would probably be better style. Failing which, at least allow:  \kw{private} a,b;
+
+\item \label{syntax:expressions as statements} Currently a few choices of statement can be put in parens to make an
+expression: (\kw{if} (true) 3; \kw{else} 4;). Probably all of them should.
+
+\item \label{syntax:records} \{: ... :\} is pretty unsatisfying for something as fundamental as records. 
+They are far more important than the two-char syntax indicates.
+Go for  \{ x : 1, y : 2 \} if possible.  Another proposal is to use `\kw{new}  \{ x : 1; y : 2 \}'.
+
+\item \label{syntax:.nice(x)} Remove the `.nice(x)' pattern. 
+The currently supported alternative `it.nice $\sim$ +x' isn't much wordier, and is
+clearer and more general.  Maybe also eliminate the `.nice()' pattern, which abbreviates
+`it.nice $\sim$ !(null $||$ false)'.
+
+\item \label{syntax:case} Change the syntax currently described as the nonterminal 'cases': 
+\begin{quote}
+\begin{lstlisting}
+try {
+	x := 1;
+} catch {
+	``Doom!'' => {print(``doom'');}
+	| ``Mood?'' => {} 
+}
+\end{lstlisting}
+\end{quote}
+The `$|$' separating the two cases is too small visually to separate chunks of
+code. Allow something else as an option: perhaps `\kw{case}'.
+
+\item \label{syntax:table decls}The syntax for table column declarations is awkward:
+\begin{lstlisting}
+t2 = table(x,y){var fg; val bg; zog : int;}; 
+\end{lstlisting}
+The current syntax is intended to parallel var/val decls, which it
+does, but that's not so nice.  It would be better to turn the semicolons into commas, and have the last one be
+optional:
+\begin{lstlisting}
+t2 = table(x,y){var fg, val bg, zog : int}
+\end{lstlisting}
+Ditto for ords.
+
+\item \label{syntax:type constraints} Replace the type constraint operation `:'  with `::',
+which is probably essential to revising record syntax and perhaps conditional
+expressions. 
+
+\item \label{syntax:conditional expressions} Could we get away with using C-style conditional expressions, i.e. `A ? B : C'? Originally we didn't do that
+because the `:' is being used for other things, but we may now have it clear
+enough.
+
+Failing which---could `if A then B else C' be an expression with ANTLR? It
+didn't work in JavaCC, for LL reasons.
+
+\item \label{syntax:queries} The \% sign in queries is a problem.  Can we do the following:
+
+\begin{description}
+
+\item[Vars] \hfill \\ Most query controls don't need adaptation. The one that does is 'var'
+\begin{center}`\lstinline{var i := E %then1 F}' $\rightarrow$ `\lstinline{var i := E ,, F}'\end{center}
+(Note---consistent with the use of ,, in groups, later on.)
+\begin{center}`\lstinline{var i := E %then0 F}' $\rightarrow$ `\lstinline{var i := ,, E ,, F}'\end{center}
+This is not ideal.
+
+\item[List Comprehension] \hfill \\ 
+$[$ Exp ...? $|$ QueryControls $]$---that is, using the presence of a `$|$' early in the list to disambiguate
+from list constructors?
+
+\item[Quantifiers]  \hfill \\ 
+Using \kw{count}, \kw{all}, \kw{exists} instead of \kw{\%count}, \kw{\%all}, \kw{\%exists} is
+probably good enough. There is some issue about claiming a popular
+identifier like `count' as a reserved word.
+
+\item[First]  \hfill \\ 
+Use \kw{first} instead of \kw{\%first}/\kw{\%find}.
+Use \kw{find} as the statement-level variant (drop \kw{first} as synonym).
+Use \kw{else} for \kw{\%none}.
+
+\item[After]  \hfill \\  
+Use \kw{after} instead of \kw{\%after}.
+
+\item[Table Comprehension]  \hfill \\  
+Can the `$|$' in the table constructor work here too? And the `=' in the key
+fields?
+\begin{lstlisting}
+{table(x=i){xsq = i*i | for i <- 1..100} 
+\end{lstlisting}
+vs a table constructor: 
+\begin{lstlisting}
+table(x){xsq}
+\end{lstlisting}
+
+\item[Sorting]  \hfill \\   
+Use \kw{sort} instead of \kw{\%sort}.
+Use \kw{by} instead of \kw{\%<}.
+Use \kw{yb} instead of \kw{\%>}.
+Or maybe \kw{by decreasing} for a more cobolly effect?
+
+\item[Group queries]  \hfill \\   
+Use \kw{count} instead of \kw{\%count}  (a previously introduced keyword);
+`\kw{E ...}' instead of `\kw{\%list E}'; 
+ `\kw{... E}' instead of `\kw{\%rev E}'; and
+ `E ,, F ,, G' instead of `\kw{\%first E \%then F \%after G}'.
+
+So, oldstyle: 
+\begin{lstlisting}
+%group(prime? = n.prime?) {
+num = %count;
+them = %list n;
+meht = %rev n;
+sum = %first n %then sum+n;
+sumAsString = %first n %then 
+  sum+n %after sum.str;
+| for n <- 2 .. 100  }
+\end{lstlisting}
+would be, newstyle: 
+\begin{lstlisting}
+group(prime? = n.prime?) {
+num = count,
+them = n ...,
+meht = ... n,
+sum = n ,, sum+n,
+sumAsString = n ,, sum+n ,, sum.str
+| for n <- 2..100 }
+\end{lstlisting}
+
+\end{description}
+
+\item \label{syntax:timeout} Timeout clauses in \kw{recv} statements should have the same syntax as other clauses, mutatis mutandis.    
+
+Currently: 
+\begin{lstlisting}
+  msg = (recv{
+    x => x
+    timeout(1000) { "timed out";}
+  });
+\end{lstlisting}
+
+The timeout clause requires braces and no $=>$; it should look more like a regular clause.
+
+\item \label{syntax:trailing semi-colons} We should allow 
+\begin{lstlisting}
+def glurd() {frell();};
+\end{lstlisting}
+
+that is, def's (and many other things) should be allowed to have trailing semicolons.
+
+\item \label{syntax:spawn} The \kw{body} block in a \kw{spawn} should just be the body of the spawn. ÊThings like initially, reinit, before, after should just be methods of the component and not baked in. ÊSpawn should be similar to \kw{new} and just take a class name (a subclass of Component providing the appropriate methods) and arguments to pass to the constructor. Ê\kw{spawn} \{ ... \} is equivalent to \kw{spawn} $<$anon subclass of Component$>$. ÊOne should be able to do \kw{new} \{ ... \} to create an anonymous subclass of Any.
+
+\item \label{syntax:implicit initializer} The body of a class declaration should allow expressions invoked before the constructor---like an initializer block in Java.
+
+\item \label{syntax:ellipses in patterns} Replace the `...' patterns with the `x::xs' syntax.
+
+\item \label{syntax:variables in patterns} \$(k) in patterns should be writable as \$k.
+
+\item \label{syntax:newline as terminator} Make $\backslash$n a synonym for `;'. ÊThe semicolon should be used as a separator consistently.
+
+\item \label{syntax:singleton objects} Remove singleton objects. ÊShould be using top-level module definitions instead.
+
+\item \label{syntax:function def matching} Remove matches baked into function definitions. ÊExplicitly write:
+\begin{lstlisting}Ê
+fun foo(x) = match(x) { ... }
+\end{lstlisting}
+\end{enumerate}

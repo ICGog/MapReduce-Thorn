@@ -1,0 +1,13 @@
+{
+   import CHOP.*;
+   ~!@eq(chops("\nSlut"), ["\n","Slut"])@!~  ;
+  ~!@eq(  chops("I like ice!"), ["I", " ", "like", " ", "ice", "!"])@!~  ;
+  ~!@eq(chops("I,,, like,,, ice."), ["I", ",,, ", "like", ",,, ", "ice", "."]);
+  ~!@eq(chops("Strayway is my new sky-yacht."), 
+     ["Strayway", " ", "is", " ", "my", " ", "new", " ", "sky-yacht", "."]
+  )@!~  ;
+  ~!@eq(
+    chops("I\nhate\neggplant"),
+    ["I", "\n", "hate", "\n", "eggplant"]
+  )@!~  ;
+}

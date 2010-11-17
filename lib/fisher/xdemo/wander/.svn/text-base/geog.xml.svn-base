@@ -1,0 +1,38 @@
+<geography start="Emerald City">
+  <place name="Emerald City">
+    <desc> A very very green and very very civilized place
+    </desc>
+    <exits>
+      <exit name="south" to="Quadling Country"> A road leading to a red land</exit>
+      <exit name="north" to="Gillikin Country"> A road leading to a purple land</exit>
+      <exit name="itch" to="Itchsylvania">A twitchy road </exit>
+    </exits>
+  </place>
+  
+  <place name="Quadling Country">
+    <desc>A very very red and very very wild place</desc>
+    <exits>
+      <exit name="north" to="Emerald City"> A yellow brick road</exit>
+    </exits>
+  </place>
+
+  <place name="Gillikin Country">
+    <desc>A very very purple and very very wild place</desc>
+    <exits>
+      <exit name="south" to="Emerald City"> A yellow brick road</exit>
+    </exits>
+  </place>
+  
+  <place name="Itchsylvania">
+    <desc>A dimension of pure itchiness</desc>
+    <exits>
+      <exit name="ouch" to="Emerald City">Ow, ow ow ow.  This direction will
+      stab you with many many jagged glass shards!!</exit>
+    </exits>
+  </place>
+
+  <entity name="Vae" at="Quadling Country", auto="auto_vae">
+    <desc>A big ugly lizard with a very long tail</desc>
+  </entity>
+
+</geography>

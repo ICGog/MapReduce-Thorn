@@ -1,0 +1,9 @@
+{
+  import PET.MentalProblem;
+  class Refractometer extends MentalProblem{
+    val evasion = 5;
+  }
+  r = Refractometer();
+  ~!@obj_local_struct(r, "evasion=5,glossary=3,")@!~;
+
+}

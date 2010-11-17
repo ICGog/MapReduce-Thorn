@@ -1,0 +1,27 @@
+{
+  t = table(a,b) {var c;};
+  fun it's(l) {
+    st = %sort( r %< r.a %< r.b | for r <- t );
+    ~!@eq(st, l);
+    }
+  fun hey(a, b, c) {
+    t(a,b) := {: c :};
+    {: a, b, c :};
+    }
+
+  var f := hey(1,11,111);
+  it's([f]);
+  var i := hey(1,22,333);
+  it's([f,i]);
+  var h := hey(2,22, 444);
+  it's([f,i,h]);
+  var s := hey(2,11,321);
+  it's([f,i,s,h]);
+  t(1,11) := null;
+  it's([i,s,h]);
+  t(2,22) := null;
+  it's([i,s]);
+  f := hey(0,11,123);
+  it's([f,i,s]);
+  
+}

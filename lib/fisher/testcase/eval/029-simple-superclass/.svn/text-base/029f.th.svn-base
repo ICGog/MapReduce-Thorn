@@ -1,0 +1,9 @@
+{
+  import Handbag = PET.Neutrino;
+  import PET.MentalProblem;
+  class Span extends Handbag, MentalProblem {
+    school = 7 + this.shield + this.glossary;
+  }
+  s = Span();
+  ~!@obj_local_struct(s, "glossary=3,school=11,shield=1,")@!~;
+}

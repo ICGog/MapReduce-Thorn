@@ -1,0 +1,153 @@
+/* -*- mode: java; c-file-style: "ellemtel" -*- */ 
+module wcformtemplates{
+  
+   import webhtml.*;
+   import wcmodels.*;
+   
+   fun div_gf(content) = div_({: `class`: "yui-gf" :}, content); 
+   fun div_u(content) = div_({: `class`: "yui-u" :}, content);
+   fun div_u_first(content) = div_({: `class`: "yui-u first" :}, content);
+
+   /** Forms */
+   fun search_form(){
+      return form({: method: "get", action: "/search/" :}, [
+         div_([
+            textinput({: id: "search", name: "q" :}),
+            submitinput({: value: "Search" :})
+            ])
+         ]);
+   }
+
+
+   fun signup_form(){
+      return
+         form({: id: "signupForm", method: "post", action: "/users/" :}, [
+            div_gf([
+               div_u_first([
+                  label({: `for`: "username" :}, "Username"),
+                  textinput({: id: "username", name: "username" :}),
+                  label({: `for`: "password" :}, "Password"),
+                  passwordinput({: id: "password", name: "password" :}),
+                  submitinput({: name: "submit", value: "Join" :})
+                  ])])]);
+   }
+
+//    label({: `for`: 'twitterintegration' :}, "Twitter Integration "),
+//       checkboxinput({: id: 'twitterintegration', name: 'twitterintegration' :}),
+
+   fun signin_form(){
+      return
+         form({: id: "loginForm", method: "post", action: "/signin/" :}, [
+            div_gf([
+               div_u_first([
+                  label({: `for`: "username" :}, "Username"),
+                  textinput({: id: "username", name: "username" :}),
+                  label({: `for`: "password" :}, "Password"),
+                  passwordinput({: id: "password", name: "password" :}),
+                  submitinput({: name: "submit", value: "Sign In" :})
+                  ])])]);
+   }
+
+   fun settings_form(context:record){
+      user = context.user;
+
+      var twitter_integration := "";
+      twitter_inputs = [
+         "No ", radioinput({: name: "twitterintegration", value: "no" :}), 
+         " Read Only ", radioinput({: name: "twitterintegration", value: "read only" :}),
+//          " Full ", radioinput({: name: "twitterintegration", value: "full" :})
+         ];
+
+      match(user['twitterintegration']){
+         "no"          => { 
+            twitter_inputs(1).attributes.put("checked", "checked"); 
+           twitter_integration := "display:none"; }
+         | "read only" => { twitter_inputs(3).attributes.put("checked", "checked"); }
+         | "full"      => { twitter_inputs(5).attributes.put("checked", "checked"); } 
+      }
+
+      twitter_cheeper_login_inputs = [
+         "Yes ", radioinput({: name: "twittercheeperlogin", value: "true" :}),
+         " No ", radioinput({: name: "twittercheeperlogin", value: "false" :}),
+         ];
+
+      var twitter_cheeper_login := "";
+
+      match(user['twittercheeperlogin']){
+         "true"  => { 
+            twitter_cheeper_login_inputs(1).attributes.put("checked", "checked"); 
+           twitter_cheeper_login := "display:none";
+         }
+         | "false" => { twitter_cheeper_login_inputs(3).attributes.put("checked", "checked");  }
+      }
+      
+      return form({: id: "settingsForm", method: "post", enctype:"multipart/form-data", action: "/" + user['key'] + "/?_method=PUT" :},[
+         div_([
+            label({: `for`: "avatar" :}, "Avatar"),
+            p({: id: "avatarimg" :}, img({: height:32, src: user['avatar'], alt:"avatarimg" :})),
+            label({: `for`: "updateavatar":}, "Update Avatar"),
+            div_({: id: "updateavatar" :},[
+               "No", radioinput({: name:"updateavatar", value:"false", checked:"checked" :}),
+               "Yes", radioinput({: name:"updateavatar", value:"true" :}),
+               p(fileinput({: id:"avatar", name: "avatar", style:"display:none" :}))]),
+            label({: `for`: "twitter" :}, "Twitter Integration"),
+            p({: id: "twitter" :}, twitter_inputs),
+            div_({: id:"twitterlogin", style: twitter_integration :}, [
+               label({: `for`: "usecheeperlogin" :}, "Use Cheeper login for Twitter"),
+               p({: id: "usecheeperlogin" :}, twitter_cheeper_login_inputs),
+               div_({: id:"twitterlogininput", style: twitter_cheeper_login :},[
+                  label({: `for`: "twitterusername" :}, "Twitter Username"),
+                  textinput({: id: "twitterusername", name: "twitterusername", value: user['twitterusername'] :}),
+                  label({: `for`: "twitterpassword" :}, "Twitter Password"),
+                  passwordinput({: id: "twitterpassword", name: "twitterpassword", value: user['twitterpassword'] :})
+                  ])]),
+         
+            submitinput({: value: "Save" :})
+            ])]);
+   }
+
+   fun cheep_form(context){
+      user = context.user;
+      return div_gf([
+         div_u_first([
+            dl([
+               dt("Username"), dd(user['username']),
+               dt("Cheeps"), dd({: id: 'cheepsnumber' :}, user['cheeps']),
+               dt("Following"), dd(user['followingkeys'].len() - 1),
+               dt("Followers"), dd(user['followerkeys'].len() - 1)
+               ]),
+            search_form()
+            ]),
+         div_u([
+            form({: id: "cheepForm", method: "post", action: "/cheeps/" :}, [
+               div_([
+                  textarea({: id: "cheep", name: "cheep", rows: 2, cols: 100 :}),
+                  div_([
+                     hiddeninput({: name: "userkey", value: user['key'] :}),
+                     hiddeninput({: id: "latest_version", name: "latest_version", value: "0" :}),
+                     submitinput({: name: "submit", value: "Cheep" :})
+                     ])])])])]);
+   }
+
+
+   fun follow_form(context){
+      return
+         form({: `class`: "followForm", method: "post", action: "/follow/" :}, [
+            div_([
+               hiddeninput({: name: "follower", value: context.user['key'] :}),
+               hiddeninput({: name: "followee", value: context.other['key'] :}),
+               submitinput({: name: "submit", value: "Follow" :})
+               ])]);
+   }
+
+   fun unfollow_form(context){
+      return
+         form({: `class`: "unfollowForm", method: "post", action: "/unfollow/" :}, [
+            div_([
+               hiddeninput({: name: "unfollower", value: context.user['key'] :}),
+               hiddeninput({: name: "unfollowee", value: context.other['key'] :}),
+               submitinput({: name: "submit", value: "Unfollow" :})
+               ])]);
+   }
+}
+

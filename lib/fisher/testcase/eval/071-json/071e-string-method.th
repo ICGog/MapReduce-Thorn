@@ -1,0 +1,30 @@
+{
+
+
+  ~!@eq(
+      ('{"a": 1}').deJSON,
+               {: a:1 :}
+  )@!~  ;
+
+  ~!@eq(
+    ('{}').deJSON,
+               {: :}
+  )@!~  ;
+
+  ~!@eq(
+    ('{"ab" : [], "cd": "ow ow"}').deJSON,
+               {: ab:[],  cd: "ow ow" :}
+  )@!~  ;
+
+  ~!@eq(
+    ('{ "the fish": {"scale" : []}, "incubus": 1 }').deJSON,
+               {: `the fish` : {:scale: []:}, incubus : 1 :}
+  )@!~  ;
+  
+  
+ ~!@eq(
+    ('[{}, {"a":"arfle"}]').deJSON,
+               [{: :}, {:a:"arfle":}]
+  )@!~  ;
+
+}

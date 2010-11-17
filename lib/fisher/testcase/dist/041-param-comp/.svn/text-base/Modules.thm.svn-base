@@ -1,0 +1,9 @@
+module FISHMONGER {
+  component Turban(name0:string, size0:int) {
+    sync name() = name0;
+    sync size() = size0;
+    body {
+      serve; serve;
+    }
+  }Turban
+}

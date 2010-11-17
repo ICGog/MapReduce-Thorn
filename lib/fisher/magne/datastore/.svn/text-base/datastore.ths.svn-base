@@ -1,0 +1,191 @@
+spawn datastore{
+
+  /** Rather simplistic datastore, a map of named tables */
+  var store := map();
+  var createdat := 0;
+  
+  fun put_(table_name, entity){
+    // just to get some sense of time
+    e = entity.toMap();
+    if(e['saved'] ~ +saved && !saved){
+      e['createdat'] := createdat;
+      createdat := createdat + 1;
+    }
+    rec = e.toRecord();
+    println('$table_name put ' + entity.`key`);
+    store[table_name].ins(rec);
+    return entity.`key`;
+  }
+
+  sync put(table_name, entities){
+    match(entities){
+      ents:list => {
+        return %[put_(table_name,e)  | for e <- ents];
+      }
+      | entity => {
+        return put_(table_name, entity);
+      }
+    }
+  }
+  
+  sync get(table_name, key_){
+    println('$table_name get ' + key_);
+    return store[table_name](key_);
+  }
+
+  sync delete(table_name, key_){
+    println('$table_name delete $key_');
+    entity = store[table_name](key_);
+    store[table_name](key_) := null;
+    println('deleted');
+    return entity;
+  }
+
+  sync execute(table_name, query){
+//     println("execute $table_name\n$query");
+    table_ = store[table_name];
+    limit = li if query ~ {: limit: li :} else 0;
+    filters  = fs if query ~ {: filters:fs :} else [];
+
+    if(table_ == null){
+      throw "Table " + query.table_name + "doesn't exist!";
+    }
+
+    // FIXME: sorting
+    table_sorted = applySorting(query, table_);
+
+    res = ord{map var elem;};
+    var count := 0;
+    for(r <- table_sorted){
+      if(applyFilters(r, filters)){
+        res @= r;
+        count += 1;
+        if(count == limit){
+          return res.lst();
+        }
+      }
+    }
+    return res.lst();
+    // %[ r | for r <- theTable, var x:= 0 if this.applyFilters(r, query.filters) ];
+  }
+
+
+  fun addTable(name, table_){
+    exists = store['name'];
+    if(exists ~ +_){
+      throw "table $name already exist";
+    }
+    store[name] := table_;
+    return true;
+  }
+
+  /**
+   * Applies the filters in a query to a single row.
+   * Args:
+   *   r: the row (record)
+   *   filters: list of filters.
+   * Returns:
+   *   true if the row should be included.
+   */
+  fun applyFilters(r, filters){
+    var include := true;
+
+    for(f <- filters){
+      // so we can get the values out of the row by prop. name
+      rowMap = r.toMap();    
+      value = rowMap[f.property];
+
+      match(f.type){
+        ">=" => {
+          include := value >= f.value;
+        }
+        | ">" => {
+          include := value > f.value;
+        }
+        | "<" => {
+          include := value > f.value;
+        }
+        | "<=" => {
+          include := value <= f.value;
+        }              
+        | "=" => {
+          match(value) {
+            // equal to any element in list
+
+            v:list => {
+              include := v ~ [_..., $(f.value), _...];
+            }
+            | v => {
+              include := value == f.value;
+            }
+          }
+        }              
+        | "!=" => {    
+          include := value != f.value;
+        }
+      }
+      if(!include){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Applies sorting. FIXME
+   */
+  fun applySorting(query, aTable){
+    return aTable;
+  }
+  
+  body{
+    println("Datastore started at: " + thisSite().host() + ":" + thisSite().port());
+    
+    persons = table(`key`){ 
+      var createdat; 
+      var name; 
+      var age; 
+      var keys;
+    };
+
+    messages = table(`key`){
+      val senderkey;
+      var createdat;
+      var text;
+      var tags;
+      var indexed;
+      var receiverkeys;
+    };
+
+    users = table(`key`){
+      var createdat;
+      var username;
+      var password;
+      var cheeps;
+      var avatar;
+      var twitterintegration;
+      var twitterusername;
+      var twitterpassword;
+      var twittercheeperlogin;
+      var followers;
+      var followees;
+      var followerkeys;
+      var followingkeys;
+    };
+
+    images = table(`key`){
+      var data;
+      var contenttype;
+      var createdat;
+    };
+
+    addTable("persons", persons);
+    addTable("users", users);
+    addTable("messages", messages);
+    addTable("images", images);
+
+    while(true){
+      serve;
+    }
+  }
+}

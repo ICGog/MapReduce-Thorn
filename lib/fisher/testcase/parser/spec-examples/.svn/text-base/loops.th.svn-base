@@ -1,0 +1,20 @@
+//STMT
+{
+
+  while(p(x)) { x := x+1; }
+  until(p(x)) { x := x+1; }
+  do { x := x+1; } while (p(x))
+  do { x := x+1; } until (p(x))
+  
+  for (i <- 1..10) tense(i);
+  
+  seek: for(i <- 1..10) {
+    for([j,k] <- L) 
+      if (t(i,j,k)) {
+        found := true;
+        break seek;
+        }
+  }for
+  
+
+}

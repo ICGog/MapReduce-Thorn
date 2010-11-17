@@ -1,0 +1,25 @@
+{
+  class Hussy(x) : pure {}
+  class Avalanche { var x; } // impure
+  ~!@assert(1 ~ _:pure )@!~  ;
+  ~!@assert(Hussy(1) ~ _:pure)@!~  ;
+  ~!@assert(Avalanche() ~ !(_:pure) )@!~  ;
+  ~!@assert([[{:time:Hussy(Hussy(Hussy(1))), `ow~!`:true:}]] ~ _:pure)@!~  ;
+  ~!@assert(Hussy([1.2, 1..2, "1.2"]) ~ _:pure)@!~  ;
+  
+  fun f(x:pure) = Hussy(x);
+    | f(x) {o = ord(); o @= x; o;}
+ 
+  ~!@assert(f(1) ~ _:pure)@!~  ;
+  ~!@assert(f(Avalanche()) ~ !(_:pure))@!~  ;
+  
+  ~!@assert( (fn(x,y):pure = x(y)) ~ _:pure )@!~  ;
+  ~!@assert( (fn(x,y) = x(y)) ~ !( _:pure) )@!~  ;
+
+  class Good{ 
+    vook : pure = "by Isis's wholesale salt shaker!";
+  }
+  ~!@assert(Good() ~ _:pure)@!~  ;
+
+
+}

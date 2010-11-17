@@ -1,0 +1,53 @@
+spawn DateService {
+  import PROFILE.Profile;
+  var db;
+
+  sync register(name, profile) from sender {
+     entry = db <-> info(name);
+     if (entry == null) {
+          db <-> setInfo({:source:sender, name, profile, 
+            picked: [name]:}); 
+       "$name, welcome to DateService!";
+       }       
+     else {
+       "We're sorry, but $name is taken. Please choose another.";
+       }
+     }register  
+
+  sync makeMeAMatch(name) {
+     entry = db <-> info(name);
+     if (entry ~ +r) 
+        findMatchFor(r);
+     else {: fail: "Please register first!" :};
+   }makeMeAMatch
+
+   fun findMatchFor({:profile, name, picked:}) {
+       customers = db <-> allCustomers();
+       first(
+         for {:profile: profile', name: name':} <~ customers,
+         if   profile.compatible?(profile') 
+           && profile'.compatible?(profile) 
+           && ! (name' in picked)
+         ){
+          # customers(name).picked := name' :: picked;
+          db <-> addPicked(name, name');
+          return {: date: name' :};
+          }
+       else {
+          return {: fail: "Sorry, you've dated everyone matching your profile":};
+       }
+       }findMatchFor
+
+   var goon := true;
+   async stop() { goon := false; }
+
+   body{
+     # Regrettable startup code to be commented out in paper
+     ~!@testStartLatch();
+     {: serverComp : server, datebaseComp :} = ~!@recOfPorts();
+     db := datebaseComp;
+     server <-> registerDateSvc(thisComp());
+     while(goon) serve;
+     db <-- quit();
+   }body
+}DateService;

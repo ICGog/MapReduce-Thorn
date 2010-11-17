@@ -1,0 +1,54 @@
+{
+  class Dissidence {
+     val dis;
+     new Dissidence(d) {dis = d;}
+  }Dissidence
+ 
+  class Elephant {
+      val ele;
+      new Elephant(e) {ele = e;}
+  }Elephant
+     
+  class Failure extends Dissidence, Elephant {
+     val fai;
+     new Failure(d,e,f) { 
+        new@Dissidence(d);
+        new@Elephant(e);
+        fai = f;
+     }
+  }Failure
+  
+  class Groucho {
+     val gro;
+     new Groucho(g) {
+         gro = g;
+     }
+   }Groucho
+
+   class Haircut {
+      val hai;
+      new Haircut(h) { hai = h; }
+   }Haircut
+   
+   class Iodine extends Groucho, Haircut {
+      val iod;
+      new Iodine(g,h,i) { 
+         new@Groucho(g);
+         new@Haircut(h);
+         iod = i;
+      }
+   }Iodine
+   
+   class Jugular extends Failure, Iodine {
+      val jug;
+      new Jugular(d,e,f,g,h,i,j) {
+         new@Failure(d,e,f);
+         new@Iodine(g,h,i);
+         jug = j;
+      }
+   }Jugular
+   
+   j = Jugular(4,5,6,7,8,9,10);
+   ~!@obj_local_struct(j,"dis=4,ele=5,fai=6,gro=7,hai=8,iod=9,jug=10,")@!~;
+   
+}

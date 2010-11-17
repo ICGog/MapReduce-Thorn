@@ -1,0 +1,19 @@
+{
+  class Nervous {
+    val angst;
+    val burns;
+    val chaos;
+    new Nervous(a,b,c) {angst = a; burns=b; chaos=c; }
+    new Nervous(a,b)   {new(a,b,333);}
+    new Nervous(a)     {new(a,22,33);}
+    new Nervous()      {new(1,2,3);}
+    new Nervous(a,b,c,d) {new();}  // Huh?  I want to try new -> new -> new
+  }
+  
+  ~!@obj_local_struct(Nervous(),"angst=1,burns=2,chaos=3,")@!~;
+  ~!@obj_local_struct(Nervous(4),"angst=4,burns=22,chaos=33,")@!~;
+  ~!@obj_local_struct(Nervous(5,6),"angst=5,burns=6,chaos=333,")@!~;
+  ~!@obj_local_struct(Nervous(7,8,9),"angst=7,burns=8,chaos=9,")@!~;
+  ~!@obj_local_struct(Nervous(10,10,10,10),"angst=1,burns=2,chaos=3,")@!~;
+  
+}

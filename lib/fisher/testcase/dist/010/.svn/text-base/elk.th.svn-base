@@ -1,0 +1,20 @@
+spawn elk {
+  initially{ ~!@testStartLatch(); }
+  body{
+     import EX10.*;
+     {: catComp: cat, dogComp: dog, elkComp: elk :} = ~!@recOfPorts();
+     // phase 1
+     ~!@phase(1, poke());
+     // phase 2
+     ~!@phase(2, poke());
+     // phase 3
+     recv {
+       [3,2] from $(dog) => {
+         cat <<< [3,3];
+       }
+     }recv;
+     // final phase
+     ~!@phase("final", 2)  ;
+     cat <<< "done";
+  }body
+}elk;

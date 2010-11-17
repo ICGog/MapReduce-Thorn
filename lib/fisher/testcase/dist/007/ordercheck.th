@@ -1,0 +1,25 @@
+spawn priocheck {
+  body{
+    outer = thisComp();
+    p = spawn p {
+      body{
+        recv{"ready" = {}};
+        ~!@eq(~!@mailbox(), [11,22,33])@!~  ;
+        recv{33 = {~!@phase(1,33);}};
+        recv{22 = {~!@phase(2,22);}};
+        recv{11 = {~!@phase(3,11);}};    
+        outer <<< "done";
+      }body
+      }p;
+    p <<< 11;
+    p <<< 22;
+    p <<< 33;
+    p <<< "ready";
+    recv{"done" = {}};
+    ~!@checkphase(
+      {: phase: 1, bag: [33]:},
+      {: phase: 2, bag: [22]:},
+      {: phase: 3, bag: [11]:}
+    )@!~  ;
+  }body
+}priocheck;

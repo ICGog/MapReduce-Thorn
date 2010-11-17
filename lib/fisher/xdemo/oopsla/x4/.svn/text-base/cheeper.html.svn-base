@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>Cheeper: a Wisdom Server</title>
+  </head>
+  <body>
+     <p> Welcome to Cheeper!  Please sign in: </p>
+     <form action="http://localhost:4321" method="get">
+        Name: <input type="text" name="name"/>
+        Password <input type="text" name="pw"/>
+        <input type="submit" name="logon" value="Log on"/>
+     </form>
+  </body>
+</html>

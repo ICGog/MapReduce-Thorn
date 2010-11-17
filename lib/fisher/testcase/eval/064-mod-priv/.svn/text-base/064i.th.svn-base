@@ -1,0 +1,5 @@
+{
+  import SILHOUETTE.*;
+  n = 81; // reuse the private variable name
+  ~!@eq(n, 81)@!~  ;
+}

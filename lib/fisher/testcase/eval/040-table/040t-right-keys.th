@@ -1,0 +1,69 @@
+{
+  t = map();
+
+  // Other stuff can
+
+  fun poke(k,v) {
+    t[k] := v;
+    ~!@eq(t[k], v)  ;
+    t[k] := [v];
+    ~!@ne(t[k], v);
+    ~!@eq(t[k], [v])  ;
+    t.ins({: k, v :});
+    ~!@eq(t[k],v)  ;
+    }
+
+ // Class with hashCode and ==
+
+ class E(a,b) {
+   def `==`(x) { 
+     if (x ~ E(a', b')) {
+       a==a' && b==b';
+     }
+     else {false;}
+   }
+   def hashCode() =  a.hashCode() + b.hashCode();
+ }
+ 
+ e1 = E(1,2);
+ poke(e1, "by the Moirae's fantastic regime");
+ e2 = E(e1, []);
+ poke(e2, "by Hugin and Munin's lovely dynasty");
+ poke(E(true, []), "by Glinda's frenzied ice cream");
+ poke(E(3.2, "/tmp/plunder".file()), "by Ygorl's ritual");
+ poke(E(1..4, ++null), "by Vecna's surfboard");
+ poke(E(ord(), {: :}), "by Metis's slightly chewed-up fascism");
+ poke(E("woe", t), "by Styx's half Death Star");
+
+
+
+  // objects can't generally be keys.
+  class C {
+    var cv;
+  }
+  c = C();
+  ~!@bad(({t[c] := 0;}))@!~  ;
+ 
+  // Not even in lists and records.
+
+  ~!@bad(({t[ [c] ] := 1;}))@!~  ;
+  ~!@bad(({t[ {: a:c  :}] := 1;}))@!~  ;
+ poke(C, "by Pelor's filthy roommate"); // Classes work.  Objects don't.
+
+
+
+
+ poke(1, "by Persephone's quiet feud");
+ poke([1], " by Ketengku's reclining paw");
+ poke(1..3, "by Bes's psychodrama");
+ poke(true, "by Nuwzyl's rowboat");
+ poke(poke, "by Gandalf's bleeding-stick"); // closures too.
+ poke("/tmp/nope".file(), "by Priapus's technique eating raindrop");
+ poke("/tmp".dir(), "by Tutankhamen's tacky mantlepiece");
+ poke({: a:1, b:2  :}, "by Eros's robin");
+ poke(t, "by Gandalf's puce ripoff");  // Tables are OK.
+ poke( ord(), "by Leviticus's poppy"); // Maps too.
+ poke( 1.35, "by Kronos's hair");
+ poke(+++null, "by Gandalf's debonair beast");
+ poke(null, "by Odin's taboo dog");
+}

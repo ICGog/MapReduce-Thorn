@@ -1,0 +1,64 @@
+{
+  var v := 0;
+  mutfun = (fn(x){v += 1;v;});
+  anord = ord();
+  atable = map{};
+  
+  class CouldBeEither(x){}
+  class DefinitelyMutable{var w;}
+  class val DefinitelyImm(x,y){}
+  
+  cbeImm = CouldBeEither(1);
+  cbeMut = CouldBeEither(anord);
+  dm = DefinitelyMutable();
+  di = DefinitelyImm(1,[2]);
+
+
+  imms = [
+    null,
+    true,
+    "/tmp".dir(),            // dir
+    "/tmp/glurd".file(),     // file
+    1.234,                   // float
+    1..8,                    // range
+    321,                     // int
+    [1, 'and a half'],       // list of immutables
+    +null,                   // nullity
+    null,                    // 
+    {: a:1, b: [[[2]]]  :},  // record of mutables
+    "expensive reputation",  // string
+    di                       // value class
+    ];
+
+  
+  
+  muts = [
+    mutfun,
+    ["list with a mutable in it", mutfun],
+    anord,
+    atable,
+    {: a:"record with a mutable in it",  b:anord :},
+    cbeMut,
+    dm
+    ];
+    
+  constly = 12321;
+  shouldBeImmutableButCurrentlyMutable = [
+     (fn(x)=1),
+     (fn(x)=constly),
+     cbeImm,
+     cbeMut
+  ];
+
+  for(x <- imms) {
+    ~!@assert(~!@immutable?(x), "imm", x)  ;
+  }
+  for(x <- muts) {
+    ~!@assert(! ~!@immutable?(x), ‹mut: x›)  ;
+  }
+
+  for(x <- shouldBeImmutableButCurrentlyMutable) {
+    ~!@assert(! ~!@immutable?(x), ‹worng: x›)  ;
+  }
+
+}

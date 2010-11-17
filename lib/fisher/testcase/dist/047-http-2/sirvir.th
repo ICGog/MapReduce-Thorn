@@ -1,0 +1,59 @@
+spawn sirvir {
+body{
+  import NET.*;
+  serverprotocol = object extends Protocol {
+    def encode(x) = x;
+    def decode(x) = x;
+    def input() = UseHTTP;
+  };
+  ListenOn(PORT, serverprotocol);
+  ~!@testStartLatch();
+
+  // Suitable matching test for HTTPRequest vs. record.
+  fun eek(w, m) {
+    ~!@eq(w.verb(), m.verb);
+    ~!@eq(w.content, m.content);
+    ~!@eq(w.resource, m.resource)  ;
+    mm = m.headers.toMap;
+    wm = w.headers.toMap;
+    // w may have headers m does not -- like Content-Length
+    for({:v:mv,k:mk:} <- mm) { 
+       wv = wm[mk];
+       ~!@eq(wv.str, mv.str);
+    }    
+    //     ~!@eq(w.params, m.params) ; -- need to str things.
+    wp = w.params.toMap;
+    for( {: v: mpv, k:mpk:} <- m.params.toMap ){
+      ~!@eq(wp[mpk].str, mpv.str);
+    }
+
+  }
+
+  fun iic(r, y) {
+     // is HTTPResponse r equal to record y?
+     ~!@eq(r.responseCode.str, y.responseCode.str);
+     ~!@eq(r.meaning.str.trim, y.meaning.str.trim);
+     ~!@eq(r.content, y.content);
+     // r may have headers y does not -- like Content-Length
+     ym = y.headers.toMap;
+     rm = r.headers.toMap;
+    for({:v:yv,k:yk:} <- ym) { 
+       rv = rm[yk];
+       ~!@eq(rv.str.trim, yv.str.trim);
+    }  
+     
+  }
+
+  w1 = (recv{x => x});
+  eek(w1,m1);
+  
+  r1 = (recv{x => x});
+  iic(r1, y1);
+
+  ~!@assert(~!@kind(r1).endsWith?("HTTPResponse"))@!~  ;
+    
+  ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body
+  }sirvir;

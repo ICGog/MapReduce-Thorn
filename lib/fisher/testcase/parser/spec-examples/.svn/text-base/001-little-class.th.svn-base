@@ -1,0 +1,7 @@
+//CLS
+
+class Cplx(x,y) {
+  def r() = sqrt(x*x + y*y);
+  def theta() = atan2(y,x);
+  def str() = "$x+i$y";
+}

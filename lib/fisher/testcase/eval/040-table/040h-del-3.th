@@ -1,0 +1,72 @@
+{ 
+  var t := table(w,x,y){ val z; };
+  fun it's(l) {
+     st = %sort( r %< r.w %< r.x %< r.y | for r <- t );
+     ~!@eq(st, l)  ;
+     ~!@assert(t.tstCheckInvariant())  ;
+  }
+  
+  var a111 := {: w: 1, x: 1, y: 1, z: "by Lintapepi's acre!" :};
+  var a112 := {: w: 1, x: 1, y: 2, z: "by Zathpim's cyst!" :};
+  var a121 := {: w: 1, x: 2, y: 1, z: "by Vainomoinen's faithlessness!" :};
+  var a122 := {: w: 1, x: 2, y: 2, z: "by Hermes's functional rejoinder!" :};
+  var a211 := {: w: 2, x: 1, y: 1, z: "by Set's vile soap!" :};
+  var a212 := {: w: 2, x: 1, y: 2, z: "by Prospero's odd paw!" :};
+  var a221 := {: w: 2, x: 2, y: 1, z: "by Aeolus's predestination" :};
+  var a222 := {: w: 2, x: 2, y: 2, z: "by Accanax's house!" :};
+
+  fun a's() = [a111, a112, a121, a122, a211, a212, a221, a222];
+  
+  fun slam() {
+     t.clear!;
+     it's([]);
+     ~!@assert(t.tstCheckInvariant())  ;
+     for(a <- a's()){
+        t .ins( a);
+     }for
+     it's(a's());
+  }
+
+  slam();
+  t .del( a121 );
+  it's([a111, a112, a122, a211, a212, a221, a222]);
+  t .del( a122 );
+  it's([a111, a112, a211, a212, a221, a222]);
+  t .ins( a121);
+  it's([a111, a112, a121, a211, a212, a221, a222]);
+  t .del( a111 );
+  it's([a112, a121, a211, a212, a221, a222]);
+  t .del( a212 );
+  it's([a112, a121, a211, a221, a222]);
+  t .ins( a111);
+  it's([a111, a112, a121, a211, a221, a222]);
+  t .del( a221 );
+  it's([a111, a112, a121, a211, a222]);
+  t .del( a222 );
+  it's([a111, a112, a121, a211]);
+  t .ins( a112);
+  it's([a111, a112, a121, a211]);
+  t .ins( a221);
+  it's([a111, a112, a121, a211, a221]);
+  t .del( a111 );
+  it's([a112, a121, a211, a221]);
+  t .del( a211 );
+  it's([a112, a121, a221]);
+  t .ins( a212);
+  ~!@bad(t .ins( 212))@!~  ;
+  it's([a112, a121, a212, a221]);
+  t .del( a112 );
+  it's([a121, a212, a221]);
+  t .del( a212 );
+  it's([a121, a221]);
+  t .ins( a111);
+  it's([a111, a121, a221]);  
+  t .del( a121 );
+  it's([a111, a221]);  
+  t .del( a221 );
+  it's([a111]);  
+  t .del( a111 );
+  it's([]);
+
+
+}

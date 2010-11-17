@@ -1,0 +1,13 @@
+{
+  // Hex integers are floats ... right?  Um ..., 
+  // Well, this file is here anyways
+  ~!@eq(0x10, 16)@!~  ;
+  ~!@eq(0xff, 255)@!~  ;
+  
+  ~!@eq(0o377, 255)@!~  ;
+  ~!@eq(0o10, 8)@!~  ;
+  
+  ~!@eq(0b100, 4)@!~  ;
+  ~!@eq(0b11, 3)@!~  ;
+  
+}

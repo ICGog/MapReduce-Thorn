@@ -1,0 +1,15 @@
+{
+   fun yeek(x) = x(3);
+   
+   fun somefun(n) = 2*n;
+   ~!@assert(yeek(somefun) == 6);
+
+   listsCanBeSubscripted = [0,11,22,33];
+   ~!@assert(yeek(listsCanBeSubscripted) == 33)@!~  ;
+   
+   class CtorLooksLikeThatToo (x) {
+   }
+   
+   ~!@assert(yeek(CtorLooksLikeThatToo) :? CtorLooksLikeThatToo)@!~  ;
+  
+}

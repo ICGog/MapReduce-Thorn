@@ -1,0 +1,17 @@
+{
+  import Fruit = EXAMPLE.Broker;
+  import Tempo = TWADDLE.Raindrop;
+  class Park extends Fruit, Tempo {
+     val wooden;
+     new Park(d,s,w) {
+        new@Tempo(d);
+        new@Fruit(s);
+        wooden = w;
+     }
+  }Park
+  
+  p = Park(1,2,3);
+  
+  ~!@obj_local_struct(p,"devil=1,secretion=2,wooden=3,")@!~;
+
+}

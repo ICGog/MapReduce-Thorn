@@ -1,0 +1,25 @@
+{
+  t = table(k){v;};
+  ~!@eq(t.num(), 0)@!~  ;
+  
+  t .ins( {: k:1, v:2 :} );
+  
+  ~!@eq(t.num(), 1)@!~  ;
+  t .ins( {: k:1, v:3 :});
+  ~!@eq(t.num(), 1)@!~  ;
+  t .ins( {: k:2, v:3 :});
+  ~!@eq(t.num(), 2)@!~  ;
+  ~!@assert(t.tstCheckInvariant())@!~  ;  
+
+  ~!@eq( t.get({: k:1 :}), ‹k:1, v:3›, t(1))@!~  ;
+  ~!@assert(t.tstCheckInvariant())@!~  ;  
+  ~!@eq( t.get({: k:2 :}), ‹k:2, v:3›, t(2))@!~  ;
+  ~!@assert(t.tstCheckInvariant())@!~  ;  
+  ~!@eq( t.get({: k:3 :}), null, t(3))@!~  ;
+  ~!@assert(t.tstCheckInvariant())@!~  ;    
+  ~!@bad(t(1,2))@!~  ;
+
+  ~!@assert(t.tstCheckInvariant())@!~  ;  
+
+
+}

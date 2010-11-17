@@ -1,0 +1,11 @@
+{
+import JSON.*;
+  class Mishap {a = 1;}
+  mishap = Mishap();  
+  r = jsonRecordizeWithClassName(mishap);
+  ~!@eq(r, {: `class`: "Mishap", a: 1 :})@!~  ;
+  
+  o = object{};
+  ro = jsonRecordizeWithClassName(o);
+  ~!@assert(ro ~ {: `class` : _ :})@!~  ;
+}

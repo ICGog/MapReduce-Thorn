@@ -1,0 +1,4 @@
+#!/bin/csh
+set th=~/thorn/fisherws/fisher
+set ch=$th/demo/cheeper
+java -classpath $th/bin:/Applications/eclipse/plugins/org.junit_3.8.2.v200706111738/junit.jar fisher.run.Thorn -m $ch/Modules.thm -s $ch/pop.th -p 4387

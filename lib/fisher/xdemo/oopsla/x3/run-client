@@ -1,0 +1,4 @@
+#!/bin/bash
+source ~/.bashrc
+th -m Modules.thm -s client.th -p 4261
+

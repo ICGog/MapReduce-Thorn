@@ -1,0 +1,10 @@
+//MODU
+
+module Sunbeam {
+  member "$sunbeamRoot/src/ui/main_ui.th";
+  public honesty;
+  private amusement;
+  import Wheat(Music=Chopin, Ring=Quaternion);
+  alias TheNameThatMustBeUsed = a.a;
+  }
+

@@ -1,0 +1,6 @@
+spawn dodo {
+  sync dicker() = "D!";
+  body {
+    serve;
+  }
+}dodo;

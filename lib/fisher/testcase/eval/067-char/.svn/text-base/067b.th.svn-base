@@ -1,0 +1,13 @@
+{
+  import UNITEST.*;
+  
+  for ({:n:i, s:si:} <- stuffs) {
+    c = i.char;
+    for ({:n:j, s:sj:} <- stuffs){
+       d = j.char;
+       ~!@eq(c<d, i<j);
+       ~!@eq(c==d, i==j);
+    }for   
+  }for
+  
+}

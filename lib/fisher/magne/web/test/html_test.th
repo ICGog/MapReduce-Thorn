@@ -1,0 +1,66 @@
+import unittest.*;
+import webhtml.*;
+
+println("webhtml Test");
+
+fun input_should_render_html(){
+  i = textinput({:
+                 name: "message",
+                 value: "Hello, world"
+             :});
+  html_ = i.str();
+  assertTrue(html_.contains?('type="text"'));
+  assertTrue(html_.contains?('value="Hello, world"'));
+  assertTrue(html_.contains?('name="message"'));
+
+}
+
+test(input_should_render_html);
+
+fun should_create_table_with_row_and_cells(){
+  html_ = 
+table_([ 
+        tr([ 
+            td("Cell1"), 
+            td("Cell2") 
+             ])
+         ]
+       );
+
+  expected = "<table><tr><td>Cell1</td><td>Cell2</td></tr></table>";
+  assertEquals(html_.str(), expected);
+}
+
+test(should_create_table_with_row_and_cells);
+
+fun should_create_div(){
+  html_ = div_({: id: "theDiv" :}, ["divcontent"]);
+  expected = '<div id="theDiv">divcontent</div>';
+  assertEquals(html_.str(), expected);
+}
+
+test(should_create_div);
+
+fun containing_element_can_be_a_string(){
+  html_ =
+  div_({: id: 'menu' :}, [
+    ul([
+      li([a({: href: "/" :}, "Home")]), 
+      li([a({: href: "/about/" :}, "About")])
+    ])
+  ]);
+  expected = '<div id="menu"><ul><li><a href="/">Home</a></li><li><a href="/about/">About</a></li></ul></div>';
+  assertEquals(html_.str(), expected);
+}
+
+test(containing_element_can_be_a_string);
+
+fun should_enforce_validness_of_element_structure(){
+    html_ =
+      html([div_({: id: 'menu' :}, "foo")]);
+    result = html_.str();
+    assertTrue(result.matchRE?("([\\n]|[^\\n])*Invalid content was found([\n]|[^\n])*"), result);
+}
+
+test(should_enforce_validness_of_element_structure);
+

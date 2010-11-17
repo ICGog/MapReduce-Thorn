@@ -1,0 +1,19 @@
+{
+  import A = BYWORD;
+  import own B = BYWORD;
+  import B.*;
+  ~!@eq(A.hoopy, 1, B.hoopy, hoopy)@!~  ;
+  ~!@eq(A.paw, 0, B.paw, paw)@!~  ;
+  A.paw := 1;
+  ~!@eq(A.paw, 1)@!~  ;
+  ~!@eq(B.paw, 0, paw)@!~  ;
+  A.paw := 2;
+  ~!@eq(A.paw, 2)@!~  ;
+  ~!@eq(B.paw, 0, paw)@!~  ;
+  B.paw := 3;
+  ~!@eq(A.paw, 2)@!~  ;
+  ~!@eq(B.paw, 3, paw)@!~  ;
+  paw := 4;
+  ~!@eq(A.paw, 2)@!~  ;
+  ~!@eq(B.paw, 4, paw)@!~  ;
+}

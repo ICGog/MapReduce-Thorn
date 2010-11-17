@@ -1,0 +1,11 @@
+\contentsline {section}{\numberline {1}Changes to Syntax}{1}{section.1}
+\contentsline {section}{\numberline {2}Changes to Serialization}{4}{section.2}
+\contentsline {subsection}{\numberline {2.1}Allowing transmission of arbitrary pure closures and objects}{4}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Allowing transmission of modules}{5}{subsection.2.2}
+\contentsline {section}{\numberline {3}Database Integration}{6}{section.3}
+\contentsline {subsection}{\numberline {3.1}Version 1}{6}{subsection.3.1}
+\contentsline {paragraph}{Issue 1:}{6}{section*.8}
+\contentsline {paragraph}{Issue 2:}{6}{section*.9}
+\contentsline {paragraph}{Final thought:}{7}{section*.10}
+\contentsline {subsection}{\numberline {3.2}Version 2}{7}{subsection.3.2}
+\contentsline {section}{\numberline {4}Resolved Syntax Changes}{8}{section.4}

@@ -1,0 +1,7 @@
+#!/bin/bash
+source ~/.bashrc
+ch=$FISHERDEMO/oopsla3
+th -m $ch/Modules.thm -s $ch/venus.th -p 5556
+
+    
+

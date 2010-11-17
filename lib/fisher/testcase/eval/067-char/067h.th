@@ -1,0 +1,39 @@
+{
+  fun sum([]) = "";
+    | sum([x,y...]) = x.str + sum(y);
+
+  fun charpluscheck(s) {
+    ~!@breaker();
+    L = %[s.char(i) | for i <- s.range];
+    for(c <- L) ~!@eq(c.str.len, 1)  ;
+    s' = sum(L);
+    
+    ~!@eq(s,s')  ;
+  }
+  
+  // Try doing some manipulations with 20-bit characters
+  lots = "FFFF".intHex() + 1;
+  
+  // These are just oddly-named variables,  not the actual chars
+  
+  ł = (lots+100).char; Ł = ł.str;
+  ù = (lots+200).char; Ù = ù.str;
+  ń = (lots+320).char; Ń = ń.str;
+  A = "A";
+  B = "B";
+  C = "C";
+
+
+  charpluscheck(Ł + A + Ń + B + Ù + C);
+  charpluscheck(A + Ł + A + Ń + B + Ù + C);
+  charpluscheck(Ł + A + A + Ń + B + Ù + C);
+  charpluscheck(A + A + Ń + Ł + B + Ù + C);
+
+
+  charpluscheck("");
+  charpluscheck("a");
+  charpluscheck("1");
+  charpluscheck("randy marigold");
+  charpluscheck("Have some Italian marshmallows!");
+
+}

@@ -1,0 +1,27 @@
+spawn Venus {
+  import AGENCY.startAgency;
+  import PROFILE.*;
+  body{
+    agencies = [
+      startAgency("Pat's Matches", 10, "Better matches!", thisComp()),
+      startAgency("DateBase", 0, "More Choices!", thisComp())];
+
+    for(a <- agencies) receive {"ready" from $(a) => {}}; # Coordination  
+
+    pat = agencies(0);
+    pat <-> register("Pat", Profile(
+              [{:topic: "j-pop", weight: 4:},
+               {:topic: "sushi", weight: 6:}]));
+    pat <-> register("Chris", Profile(
+              [{:topic: "hip-hop", weight: 8:},
+               {:topic: "sushi", weight: 4:}]));
+    
+    {: kimComp:kim :} = ~!@recOfPorts(); #coordination
+    kim <<< "cupid"; #coordination;
+  
+    recv{"happy ending" => {}}; #coordination
+    for(a <- agencies) a <-- stop(); #coordination
+    registry() <-- stop(); #coordination
+  ~!@checkphase()@!~  ;
+  }body
+}Venus;

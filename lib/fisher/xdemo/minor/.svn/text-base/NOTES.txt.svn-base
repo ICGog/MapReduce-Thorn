@@ -1,0 +1,12 @@
+* I had to turn DOTALL mode on in some multi-line regexps, with the (?s)
+  directive.  This was a bit awkward.
+
+* string might want a ".lst" function or something, to turn it into a list of
+  one-char strings or chars.
+
+
+* The following parens are necessary, but shouldn't be: 
+     line @= (yss if pr(x,y).yes ~ +yss else ".");
+
+
+* int.setEq needs a ?

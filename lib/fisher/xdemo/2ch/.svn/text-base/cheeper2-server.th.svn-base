@@ -1,0 +1,211 @@
+ spawn cheeper {
+   import CHEEP.*;
+   import TIME.*;
+   
+   // State: it would be nice if this were persistent.
+   users = table(username){
+      var password, lastSeen, pushee;
+      var followEveryone: bool; // if true, use the follow table.
+      var follows: list;
+      var followedBy: list;
+      };
+   chirps = ord(); 
+
+
+   // save file
+   fusers = "/tmp/cheeper-users.tmp".file();
+   fchirps = "/tmp/cheeper-chirps.tmp".file();
+   ffollows = "/tmp/cheeper-follows.tmp".file();
+
+   fun thoseWhoFollowEveryone() = 
+     %[username | for {:username, followEveryone: true:} <~ users];
+     
+   fun thoseWhoFollow(someone) = 
+     thoseWhoFollowEveryone().union(
+        users(someone).followedBy
+     );  
+
+   var goon := true;
+
+
+   sync register(who && {:username, password:}, pushee)  {
+     if (users(username) == null) {
+       users(username) := {:password, lastSeen: 0, pushee, 
+         followEveryone: true,
+         follows: [username],
+         followedBy: [username]
+         :};
+       println("Registering $username (pw=$password)");
+       true;
+     }
+     else if (passwordOK?(who)) {
+       // Mark as alive again, with new pushee
+       users(username).pushee := pushee;
+       println("Reactivating $username, with pushee = $pushee");
+       false;
+     }
+     else {
+       println("Someone is trying to get into $username's account.");
+     }
+   }
+   
+   fun passwordOK?({:username, password:}) = 
+      users(username) ~ {:password:$(password):};
+   
+   sync chirp(text, who && {:username, password:} )  {
+      if (passwordOK?(who)) {
+        c = Chirp(username, text, tick());
+        chirps @= c;
+        println("New chirp: $c");
+        inform = thoseWhoFollow(username);
+        println("chirp: informing $inform");
+        for (follower <- inform) {
+          pushee = users(follower).pushee;
+          unless(pushee == null) {
+             pushee <-> chirped(c.str()) timeout(100) {
+                // Timed out
+                println("Neutering $follower.");
+                users(follower).pushee := null;
+             };
+          }unless
+        }for
+        "You chirped $text.";
+        }
+      else {
+        ["You're not $username!"];
+      }
+   }
+ 
+   sync follow(who && {:username: follower:}, followee, add?) {
+     unless (passwordOK?(who)) {
+       return "You're not $follower.";
+     }
+     if (users(followee) ~ {: followedBy :}) {
+       if (add?) {
+         users(followee).followedBy := followedBy.union([follower]);
+         follows' = users(follower).follows.union([followee]);
+         users(follower).follows := follows';
+         users(follower).followEveryone := false;
+         followsmsg = follows'.and();
+         "You are following $followsmsg.";       
+         }
+       else {
+         // Remove
+         users(followee).followedBy := followedBy.minus([follower]);
+         follows' = users(follower).follows.minus([followee]);
+         users(follower).follows := follows';
+         followsmsg = follows'.and();
+         users(follower).followEveryone := false;
+         "You are now following $followsmsg, having dumped $followee.";
+         }
+       }
+     else {
+       "$followee is not a Cheeper user.";
+       }
+   }follow
+
+   sync info(who && {:username:}) {
+      userscrawl = users.str();
+      chirpscrawl = chirps.str();
+      followsEveryone = thoseWhoFollowEveryone();
+      followsYou = thoseWhoFollow(username);
+      """You don't need to be logged in to see *our* database!\n
+   USERS
+   $userscrawl
+   CHIRPS
+   $chirpscrawl
+   FOLLOWS EVERYONE
+   $followsEveryone
+   FOLLOWS YOU
+   $followsYou
+      """;
+   }
+   
+   sync unseen(who && {:username:}) {
+     if (passwordOK?(who)) {
+        lastSeen = users(username).lastSeen;
+        users(username).lastSeen := now;
+        // Not the most efficient way to do this...
+        u = %[c | for c <- chirps.lst(), 
+                  if c.modTime() > lastSeen];
+        %sort(c.str() %> c.love() | for c <- u);
+        }
+     else {
+       ["You're not $username, or $username does not exist, you lying buzzard."];
+     }
+   }
+   
+   sync vote(n, up, who && {:username:} && (passwordOK?(who))? ) {
+     // We don't protect against multiple voting.
+     if (%first(c %none null | for c && Chirp(_,_,$(n)) <~ chirps.lst()) ~ +c){
+        c.vote(up);
+        println("$username voted $n $up: $c");
+        return c.str();
+        }
+     else {
+       np = n + 1;
+       "Sorry, no chirp $n.";
+     }
+   }vote
+   
+   sync topChirps(n) {
+     inOrder = %sort(c %> c.love() | for c <- chirps);
+     topN = inOrder.span(0, n);
+     %[c.str() | for c <- topN];
+   }topChirps
+   
+   sync allChirps() =  %[c.str() | for c <- chirps.lst()];
+   
+   // The kill signal is high-priority.
+   async plz_die() prio 1 {
+     println("Oh, yay, I get to die now!");
+     goon := false;
+   }
+   
+   fun save(thing, f) {
+      f.clear();
+      f.writeBytes(crude_serialize(thing));
+      true;
+   }
+   
+   sync writeDB(){
+     save(users.rows(), fusers);
+     save(%[ {:writer,text,time,plusVotes,minusVotes,modTime:}
+          | for {:writer,text,time,plusVotes,minusVotes,modTime:} <- chirps], fchirps);
+     "Written!"; 
+   }
+   
+   sync readDB(){
+     // Restore users
+     userRows = crude_deserialize(fusers.readBytes());
+     users.clear();
+     users.insAll(userRows);
+     println("user rows = " + users.rows());
+     // Restore cheeps
+     savedChirps = crude_deserialize(fchirps.readBytes());
+     chirps.clear();
+     for({:writer,text,time,plusVotes,minusVotes,modTime:} <- savedChirps) {
+       c = Chirp(writer, text, time);
+       c.plusVotes := plusVotes;
+       c.minusVotes := minusVotes;
+       c.modTime := modTime;
+       chirps @= c;
+       println("Restoring chirp: $c");
+     }
+     "Restored.";
+   }
+   
+   body{
+     println("Cheeper server is up and running.");
+     while(goon){
+       try {
+         serve;
+       }
+       catch {
+         problem => {
+            println("\n\nProblem: $problem");
+         }
+       }
+     }
+   }body
+ }cheeper;

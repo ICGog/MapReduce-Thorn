@@ -1,0 +1,38 @@
+import webmemcache.*;
+import webdatastore.*;
+import webrouter.*;
+import web.*;
+
+import wccontrollers.*;
+import wcfixture.*;
+import wcapi.*;
+
+import cheepindexer.cheepindexer;
+
+fun main(){
+  
+//   installFixture();
+
+  r = Router();
+  
+  r.connect("/", SignInHandler);
+  r.connect("/users/", UsersHandler);
+  r.connect("/cheeps/", MessagesHandler);
+  r.connect("/settings/", SettingsHandler);
+  r.connect("/signup/", SignUpHandler);
+  r.connect("/signin/", SignInHandler);
+  r.connect("/signout/", SignOutHandler);
+  r.connect("/follow/", FollowUserHandler);
+  r.connect("/unfollow/", UnfollowUserHandler);
+  r.connect("/search/", SearchHandler);
+  r.connect("/avatar/:key", AvatarHandler);
+  r.connect("/:userkey/", UserHandler);
+  r.connect("/:userkey/:msgno/", MessagesHandler);
+
+  spawn cheepindexer();
+
+  run(r);
+}
+
+main();
+

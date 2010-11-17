@@ -1,0 +1,16 @@
+{
+  class A{
+    def m() = 1;
+  }
+  a = A();
+  ~!@eq(a.m, a.m(), 1)@!~  ;
+  
+  class B extends A {
+    val m = 2;
+    def sm() = super.m();
+  }
+  b = B();
+  ~!@eq(b.m, b.m(), 2)@!~  ;
+  ~!@eq(b.sm(), 1)@!~  ;
+    
+}

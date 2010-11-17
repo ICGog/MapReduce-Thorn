@@ -1,0 +1,6 @@
+{
+  import INGR.*;
+  ~!@eq(egg.quantity, 1)@!~  ;
+  ~!@eq((egg * 2).quantity, 2)@!~  ;
+  
+}

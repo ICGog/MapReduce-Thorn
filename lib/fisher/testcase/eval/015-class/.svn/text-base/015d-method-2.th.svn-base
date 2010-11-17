@@ -1,0 +1,17 @@
+{
+  class allegory{
+    var opinion := 0;
+    def uncover() {
+       opinion := opinion + 1;
+       opinion;
+    }uncover
+  }allegory
+  
+  a = allegory();
+  ~!@eq(a.opinion, 0)@!~;
+  o1 = a.uncover();
+  ~!@eq(o1, 1)@!~;
+  ~!@eq(a.opinion, 1)@!~;
+  ~!@eq(a.uncover(), 2)@!~;
+  
+}

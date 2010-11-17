@@ -1,0 +1,51 @@
+{
+   class TAILOR {
+      val a; val b;
+      new TAILOR(a', b') {a=a'; b=b';}
+   }
+   
+   class RACKET extends TAILOR {
+      val c;
+      new RACKET(a', b', c') {
+         new@TAILOR(a', b');
+         c = c';
+      }
+   }
+
+   t = TAILOR(11,22);
+   ~!@eq(t.a,11)@!~  ;
+   ~!@eq(t.b,22)@!~  ;
+   
+   r = RACKET(1,2,3);
+   ~!@eq(r.a, 1)@!~  ;
+   ~!@eq(r.b, 2)@!~  ;
+   ~!@eq(r.c, 3)@!~  ;
+   
+   if (t ~ tt:TAILOR) {
+      ~!@same_ptr(t,tt)@!~  ;
+   }
+   else { ~!@hit()@!~ 0 ; }
+   
+   if (r ~ rr:TAILOR) {
+      ~!@same_ptr(r, rr)@!~  ;
+   }   
+   
+   if (t ~ _:RACKET) { ~!@hit()@!~ 0 ; }
+   else {
+      ~!@hit()@!~  ;
+   }
+   
+   if (r ~ rr:RACKET) {
+      ~!@hit()@!~  ;
+   }
+   else {
+     { ~!@hit()@!~ 0 ; }
+   }
+   
+   if (r ~ ‹a›:TAILOR) {
+      ~!@eq(a, r.a, 1)@!~  ;
+   }
+   
+   
+   
+}

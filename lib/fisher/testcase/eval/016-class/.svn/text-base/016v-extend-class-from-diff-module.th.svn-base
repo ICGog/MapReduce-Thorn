@@ -1,0 +1,21 @@
+/* Susan Eisenbach: "The interpreter throws a java.lang.RuntimeException("Not implemented yet") when extending a class from a different module" */
+{
+
+import IDEOLOGY.*;
+
+class Ale(lawn) extends Objection {
+}
+
+~!@eq(torpor, 1)@!~  ;
+ale = Ale("amoeba");
+~!@eq(torpor, 1)@!~  ;
+ale.nestle();
+~!@eq(torpor, 3)@!~  ;        
+
+import RHETORIC.*;
+s = Speaker();
+~!@eq(torpor, 3)@!~  ;  
+s.nestle();
+~!@eq(torpor, 5)@!~  ;
+
+}

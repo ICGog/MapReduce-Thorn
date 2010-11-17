@@ -1,0 +1,15 @@
+{
+// My full set of three-place comparisons was pretty slow,
+// having 4500 lines of code, 
+// so here's a subset for ordinary purposes.
+  ~!@eq(null >= 1 >= null, false)@!~;
+  ~!@eq(null < 1 <= 2, true)@!~;
+  ~!@eq(null <= 'b' >= 'b', true)@!~;
+  ~!@eq(1 != 1 == 2, false)@!~;
+  ~!@eq(1 >= 1 < 'a', true)@!~;
+  ~!@eq(1 == 2 != 2, false)@!~;
+  ~!@eq(1 > 2 >= 2, false)@!~;
+  ~!@eq('a' <= 2 > null, false)@!~;
+  ~!@eq('a' <= 'a' <= 'b', true)@!~;
+  ~!@eq('a' <= 'a' < 'b', true)@!~;
+}

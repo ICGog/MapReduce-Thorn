@@ -1,0 +1,11 @@
+// file: tut02/server.th
+spawn server {
+  sync hello(clientName) {
+    println("$clientName said hello.");
+    "And hello to you, $clientName, from Cheeper.";
+  }
+  body{
+    println("Server is happily started!");
+    serve;
+  }body
+}server;

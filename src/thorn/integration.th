@@ -1,0 +1,2 @@
+import MAPREDUCE.*;
+println(scrieDracu("AA", "BB"));

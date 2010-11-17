@@ -1,0 +1,42 @@
+{
+
+class Event {
+  def m() = "e0";
+  def m(_) = "e1";
+}
+
+{
+  x = Event();
+  ~!@eq(x.m(), "e0")@!~  ;
+  ~!@eq(x.m(1), "e1")@!~  ;
+  ~!@bad(x.m(2,2))@!~  ;
+  ~!@bad(x.m(3,3,3))@!~  ;
+}
+
+class Knife {
+  def m() = "k0";
+  def m(_,_) = "k2";
+}
+
+{
+  x = Knife();
+  ~!@eq(x.m(), "k0")@!~  ;
+  ~!@bad(x.m(1))@!~  ;
+  ~!@eq(x.m(2,2), "k2")@!~  ;
+  ~!@bad(x.m(3,3,3))@!~  ;
+}
+
+class Rune extends Event, Knife {
+  def m() = super@Event.m() + super@Knife.m();
+  def m(_,_,_) = "r3";
+}
+
+{
+  x = Rune();
+  ~!@eq(x.m(), "e0k0")@!~  ;
+  ~!@eq(x.m(1), "e1")@!~  ;
+  ~!@eq(x.m(2,2), "k2")@!~  ;
+  ~!@eq(x.m(3,3,3), "r3")@!~  ;
+}
+
+}

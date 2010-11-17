@@ -1,0 +1,5 @@
+module SILHOUETTE {
+  var n := 0;
+  var o := 0;
+  private n;      
+}

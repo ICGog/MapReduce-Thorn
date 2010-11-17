@@ -1,0 +1,16 @@
+spawn Sender1 {
+body{
+  import NET.*;
+  protox = object extends Protocol {
+    def encode(msg) = "Yow! $msg\n";
+    def decode(msg) = (throw "Not used";);
+    def input() = UseLINE;
+  };
+//println("I'm not a vurple vurrey");
+  sx = NetSite("localhost", PORT+1, protox);
+
+  ~!@testStartLatch();
+ 
+  sx <<< "Voon";
+}body
+}Sender1;

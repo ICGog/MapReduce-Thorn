@@ -1,0 +1,54 @@
+module twitter{
+
+  import json.*;
+
+  class TwitterException(message){}
+  
+  class Twitter(){
+    
+    user;
+    password;
+
+    new Twitter(){}
+    
+    new Twitter(user_, password_){
+      user = user_;
+      password = password_;
+    }
+    
+    def public_timeline() = http().get('http://twitter.com/statuses/public_timeline.json');
+
+    def user_timeline(username) = http().get('http://twitter.com/statuses/user_timeline/$username.json');
+
+    def friends_timeline(username){ 
+      if(this.user ~ +u && this.password ~ +p){
+        client = http();
+        client.credentials(u, p);
+        println("GET http://twitter.com/statuses/friends_timeline/$username.json");
+        response = client.get('http://twitter.com/statuses/friends_timeline/$username.json');
+        if( response.status != 200 ){
+          throw TwitterException("Twitter Exception: " + response.content);
+        }
+        tweets = decode(response.content);
+
+        result = ord();
+        for(tweet <- tweets){
+          cheep = map();
+          cheep['text'] := tweet['text'];
+          cheep['key'] := tweet['id'];
+          cheep['senderkey'] := tweet['user']['screen_name']; 
+          cheep['avatar'] := tweet['user']['profile_image_url'];
+          cheep['createdat'] := tweet['created_at'];
+          cheep['twitter'] := true;
+
+          result @= cheep;
+        }
+        return result.lst();
+        
+      }
+      else{
+        throw TwitterException("Twitter Exception: You must specify credentials!");
+      }
+    }
+  }
+}

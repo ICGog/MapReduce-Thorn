@@ -1,0 +1,71 @@
+module TOP_TEST {
+  class Graph {
+    val nodes; // List of items.
+    val edges; // List of tuples {: from, to :}
+    new Graph(nodesOfZeroDegree, e) {
+       nodes = [
+                 nodesOfZeroDegree ..., 
+                 %[fr | for {:fr:} <- e]...,  
+                 %[to | for {:to:} <- e]...
+               ].unique();      
+       edges = e;
+    }
+    def str() = "Graph(nodes=$nodes, edges=$edges)";
+    def sortedBy?(order) {
+      if (! order.setEq(nodes) ) return false;
+      return 
+        %every(order.index(fr) <= order.index(to) | 
+          for {:fr,to:} <- edges
+          );
+    }sortedBy?
+  }Graph
+
+  // My nodes
+  aa = "aa";
+  bb = "bb";
+  cc = "cc";
+  dd = "dd";
+  ee = "ee";
+  ff = "ff";
+  gg = "gg";
+  hh = "hh";
+  ii = "ii";
+  
+  // My edges
+  edges_1 = [ {: fr: aa, to: bb :},
+              {: fr: aa, to: cc :},
+              {: fr: cc, to: dd :} ];
+
+  g1 = Graph([ee], edges_1);
+
+  edges_2 = [ {: fr: aa, to: bb :},
+              {: fr: aa, to: cc :},
+              {: fr: cc, to: dd :},
+              {: fr: cc, to: ee :},
+              {: fr: cc, to: ff :},
+              {: fr: ff, to: gg :},
+              {: fr: gg, to: hh :},
+              {: fr: hh, to: ii :}
+              ];
+   g2 = Graph([], edges_2);
+   
+   graphsY = [g1, g2];
+   
+   gn_1 = Graph([], [ {: fr: aa, to: aa :} ]);
+   gn_2 = Graph([], [ {: fr: aa, to: bb :}, {: fr: bb, to: aa :}  ]);
+   
+   graphsN = [gn_1, gn_2]; 
+   
+   fun testTopSort(topsort) {
+      for(g <- graphsY) {
+         ~!@assert(g.sortedBy?(topsort(g)))  ;
+      }
+      for(g <- graphsN) {
+         ~!@assert(topsort(g) == null)@!~  ;
+      }
+   }testTopSort
+   
+}
+
+
+

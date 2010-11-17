@@ -1,0 +1,32 @@
+{
+  class A {
+     def m() = 1;
+  }
+
+  class B extends A {
+     def m() = super@A.m() + 1; // 2
+  }
+
+  class C extends B {
+     def m() = super@B.m() + 1; // 3
+  }
+
+  class D {
+     def m() = 10; 
+  }
+
+  class E extends D {
+     def m() = 10 + super@D.m(); // 20
+  }
+
+  class F extends E, C {
+     def m() = super@C.m() + super@E.m(); // 23
+  }
+
+  ~!@eq(A().m(), 1)@!~  ;
+  ~!@eq(B().m(), 2)@!~  ;
+  ~!@eq(C().m(), 3)@!~  ;
+  ~!@eq(D().m(), 10)@!~  ;
+  ~!@eq(E().m(), 20)@!~  ;
+  ~!@eq(F().m(), 23)@!~  ;
+}

@@ -1,0 +1,7 @@
+#!/bin/bash
+source ~/.bashrc
+ch=$FISHERDEMO/oopsla2
+th -m $ch/Modules.thm -s $ch/server.th -p 5555
+
+    
+

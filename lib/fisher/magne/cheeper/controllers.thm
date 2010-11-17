@@ -1,0 +1,357 @@
+/**
+ * All request handlers in webcheeper.
+ */
+// COMMENT: null pointers should give the line of the nullpointer
+module wccontrollers{
+
+  import webresponse.Response;
+  import webresponse.ResponseSeeOther;
+  import webresponse.ResponseNotModified;
+  import webresponse.ResponseBadRequest;
+  import webresponse.ResponseNotFound;
+
+  import webrequesthandler.RequestHandler;
+  import webmimetype.guessType;
+
+  import wcmodels.db;
+
+  import wctemplates.user_tpl;
+  import wctemplates.message_tpl;
+
+  import wcpages.search_results_page;
+  import wcpages.settings_page;
+  import wcpages.user_page;
+  import wcpages.user_home_page;
+  import wcpages.user_list_page;
+  import wcpages.signin_page;
+  import wcpages.signup_page;
+  
+  import twitter.Twitter;
+  import twitter.TwitterException;
+
+  fun get_current_user(request){
+    if(request.cookies.get('userkey') ~ +user_key){
+      return db.users.get(user_key);
+    }
+    return null;
+  }
+
+  // login request handler decorator
+  fun require_login(handler){
+    return fn (request, args) = {
+      if(get_current_user(request) ~ +u){
+        request.environ['user'] := u;
+        return handler(request, args);
+      }
+      else{
+        println("User not logged in! Redirecting to /");
+        return ResponseSeeOther('/');
+      }
+    };
+  }
+
+  /** /search/ */
+  class SearchHandler extends RequestHandler{
+    
+    decorations = {: get: [require_login] :};
+
+    def get(request, args){
+      
+      p = request.GET;
+      if(p.get('q') ~ +query){
+        tags = query.split(' ');
+        tags_trimmed = %[t.trim() | for t <- tags ];
+        messages = db.messages.get_messages_by_tags(tags_trimmed);
+        content = search_results_page({: messages, user:request.environ['user'] :});
+        return Response({: content :});
+      }
+      return ResponseBadRequest("Hey, you need be logged in and set parameter q!");
+    }
+  }
+
+  
+  /** /cheeps/ */
+  class MessagesHandler:pure extends RequestHandler{
+
+    decorations = {: get: [require_login], post: [require_login] :};
+    
+    def get(request, args){
+      p = request.GET;
+      version = v if p.get('latest_version') ~ +v else "0"; 
+      user = request.environ['user'];
+      messages_since = db.messages.get_messages_since(user, version.int());
+      last_modified = lm.str() if messages_since.len() > 0 && messages_since(0)['createdat'] ~ +lm else "0";
+
+      if(request.headers['if-none-match'] ~ +etag){
+        if(last_modified == etag){
+          return ResponseNotModified();
+        }
+      }
+      r = Response({: content: ''.join(%[ message_tpl(m) | for m <- messages_since ]) :});
+      r.headers.add('etag', last_modified);
+      return r;
+    }
+
+    def post(request, args){
+      p = request.POST;
+      if(p.get('cheep') ~ +cheep && 
+         p.get('userkey') ~ +userkey && 
+         p.get('latest_version') ~ +version){
+        user = request.environ['user'];
+        message_key = db.messages.add_message(user, cheep);
+        messages_since = db.messages.get_messages_since(user, version.int());
+        return Response({: content: ''.join(%[ message_tpl(m) | for m <- messages_since ]) :});
+      }
+      return ResponseBadRequest("Hey, cheep, userkey and latest_version of message must be set");
+    }
+  }
+
+  /** /settings/ */
+  class SettingsHandler:pure extends RequestHandler{
+    
+    decorations = {: get: [require_login] :};
+
+    def get(request, args){
+      return Response({: content: settings_page({: user:request.environ['user'] :}) :});
+    }
+  }
+
+
+  /** /:userkey/ */
+  class UserHandler:pure extends RequestHandler{
+    
+    decorations = {: 
+                   get: [require_login], 
+                   put: [require_login] 
+                   :};
+
+    /** Gets the user's page */
+    def get(request, args){
+      if(db.users.get(args["userkey"]) ~ +page_user){
+        var messages := db.users.messages(page_user);
+
+        // caching
+        last_modified = lm.str() if messages.len() > 0 && messages(0)['createdat'] ~ +lm else "0";
+        if(request.headers['if-none-match'] ~ +etag){
+          if(last_modified == etag){
+            return ResponseNotModified();
+          }
+        }
+        
+        // FIXME: twitter int. with other users viewing the profile?
+
+        r = Response();
+        r.headers.add('etag',last_modified);
+
+        user = request.environ['user'];
+        if(user['key'] == page_user['key']){
+
+          if(user['twitterintegration'] != "no"){
+            client = Twitter(user['twitterusername'], user['twitterpassword']);
+            var tweets := [];
+            try{
+              tweets := client.friends_timeline(user['twitterusername']);
+            }
+            catch{
+              e:TwitterException => {
+                return Response({: content: e.message + user_home_page({: messages,user:request.environ['user'] :}) :});
+              }
+            }
+            // tweets always after cheeps
+            messages := messages @ tweets;
+          }
+          r.content := user_home_page({: messages, user:request.environ['user'] :});
+          return r;
+        }
+        // another users page
+        else{
+          r.content := user_page({: messages, user:request.environ['user']:});
+          return r;
+        }
+      }
+      else{
+        return ResponseNotFound();
+      }
+    }
+
+    /** Update a user */
+    def put(request, args){
+      println('Updating user');
+      p = request.POST;
+      if(
+         p.get('twitterintegration') ~ +t &&
+         p.get('twitterusername') ~ +un &&
+         p.get('twitterpassword') ~ +ps &&
+         p.get('twittercheeperlogin') ~ +ucl &&
+         p.get('updateavatar') ~ +updateavatar){
+        user = request.environ['user'];
+        user['twitterintegration'] := t.str();
+        user['twitterusername'] := un.str();
+        user['twitterpassword'] := ps.str();
+        user['twittercheeperlogin'] := ucl.str();
+        if(updateavatar.str() == "true" && p.get('avatar') ~ +av:bytes){
+          img = db.images.new_instance();
+          img['filename'] := p.headers('avatar').get_as_dict('content-disposition').get('filename');
+          img['contenttype'] := ct if guessType(img['filename']) ~ +ct else 'application/octet-stream';
+          img['data'] := av;
+          img['key'] := '/avatar/' + user['key'];
+          user['avatar'] := img['key'];
+          db.images.put(img);
+        }
+        db.users.put(user);
+        return Response({: content: '{"status":200,"text":"Settings updated", "avatar":"' + user['avatar'] + '"}' :});
+      }
+      else{
+        return ResponseBadRequest('{"status":400,"text":"All parameters are not supplied!"}');
+      }
+    }
+  }
+
+  /** /users/ */
+  class UsersHandler extends RequestHandler{
+    
+    decorations = {: get: [require_login] :};
+    
+    def get(request, args){
+      users = %[u | for u <- %sort[ e %< e['key'] | for e <- db.users.query().find_all()]];
+      return Response({: content: user_list_page({: users, user:request.environ['user'] :}) :});
+    }
+    
+    def post(request, args){
+      p = request.POST;
+
+      if(p.get('username') ~ +username && 
+         p.get('password') ~ +password){
+        
+        // check that user doesn't exist
+        if(db.users.get(username) ~ +_){
+          return ResponseBadRequest("User $username already exists!");
+        }
+        u = db.users.new_instance();
+        u['username'] := username;
+        u['password'] := password;
+        u['key'] := username;
+        db.users.put(u);
+
+        r = Response({: content: "/$username/" :});
+        r.headers.add('set-cookie', 'userkey=$username; path=/');
+        return r;
+      }
+      return ResponseBadRequest("Both username, password, and twitterintegration must be set");
+    }
+  }
+
+  /** /signup/ */
+  class SignUpHandler:pure extends RequestHandler{
+
+    def get(request, args){
+      content = signup_page();
+      return Response({: content :});
+    }
+  }
+
+  /** GET / 
+      POST /signin/ */
+  class SignInHandler:pure extends RequestHandler{
+    
+    def get(request, args){
+      if(get_current_user(request) ~ +u){
+        return ResponseSeeOther("/" + u['key'] + "/");
+      }
+      return Response({: content: signin_page() :});
+    }
+
+    def post(request, args){
+      data = request.POST;
+      if(data.get('username') ~ +username && 
+         data.get('password') ~ +p){
+        if(db.users.get(username) ~ +user){
+          if(user['password'] == p){
+            response = Response({: content: "/$username/" :});
+            response.headers.add('set-cookie',"userkey=$username; path=/");
+            return response;
+          }
+          else{
+            return Response({: status: 401, content: "The password is wrong!" :});
+          }
+        }
+        else{
+          return Response({: status: 401, content: "Hey, the user doesn't exist!" :});  
+        }
+      }
+      return Response({: status: 401, content: "You need to supply both username and password" :});  
+    }
+  }
+
+  /** /signout/ */
+  class SignOutHandler extends RequestHandler{
+    
+    def get(request, args){
+      response = ResponseSeeOther("/");
+      if(get_current_user(request) ~ +u){
+        response.headers.add('set-cookie', "userkey=; max-age=0; path=/");
+      }
+      return response;
+    }
+  }
+  
+  /** /follow/ */
+  class FollowUserHandler:pure extends RequestHandler{
+    
+    decorations = {: post: [require_login] :};
+
+    def post(request, args){
+      p = request.POST;
+
+      if(p.get('followee') ~ +other_key &&
+         db.users.get(other_key) ~ +other){
+        user = request.environ['user'];
+        db.users.follow(user, other);
+        user_updated = db.users.get(user['key']);
+        other_updated = db.users.get(other['key']);
+        content = user_tpl({: other:other_updated, user:user_updated :});
+        return Response({: content :});
+      }
+
+      return ResponseBadRequest("You need to specify the follower, and followee!");
+    }
+  }
+  
+  /** /unfollow/ */
+  class UnfollowUserHandler:pure extends RequestHandler{
+    
+    decorations = {: post: [require_login] :};
+
+    def post(request, args){
+      p = request.POST;
+
+      if(p.get('unfollowee') ~ +other_key &&
+         db.users.get(other_key) ~ +other){
+        user = request.environ['user'];
+        db.users.unfollow(user, other);
+        user_updated = db.users.get(user['key']); 
+        other_updated = db.users.get(other['key']);
+        content = user_tpl({: other: other_updated, user:user_updated :});
+        return Response({: content :});
+      }
+      return ResponseBadRequest("You need to specify a unfollower and a unfollowee!");
+    } 
+  }
+
+  class AvatarHandler extends RequestHandler{
+    
+    def get(request, args){      
+      if(db.images.get('/avatar/' + args['key']) ~ +img 
+         && img['data'] ~ +data 
+         && img['contenttype'] ~ +ct){
+        r = Response();
+        r.content := data;
+        r.headers.add('content-type', ct);
+        return r;
+      }
+      else{
+        return ResponseSeeOther('/static/img/avatar.png');
+      }
+    }
+  }
+}

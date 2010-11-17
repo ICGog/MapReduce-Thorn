@@ -1,0 +1,28 @@
+{
+  if (1 ~ x:int) {
+    ~!@eq(x,1)@!~  1;
+  }
+  
+  if ([1,2] ~ [x:int, y...] :list) {
+    ~!@eq(x,1)@!~  ;
+    ~!@eq(y, [2])@!~  ;
+  }
+  
+  fun sum([]) = 0;
+    | sum([x:int, y...]) = x + sum(y);
+
+  ~!@eq(sum([]), 0)@!~  ;
+  ~!@eq(sum([5,5]), 10)@!~  ;
+
+  if ("by Hephastos's parish" ~ x:bool) {
+     { ~!@hit()@!~ 0 ; }
+  }
+  else {
+     ~!@hit()@!~  ;
+  }
+
+  if (‹a:true, b:"by Zeus's chair!"› ~ ‹a: a':bool, b: b':string›:record) {
+     ~!@eq(a', true)@!~  ;
+     ~!@eq(b', "by Zeus's chair!")@!~  ;
+  }
+}

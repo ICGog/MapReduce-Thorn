@@ -1,0 +1,46 @@
+// module CLO{ class Canoe{}  class Loser{def vex(){}}Loser  var feud:=1; sector=2; }
+{
+   import own OLC = CLO;
+   import olc = OLC.feud;
+   import own ORC = CLO;
+   import orc = ORC.feud;
+   import CLO.feud;
+   
+   class Haggis{
+      var team := 1;
+      def iolc(){olc := olc + team;}
+      def iorc(){orc := orc + team;}
+      def ifeud(){feud := feud + team;}
+      def steam(n){team := n;}
+   }Haggis
+   
+   h1 = Haggis();
+   ~!@eq(olc, 1)@!~;   ~!@eq(orc, 1)@!~;    ~!@eq(feud, 1)@!~;    ~!@eq(h1.team, 1)@!~;
+   h1.iolc();
+   ~!@eq(olc, 2)@!~;   ~!@eq(orc, 1)@!~;    ~!@eq(feud, 1)@!~;    ~!@eq(h1.team, 1)@!~;
+   h1.steam(3);
+   ~!@eq(olc, 2)@!~;   ~!@eq(orc, 1)@!~;    ~!@eq(feud, 1)@!~;    ~!@eq(h1.team, 3)@!~;
+   h1.iorc();
+   ~!@eq(olc, 2)@!~;   ~!@eq(orc, 4)@!~;    ~!@eq(feud, 1)@!~;    ~!@eq(h1.team, 3)@!~;
+   h1.steam(7);
+   ~!@eq(olc, 2)@!~;   ~!@eq(orc, 4)@!~;    ~!@eq(feud, 1)@!~;    ~!@eq(h1.team, 7)@!~;
+   h1.ifeud();
+   ~!@eq(olc, 2)@!~;   ~!@eq(orc, 4)@!~;    ~!@eq(feud, 8)@!~;    ~!@eq(h1.team, 7)@!~;
+   h1.iolc();
+   ~!@eq(olc, 9)@!~;   ~!@eq(orc, 4)@!~;    ~!@eq(feud, 8)@!~;    ~!@eq(h1.team, 7)@!~;
+   
+   h2 = Haggis();
+   ~!@eq(olc, 9)@!~;   ~!@eq(orc, 4)@!~;    ~!@eq(feud, 8)@!~;    ~!@eq(h1.team, 7)@!~;   ~!@eq(h2.team, 1)@!~;
+   h2.iolc();
+   ~!@eq(olc, 10)@!~;  ~!@eq(orc, 4)@!~;    ~!@eq(feud, 8)@!~;    ~!@eq(h1.team, 7)@!~;   ~!@eq(h2.team, 1)@!~;
+   h1.iolc();
+   ~!@eq(olc, 17)@!~;  ~!@eq(orc, 4)@!~;    ~!@eq(feud, 8)@!~;    ~!@eq(h1.team, 7)@!~;   ~!@eq(h2.team, 1)@!~;
+   h2.iolc();
+   ~!@eq(olc, 18)@!~;  ~!@eq(orc, 4)@!~;    ~!@eq(feud, 8)@!~;    ~!@eq(h1.team, 7)@!~;   ~!@eq(h2.team, 1)@!~;
+   h2.steam(10);
+   ~!@eq(olc, 18)@!~;  ~!@eq(orc, 4)@!~;    ~!@eq(feud, 8)@!~;    ~!@eq(h1.team, 7)@!~;   ~!@eq(h2.team, 10)@!~;
+   h2.ifeud();
+   ~!@eq(olc, 18)@!~;  ~!@eq(orc, 4)@!~;    ~!@eq(feud, 18)@!~;   ~!@eq(h1.team, 7)@!~;   ~!@eq(h2.team, 10)@!~;
+   
+
+}
