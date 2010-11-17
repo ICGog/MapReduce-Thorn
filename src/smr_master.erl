@@ -26,7 +26,7 @@
 %------------------------------------------------------------------------------
 
 start_link(EnableHttpApi) ->
-    gen_server:start_link(?MODULE, [EnableHttpApi], []).
+    gen_server:start_link({global, smr_master}, ?MODULE, [EnableHttpApi], []).
 
 spawn_worker(Pid, Node) -> 
     gen_server:call(Pid, {spawn_worker, Node}, infinity).

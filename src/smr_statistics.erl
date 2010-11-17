@@ -26,8 +26,8 @@
 %------------------------------------------------------------------------------
 
 start_link(EnableHttpApi) ->
-    gen_server:start_link({local, smr_statistics}, ?MODULE,
-                          [EnableHttpApi], []).
+    gen_server:start_link({global, smr_statistics}, ?MODULE, [EnableHttpApi],
+                          []).
 
 register_worker(Pid, Node) ->
     gen_server:cast(Pid, {register_worker, Node}).

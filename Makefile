@@ -10,6 +10,7 @@ export SOURCE_DIR=src
 export EBIN_DIR=ebin
 TEST_DIR=test
 LOG_DIR=log
+LIB_DIR=lib
 
 # Override this with path to ej to use Erjang
 export EJ=erl
@@ -17,9 +18,12 @@ export EJ=erl
 # Needed by Erjang
 export ERL_ROOT=$(ERL_TOP)
 
+ADDITIONAL_ERL_SOURCES=$(LIB_DIR)/rfc4627/rfc4627.erl
+ADDITIONAL_ERL_TARGETS=$(EBIN_DIR)/rfc4627.beam
+
 INCLUDES=$(wildcard $(INCLUDE_DIR)/*.hrl)
 SOURCES=$(wildcard $(SOURCE_DIR)/*.erl)
-TARGETS=$(patsubst $(SOURCE_DIR)/%.erl, $(EBIN_DIR)/%.beam, $(SOURCES))
+TARGETS=$(patsubst $(SOURCE_DIR)/%.erl, $(EBIN_DIR)/%.beam, $(SOURCES)) $(ADDITIONAL_ERL_TARGETS)
 TEST_SOURCES=$(wildcard $(TEST_DIR)/*.erl)
 TEST_TARGETS=$(patsubst $(TEST_DIR)/%.erl, $(TEST_DIR)/%.beam, $(TEST_SOURCES))
 
@@ -66,6 +70,9 @@ stop_worker_nodes:
 ##########################################################################
 ## Internal
 ##########################################################################
+
+$(ADDITIONAL_ERL_TARGETS): $(ADDITIONAL_ERL_SOURCES)
+	erlc $(ERLC_OPTS) $<
 
 $(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(INCLUDES)
 	erlc $(ERLC_OPTS) $<
