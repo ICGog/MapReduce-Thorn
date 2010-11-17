@@ -27,7 +27,8 @@ start() ->
         {transfer_log, "transfer.log"},
         {mime_types, [{"html", "text/html"},
                       {"css", "text/css"},
-                      {"js", "application/x-javascript"}]}]).
+                      {"js", "application/x-javascript"},
+                      {"png", "image/png"}]}]).
 
 hello_world(SessionId, _Env, _Input) ->
     mod_esi:deliver(
