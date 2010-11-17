@@ -2,24 +2,53 @@
 
 function initialize()
 {	
-	$("#framework_name").append(" 0.1");		
-	$("#logo").click( function()	  {
-		  	$("img").fadeTo("slow",0);	
-	  });  	
-  
+	$("#framework_name").append(" 0.1");			  
 	update();	
 }
 
 function update()
 {
-		var ns = getNodes();
-		var js = getJobs();
+		ns = getNodes();
+		js = getJobs();
+		
+	$(".joblist").empty();
+		
+	if(!js.length)
+		$(".joblist")
+		.append($("<div/>").text("No running jobs"));
+		
+	for(var j in js) {
+		jobname = js[j].name;
+		owner = js[j].owner;
+		id = "j_" + jobname;
+		
+		
+		innerHTML = "<div class=\"foldable\"><b>" + jobname + "</b> : " + js[j].completed + "% complete";
+		innerHTML += "<div class=\"progressbar\">" + js[j].completed + "</div></div>";
+		innerHTML += "<div>";
+		innerHTML += "<div>Owner: <b>" + owner + "</b></div>";	
+		innerHTML += "<div><a href=\"code.txt\">[View map code]</a> [View reduce code] [Kill job]</div>";	
+		innerHTML += "</div>";
+
 	
-	   $(".nodelist").empty();
+	 	$(".joblist")
+        .append(
+           $("<div/>").addClass("job").attr("id", "acc")
+        .append($("<div/>").html(innerHTML)));          
+	} 
+	
+	
+	$('.progressbar').each(function() {
+             var value = parseInt($(this).text());
+            $(this).empty().progressbar({value: value});
+        }); 
+	
+	
+ 	$(".nodelist").empty();
 	   
-	   if(!ns.length)
-   	$(".nodelist")
-   	.append($("<div/>").text("No nodes available"));
+   	if(!ns.length)
+   		$(".nodelist")
+   		.append($("<div/>").text("No nodes available"));
    
 	  
 	for(var n in ns) {
@@ -35,5 +64,11 @@ function update()
 	} 		
 	
 	
-	setTimeout("update()", 5000);
+	$('.foldable').click(function() {
+		$(this).next().toggle('fast');
+		return false;
+	}).next().hide();
+	
+	
+	setTimeout("update()", 20000);
 }

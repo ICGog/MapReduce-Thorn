@@ -11,6 +11,12 @@ body h1 {
 	font-style: normal;
 }
 
+body a {
+	color: #000000;
+	text-decoration: none;
+
+}
+
 /* Header styles */
 
 .header {
@@ -35,6 +41,13 @@ body h1 {
 
 .jobs {
 	margin-left: 5px;
+}
+
+.job {
+	width: 70%;
+	border: 1px solid #666;
+	margin-left: 10px;
+	padding: 5px;
 }
 
 
