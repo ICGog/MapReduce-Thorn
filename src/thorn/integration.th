@@ -1,2 +1,2 @@
 import MAPREDUCE.*;
-println(scrieDracu("AA", "BB"));
+println(doubleNum("AA"));
