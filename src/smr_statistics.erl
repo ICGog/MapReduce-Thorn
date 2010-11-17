@@ -19,7 +19,7 @@
                  busy_time = 0,
                  num_map_jobs = 0,
                  num_reduce_jobs = 0,
-                 start_time = dict:new_dict()}).
+                 start_time = dict:new()}).
 
 %------------------------------------------------------------------------------
 % Internal API
