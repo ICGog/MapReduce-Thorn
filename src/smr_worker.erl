@@ -3,7 +3,7 @@
 
 -behaviour(gen_server).
 
--export([start_link/1, do_job/5]).
+-export([start_link/1, shutdown/1, do_job/5]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
@@ -28,6 +28,9 @@ start_link(Node) ->
                 {error, Reason}
     end.
 
+shutdown(Worker) ->
+    gen_server:cast(Worker, shutdown).
+
 do_job(Worker, JobPid, JobType, Fun, Input) ->
     gen_server:cast(Worker, {do_job, JobPid, JobType, Fun, Input}).
 
@@ -41,6 +44,8 @@ init([]) ->
 handle_call(Call, _From, State) ->
     {stop, {unexpected_call, Call}, State}.
 
+handle_cast(shutdown, State) ->
+    {stop, normal, State};
 handle_cast({do_job, JobPid, map, MapFun, MapInput}, State) ->
     smr_job:result(JobPid, self(), lists:flatmap(MapFun, MapInput)),
     {noreply, State};

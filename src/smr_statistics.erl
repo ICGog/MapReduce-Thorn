@@ -6,6 +6,8 @@
         worker_failed/2, worker_batch_started/6, worker_batch_ended/5,
         worker_batch_failed/3]).
 
+-export([get_all_workers/1]).
+
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
@@ -25,8 +27,8 @@
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link(EnableHttpApi) ->
-    gen_server:start_link({global, smr_statistics}, ?MODULE, [EnableHttpApi],
+start_link(EnableWebsite) ->
+    gen_server:start_link({global, smr_statistics}, ?MODULE, [EnableWebsite],
                           []).
 
 register_worker(Pid, Node) ->
@@ -49,17 +51,24 @@ worker_batch_ended(Pid, Node, JobId, Time, BatchSize) ->
     gen_server:cast(Pid, {batch_ended, Node, JobId, Time, BatchSize}).
 
 %------------------------------------------------------------------------------
+% Query API
+%------------------------------------------------------------------------------
+
+get_all_workers(Pid) ->
+    gen_server:call(Pid, get_all_workers).
+
+%------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([EnableHttpApi]) ->
-    case EnableHttpApi of true  -> {ok, _} = smr_http:start();
+init([EnableWebsite]) ->
+    case EnableWebsite of true  -> {ok, _} = smr_http:start();
                           false -> ok
     end,
     {ok, #state{}}.
 
-handle_call(Request, _From, State) ->
-    {stop, {unexpected_call, Request}, State}.
+handle_call(get_all_workers, _From, State = #state{workers = Workers}) ->
+    {reply, dict:fetch_keys(Workers), State}.
 
 handle_cast({register_worker, Node},
             State = #state{workers = Workers}) ->
@@ -132,4 +141,3 @@ code_change(_OldVsn, State, _Extra) ->
 
 terminate(_Reason, _State) ->
     ok.
-

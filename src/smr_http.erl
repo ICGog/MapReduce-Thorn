@@ -1,7 +1,7 @@
 
 -module(smr_http).
 
--export([start/0, hello_world/3, get_all_workers/3]).
+-export([start/0, get_all_workers/3]).
 
 start() ->
     inets:start(),
@@ -30,19 +30,11 @@ start() ->
                       {"js", "application/x-javascript"},
                       {"png", "image/png"}]}]).
 
-hello_world(SessionId, _Env, _Input) ->
-    mod_esi:deliver(
-        SessionId,
-        ["Content-Type: text/html\r\n\r\n",
-         "<html><body>Hello, World!</body></html>"
-        ]).
-
 rfc4627_header() ->
     "Content-Type: " ++ rfc4627:mime_type() ++ "\r\n\r\n".
 
 get_all_workers(SessionId, _Env, _Input) ->
-    MasterPid = global:whereis_name(smr_master),
-    mod_esi:deliver(
-        SessionId,
-        [rfc4627_header(),
-         rfc4627:encode(smr_master:get_worker_nodes(MasterPid))]).
+    Statistics = global:whereis_name(smr_statistics),
+    Workers = lists:map(fun erlang:atom_to_list/1,
+                        smr_statistics:get_all_workers(Statistics)),
+    mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(Workers)]).
