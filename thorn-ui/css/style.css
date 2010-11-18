@@ -17,16 +17,28 @@ body a {
 
 }
 
+
+/* Column styles */
+
+.main {
+	float:	left;
+	width:	75%;
+}
+
+.menu {
+	width: 25%;
+	float:	right;	
+}
+
+
 /* Header styles */
 
 .header {
 	font-size: 150%;
 	width: 100%;
-	height: 20%;
 }
 
-.header #page_title {
-	float: left;
+.header #page_title {	
 	width: 60%;
 }
 
@@ -100,9 +112,7 @@ body a {
 
 /* Footer styles */ 
 
-.footer {
-	position: fixed;
-	bottom: 10px;
+.footer {	
 	color: #AAAAAA;
 	font-size: 75%;		
 }
@@ -114,3 +124,10 @@ body a {
 .footer #framework_version {
 	margin-left: 1em;	
 }
+
+/* Other style */
+.invisible {
+	display: none;
+}
+
+

@@ -1,8 +1,38 @@
 /* This script updates the presented data */
 
+var doUpdate = true;
+var updateTimeout;
+
 function initialize()
 {	
 	$("#framework_name").append(" 0.1");			  
+	
+	$("#expand_jobs").click(function() 
+	{
+		$('.foldable').next().toggle('fast');				
+	});
+	
+	$(".expander").click(function() 
+	{
+		$(this).next().toggle('fast');				
+	});
+	
+	
+	$("#update_toggle").click(function() 
+	{
+		doUpdate = !doUpdate;
+		if(doUpdate)		
+		{			
+			$("#update_toggle").text("[Disable Updates]");
+			update();
+		} 
+		else 
+		{			
+			$("#update_toggle").text("[Enable Updates]");
+			clearTimeout(updateTimeout);		
+		}
+	});
+	
 	update();	
 }
 
@@ -17,41 +47,58 @@ function update()
 		$(".joblist")
 		.append($("<div/>").text("No running jobs"));
 		
-	for(var j in js) {
+	for(var j in js) 
+	{
 		jobname = js[j].name;
 		owner = js[j].owner;
-		id = "j_" + jobname;
+		id = j + jobname;
 		
 		
 		innerHTML = "<div class=\"foldable\"><b>" + jobname + "</b> : " + js[j].completed + "% complete";
 		innerHTML += "<div class=\"progressbar\">" + js[j].completed + "</div></div>";
 		innerHTML += "<div>";
 		innerHTML += "<div>Owner: <b>" + owner + "</b></div>";	
-		innerHTML += "<div><a href=\"code.txt\">[View map code]</a> [View reduce code] [Kill job]</div>";	
-		innerHTML += "</div>";
-
+		innerHTML += "<div id=\"M" + id + "\">[View map code]</div>";
+		innerHTML += "<div id=\"R" + id + "\">[View reduce code]</div>";
+		innerHTML += "<div>[Kill job]</div>";	
+		innerHTML += "</div>";	
 	
 	 	$(".joblist")
         .append(
            $("<div/>").addClass("job").attr("id", "acc")
-        .append($("<div/>").html(innerHTML)));          
+        .append($("<div/>").html(innerHTML)));      
+        
+      	$('#M' + id).click(function() 
+      	{      	 
+		 $(this).append($("<div/>").load("\ #map_code")).show();			 	 
+		 return false;		
+		});
+		
+		$('#R' + id).click(function() 
+		{		 
+		 $(this).append($("<div/>").load("\ #reduce_code"));			 	 
+		 return false;		
+		});
+        
 	} 
 	
-	
-	$('.progressbar').each(function() {
+	//START Foreign code
+	$('.progressbar').each(function() 
+	{
              var value = parseInt($(this).text());
             $(this).empty().progressbar({value: value});
-        }); 
-	
-	
+    }); 
+    //END Foreign code
+		
  	$(".nodelist").empty();
 	   
    	if(!ns.length)
    		$(".nodelist")
-   		.append($("<div/>").text("No nodes available"));
+   		.append($("<div/>").text("No workers available"));
    
 	  
-	for(var n in ns) {
+	for(var n in ns) 
+	{
 		        
         $(".nodelist")
         .append($("<div/>").addClass("node")
@@ -64,11 +111,14 @@ function update()
 	} 		
 	
 	
-	$('.foldable').click(function() {
+	$('.foldable').click(function() 
+	{
 		$(this).next().toggle('fast');
 		return false;
 	}).next().hide();
 	
-	
-	setTimeout("update()", 20000);
+	if(doUpdate)
+	{
+	  updateTimeout = setTimeout("update()", 20000);
+	}	
 }

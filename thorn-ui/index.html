@@ -16,21 +16,29 @@
 	<script type="text/javascript" src="js/update.js"></script>
 </head>   
 <body onload="initialize()">
+	<div class="main">
 	<div class="header">
-		<div id="page_title">Thorn mapReduce status</div>
-		<div id="logo"><img src="img/logo.png" width="220" height="120" alt=""/></div>
-	</div>
+		<div id="page_title">THORN mapReduce status</div>
+		
+	</div>	
 	<div class="jobs">
-	   <h1>Running jobs:</h1>	   
+	   <div class="expander"><h1>Running jobs:</h1></div> 
 		<div class="joblist">Fetching joblist failed</div>	
+		
 	</div>
     <div class="nodes">
-		<h1>Available nodes:</h1>
-		<div class="nodelist">Fetching nodelist failed</div> 
+		<div class="expander"><h1>Available workers:</h1></div>
+		<div class="nodelist">Fetching worker list failed</div> 
+	</div>			
 	</div>
-	
+	<div class="menu">
+	<div id="logo"><img src="img/logo.png" width="220" height="120" alt=""/></div>
+	<div id="update_toggle">[Disable Updates]</div>
+	<br/>
+	<div id="expand_jobs">[Expand/Fold Jobs]</div>
 	<div class="footer">
 	   <div id="framework_name">Thorn mapReduce</div>	   
 	</div>	
+	</div>
 </body>
 </html>
