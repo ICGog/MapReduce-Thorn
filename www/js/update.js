@@ -33,6 +33,24 @@ function initialize()
 		}
 	});
 	
+	$( "#dialog-confirm" ).dialog({
+			autoOpen: false,
+			resizable: false,
+			height:200,
+			width: 400,
+			modal: true,
+			buttons: {
+				"Kill, please": function() {
+					$( this ).dialog( "close" );
+				},
+				"No, thanks": function() {
+					$( this ).dialog( "close" );
+				}
+			}
+	});
+	
+	
+	
 	update();	
 }
 
@@ -58,9 +76,9 @@ function update()
 		innerHTML += "<div class=\"progressbar\">" + js[j].completed + "</div></div>";
 		innerHTML += "<div>";
 		innerHTML += "<div>Owner: <b>" + owner + "</b></div>";	
-		innerHTML += "<div id=\"M" + id + "\">[View map code]</div>";
-		innerHTML += "<div id=\"R" + id + "\">[View reduce code]</div>";
-		innerHTML += "<div>[Kill job]</div>";	
+		innerHTML += "<div class=\"button\" id=\"M" + id + "\">[View map code]</div>";
+		innerHTML += "<div class=\"button\" id=\"R" + id + "\">[View reduce code]</div>";
+		innerHTML += "<div class=\"button\" id=\"K" + id + "\">[Kill job]</div>";	
 		innerHTML += "</div>";	
 	
 	 	$(".joblist")
@@ -78,6 +96,11 @@ function update()
 		{		 
 		 $(this).append($("<div/>").load("\ #reduce_code"));			 	 
 		 return false;		
+		});
+		
+		$('#K' + id).click(function() 
+		{			
+			killJob(jobname);
 		});
         
 	} 
@@ -121,4 +144,9 @@ function update()
 	{
 	  updateTimeout = setTimeout("update()", 20000);
 	}	
+}
+
+function killJob(jobname) {
+	$( "#dialog-confirm" ).text("Are you sure you want to kill " + jobname + "?");
+	$("#dialog-confirm").dialog('open');		
 }

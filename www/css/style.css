@@ -56,7 +56,7 @@ body a {
 }
 
 .job {
-	width: 70%;
+	width: 80%;
 	border: 1px solid #666;
 	margin-left: 10px;
 	padding: 5px;
@@ -73,6 +73,7 @@ body a {
 	 width: 80%; 
 	 border: 1px solid #666;
 	 margin: 10px;  
+	 padding: 5px;
 	 float: left;
 }
 
@@ -130,4 +131,11 @@ body a {
 	display: none;
 }
 
+.button {
+	cursor:pointer;cursor:hand;
+}
+
+.expander {
+	cursor:pointer;cursor:hand;
+}
 
