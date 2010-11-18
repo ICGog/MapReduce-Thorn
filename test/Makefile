@@ -7,7 +7,7 @@ INCLUDES=$(wildcard ../$(INCLUDE_DIR)/*.hrl)
 
 ERLC_OPTS=-I ../$(INCLUDE_DIR) -o ./ -Wall -v +debug_info
 
-EJ_OPTS=-pa ../$(EBIN_DIR) -pa ./ -noshell
+EJ_OPTS=-pa ../$(EBIN_DIR) -pa ./ -sname $(SMR_NODE) -noshell
 
 all: test
 
@@ -21,4 +21,3 @@ test: $(TEST_TARGETS)
 
 clean:
 	rm -f $(TEST_TARGETS)
-

@@ -12,12 +12,21 @@
 %------------------------------------------------------------------------------
 
 start_link(Node) ->
-    {ok, proc_lib:spawn_link(
+    Parent = self(),
+    Pid = proc_lib:spawn_link(
              Node,
              fun () ->
                      {ok, State} = ?MODULE:init([]),
+                     Parent ! {init_done, self()},
                      gen_server:enter_loop(?MODULE, [], State)
-             end)}.
+             end),
+    MonitorRef = erlang:monitor(process, Pid),
+    receive {init_done, Pid} ->
+                erlang:demonitor(MonitorRef),
+                {ok, Pid};
+            {'DOWN', MonitorRef, process, Pid, Reason} ->
+                {error, Reason}
+    end.
 
 do_job(Worker, JobPid, JobType, Fun, Input) ->
     gen_server:cast(Worker, {do_job, JobPid, JobType, Fun, Input}).
