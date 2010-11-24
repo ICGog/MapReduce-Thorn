@@ -1,0 +1,2 @@
+source ~/.bashrc
+th -m Modules.thm -s web-cheeper-server.th 

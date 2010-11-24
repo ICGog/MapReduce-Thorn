@@ -12,6 +12,11 @@ TEST_DIR=test
 LOG_DIR=log
 LIB_DIR=lib
 
+THORNROOT=lib/thorn-interp-05
+THORNJARS="$(THORNROOT)/classes/fisher.jar:$(THORNROOT)/classes/junit.jar"
+TH=java -classpath $(THORNJARS) fisher.run.Thorn
+THREPL=java -classpath $(THORNJARS) fisher.run.REPL
+
 # Override this with path to ej to use Erjang
 export EJ=erl
 
@@ -39,8 +44,14 @@ compile_tests: $(TEST_TARGETS)
 run: $(TARGETS)
 	$(MAKE) start_worker_nodes
 	mkdir -p $(LOG_DIR)
-	$(EJ) $(EJ_OPTS)
+	TH="$(TH)" $(EJ) $(EJ_OPTS)
 	$(MAKE) stop_worker_nodes
+
+run_th:
+	$(TH) $(PARAMS)
+
+run_threpl:
+	$(THREPL) $(PARAMS)
 
 all_tests: $(TARGETS) $(TEST_TARGETS)
 	$(MAKE) SMR_WORKER_NODES="$(SMR_TEST_WORKER_NODES)" start_worker_nodes
@@ -57,7 +68,7 @@ start_worker_nodes: $(TARGETS)
 	for node in $(SMR_WORKER_NODES) ; do \
 	    echo ; \
 	    echo "Starting node $$node" ; \
-	    echo 'code:add_pathsa(["$(EBIN_DIR)"]), code:add_pathsa(["$(TEST_DIR)"]).' | erl_call -sname $$node -s -e ; \
+	    echo 'code:add_pathsa(["$(EBIN_DIR)"]), code:add_pathsa(["$(TEST_DIR)"]).' | TH="$(TH)" erl_call -sname $$node -s -e ; \
 	    done
 
 .PHONY: stop_worker_nodes

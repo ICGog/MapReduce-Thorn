@@ -1,0 +1,104 @@
+spawn DiningPhil {
+body{
+  nIter = 10;
+  
+  monitor = spawn monitor {
+    f = table(fork){map var phil;};
+    var done := false;
+    sync die() { done := true; }
+    fun forkmap() = %["$i: $ff" | 
+      for i <- 0..4, ff = (phil if f[i]~ +phil else "-----")
+      ];
+    sync has(phil, fork) { 
+      if (phil != null) 
+        println("$phil takes fork $fork.            " + forkmap());
+      else
+        println("fork $fork is dropped.             " + forkmap());
+      f[fork] := phil;
+      false; }
+    sync eat(phil, f1, f2) {
+      println("$phil eats with forks $f1 and $f2  " + forkmap());
+      if (f[f1] != phil || f[f2] != phil) {
+        println("** * * * * Oh no!  $phil does not have $f1 and $f2, but is using them!");
+      }
+    }eat
+    body {
+      until(done) serve;
+    }
+  }monitor;
+  
+  fun makeFork(n) = spawn fork {
+    var holder := null;
+    var waiting := null;
+    var waitName := null;
+    var done := false;
+    fun taken(phil, pn) {
+      holder := phil;
+      monitor <-> has(pn, n);
+      phil <<< "taken";
+      }
+    body {
+      until(done) {
+         recv{
+           "die" => {
+             done := true;
+             }
+         | {:take:pn:} from phil => {
+             if (holder == null) {
+                taken(phil, pn);
+             }
+             else {
+                waiting := phil;
+                waitName := pn;
+             }
+           }//take
+         |
+           "drop" from phil => {
+             monitor <-> has(null, n);
+             phil <<< "dropped";
+             if (waiting != null) {
+               taken(waiting, waitName);
+               waiting := null;
+             }
+             else {
+               holder := null;
+             }
+           }// drop
+         }
+      }
+    }
+  }fork;
+
+  forks = %[makeFork(i) | for i <- 0 .. 4];
+
+  fun makePhil(name, ln, rn) = spawn phil {
+    body {
+      left = forks(ln);
+      right = forks(rn);      
+      for(i <- 1 .. nIter) {
+         // think
+         // take 
+         left <<< {:take:name:};
+         recv{"taken" => {}};
+         right <<< {:take:name:};
+         recv{"taken" => {}};
+         // eat
+         monitor <-> eat(name, ln, rn);
+         // drop
+         right <<< "drop";
+         recv{"dropped" => {}};
+         left <<< "drop";
+         recv{"dropped" => {}}; 
+      }for
+    }
+  }phil;
+  
+  phils = [
+    makePhil("Aris.", (0), (1)),
+    makePhil("Berk.", (1), (2)),
+    makePhil("Chur.", (2), (3)),
+    makePhil("DesC.", (3), (4)),
+    makePhil("Emer.", (0), (4))];
+  
+}body
+}DiningPhil;

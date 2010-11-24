@@ -1,0 +1,23 @@
+/*
+This program prints a bar graph of the distribution of 
+nRolls rolls of nDice dice of nSides each.
+These values are given as strings in the first line of the
+program, as if they were command line arguments.  
+Feel free to change them to observe the behavior.
+*/
+
+inputs =  ["100", "2", "6"];
+
+[.int(nRolls), .int(nDice), .int(nSides) ] = inputs;
+               
+fun roll() = 
+  %[nSides.rand1 | for i <- 1 .. nDice].sum;
+
+stars = %group(t = roll())
+          {s = %list "*"; | for i<- 1 .. nRolls};
+
+for(i <- nDice .. nDice * nSides) {
+   println("%3d ".format(i) + 
+     (s.cat if stars(i) ~ {:s:} else ""));
+   }
+

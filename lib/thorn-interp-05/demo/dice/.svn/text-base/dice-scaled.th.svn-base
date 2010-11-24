@@ -1,0 +1,19 @@
+[.int(nRolls), .int(nDice), .int(nSides), .int(width) ] = argv();
+               
+fun roll() = 
+  %[nSides.rand1 | for i <- 1 .. nDice].sum;
+
+freqs = %group(t = roll())
+          {n = %count; | for i<- 1 .. nRolls};
+
+maxFreq = 0.max(%[n | for {:n:} <- freqs]);
+
+scale = width / maxFreq;
+
+fun stars(i) = ("*" * (scale*n).ceil
+   if freqs(i) ~ {:n:}
+   else "");
+
+for(i <- nDice .. nDice * nSides) {
+   println("%3d ".format(i) +  stars(i));
+   }
