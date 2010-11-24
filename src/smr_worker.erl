@@ -3,7 +3,7 @@
 
 -behaviour(gen_server).
 
--export([start_link/1, do_job/5]).
+-export([start_link/1, do_job/5, run_thorn_job/2]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
@@ -59,3 +59,11 @@ code_change(_OldVsn, State, _Extra) ->
 terminate(_Reason, _State) ->
     ok.
 
+run_thorn_job(Code, Input) ->
+    Temp = os:cmd("mktemp /tmp/XXXXXXXXXX-tmp.th"),
+    EscCode = re:replace(Code, "'", "'\"'\"'", [{return, list}, global]),
+    os:cmd("echo '" ++ EscCode ++ "' > " ++ Temp),
+    EscInput = re:replace(Input, "'", "'\"'\"'", [{return, list}, global]),
+    Output = os:cmd("echo '" ++ EscInput ++ "' | $TH -f " ++ Temp),
+    os:cmd("rm -f " ++ Temp),
+    Output.

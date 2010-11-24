@@ -1,0 +1,55 @@
+8
+
+dir
+3558
+svn://dumbo.cs.purdue.edu/Thorn/fisher/demo
+svn://dumbo.cs.purdue.edu/Thorn
+
+
+
+2010-02-12T13:53:13.110775Z
+3403
+bard
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+a723982a-6043-0410-9263-eafd0724ee76
+
+mmorpg
+dir
+
+dice
+dir
+
+wordcount
+dir
+
+dining-philosophers
+dir
+
+web-cheeper
+dir
+
+hello-world
+dir
+
+volley
+dir
+
+cheeper
+dir
+
+punyhttp
+dir
+

@@ -1,0 +1,3 @@
+#!/bin/bash 
+source ~/.bashrc
+th -f dice.th -- 100 3 6

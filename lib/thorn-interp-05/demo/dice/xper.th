@@ -1,0 +1,15 @@
+ {
+
+[{:int:nRolls:}, {:int:nDice:}, {:int:nSides:} ] = ["100", "2", "6"];
+               
+fun roll() = 
+  %[nSides.rand1 | for i <- 1 .. nDice].sum;
+
+stars = %group(t = roll())
+          {s = %list "*"; | for i<- 1 .. nRolls};
+
+for(i <- nDice .. nDice * nSides) {
+   println("%3d ".format(i) + 
+     (s.cat if stars(i) ~ {:s:} else ""));
+   }
+}
