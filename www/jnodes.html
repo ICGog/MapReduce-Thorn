@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>img{ height: 100px; float: left; }</style>
+  <script type="text/javascript" src="jquery.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+$.get("/js/testworkers.js",
+    function(data){
+      var current;
+      for (current=0; current<data.length; current++) {
+        var temp = data[current];
+        $('#response').append("*<br>");    
+        $('#response').append("Node number # " + current + "<br>");
+        $('#response').append("name = " + temp.name + "<br>");
+        $('#response').append("started_on = " + temp.started_on + "<br>");
+        $('#response').append("num_exec = " + temp.num_exec + "<br>");
+        $('#response').append("num_failed = " + temp.num_failed + "<br>");
+        $('#response').append("num_succ = " + temp.num_succ + "<br>");
+        $('#response').append("busy_time = " + temp.busy_time + "<br>");
+        $('#response').append("num_map_jobs = " + temp.num_map_jobs + "<br>");
+        $('#response').append("num_reduce_jobs = " + temp.num_reduce_jobs + "<br>");
+        $('#response').append("start_time = " + temp.start_time + "<br>");
+      }
+    }
+    ,'json');
+});
+
+</script>
+<div id="response"> </div>
+</body>
+</html>
+
