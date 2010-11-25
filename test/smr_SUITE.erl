@@ -30,17 +30,19 @@ whole_system_2_test() ->
          [{keys, 40 * 50 * 51 div 2}, {values, 50 * 40 * 41 div 2}]}).
 
 basic_whole_system(TestSuite) ->
-    {ok, Master} = smr_master:start_link(false),
+    smr:start(),
+    Master = smr:master(),
     Host = get_host(),
     [ok, ok, ok, ok, ok] =
         [smr_master:spawn_worker(Master, list_to_atom(Node ++ "@" ++ Host))
          || Node <- ["test_w1", "test_w2", "test_w3", "test_w4", "test_w5"]],
     whole_system(TestSuite, Master),
-    teardown(Master).
+    smr:stop().
 
 statistics_get_all_workers_test() ->
-    {ok, Master} = smr_master:start_link(false),
-    Statistics = global:whereis_name(smr_statistics),
+    smr:start(),
+    Master = smr:master(),
+    Statistics = smr:statistics(),
     Host = get_host(),
     ?assertMatch([], smr_statistics:get_all_workers(Statistics)),
     Worker1 = list_to_atom("test_w1@" ++ Host),
@@ -56,22 +58,11 @@ statistics_get_all_workers_test() ->
     ok = smr_master:shutdown_worker(Master, Worker1),
     timer:sleep(20), %% Wait to propagate to statistics
     ?assertMatch([Worker2], smr_statistics:get_all_workers(Statistics)),
-    teardown(Master).
+    smr:stop().
 
 get_host() ->
     [_ , Host] = string:tokens(atom_to_list(node()), "@"),
     Host.
-
-teardown(Master) ->
-    process_flag(trap_exit, true),
-    smr_master:shutdown(Master),
-    %% TODO: The need for the exit call will be fixed when moving to proper
-    %%       Erlang supervision
-    timer:sleep(20),
-    exit(global:whereis_name(smr_statistics), kill),
-    receive {'EXIT', Master, normal} -> ok
-    after 1000 -> exit(expected_to_exit)
-    end.
 
 whole_system({MapFun, ReduceFun, Input, ExpectedResult}, Master) ->
     {ok, Result} = smr_master:map_reduce(Master, MapFun, ReduceFun, Input),

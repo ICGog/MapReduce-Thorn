@@ -7,7 +7,7 @@ INCLUDES=$(wildcard ../$(INCLUDE_DIR)/*.hrl)
 
 ERLC_OPTS=-I ../$(INCLUDE_DIR) -o ./ -Wall -v +debug_info
 
-EJ_OPTS=-pa ../$(EBIN_DIR) -pa ./ -sname $(SMR_NODE) -noshell
+ERL_OPTS=-pa ../$(EBIN_DIR) -pa ./ -sname $(SMR_NODE) -noshell
 
 all: test
 
@@ -17,7 +17,11 @@ compile: $(TEST_TARGETS)
 	erlc $(ERLC_OPTS) $<
 
 test: $(TEST_TARGETS)
-	$(EJ) $(EJ_OPTS) -s smr_SUITE test -s erlang halt
+	mkdir -p $(WWW_DIR)
+	mkdir -p $(LOG_DIR)
+	erl $(ERL_OPTS) -s smr_SUITE test -s erlang halt
 
 clean:
+	rm -rf $(WWW_DIR)
+	rm -rf $(LOG_DIR)
 	rm -f $(TEST_TARGETS)

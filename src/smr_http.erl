@@ -34,7 +34,6 @@ rfc4627_header() ->
     "Content-Type: " ++ rfc4627:mime_type() ++ "\r\n\r\n".
 
 get_all_workers(SessionId, _Env, _Input) ->
-    Statistics = global:whereis_name(smr_statistics),
     Workers = lists:map(fun erlang:atom_to_list/1,
-                        smr_statistics:get_all_workers(Statistics)),
+                        smr_statistics:get_all_workers(smr:statistics())),
     mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(Workers)]).

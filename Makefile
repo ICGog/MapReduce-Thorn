@@ -9,19 +9,16 @@ export INCLUDE_DIR=include
 export SOURCE_DIR=src
 export EBIN_DIR=ebin
 TEST_DIR=test
-LOG_DIR=log
+export LOG_DIR=log
+export WWW_DIR=www
 LIB_DIR=lib
 
+JINTERFACE_JAR=$(ERL_TOP)/lib/jinterface-?.?.?/priv/OtpErlang.jar
+
 THORNROOT=lib/thorn-interp-05
-THORNJARS="$(THORNROOT)/classes/fisher.jar:$(THORNROOT)/classes/junit.jar"
+THORNJARS="$(THORNROOT)/classes/fisher.jar:$(THORNROOT)/classes/junit.jar:$(JINTERFACE_JAR)"
 TH=java -classpath $(THORNJARS) fisher.run.Thorn
 THREPL=java -classpath $(THORNJARS) fisher.run.REPL
-
-# Override this with path to ej to use Erjang
-export EJ=erl
-
-# Needed by Erjang
-export ERL_ROOT=$(ERL_TOP)
 
 ADDITIONAL_ERL_SOURCES=$(LIB_DIR)/rfc4627/rfc4627.erl
 ADDITIONAL_ERL_TARGETS=$(EBIN_DIR)/rfc4627.beam
@@ -33,7 +30,7 @@ TEST_SOURCES=$(wildcard $(TEST_DIR)/*.erl)
 TEST_TARGETS=$(patsubst $(TEST_DIR)/%.erl, $(TEST_DIR)/%.beam, $(TEST_SOURCES))
 
 ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall -v +debug_info
-EJ_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE)
+ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE)
 
 all: compile
 
@@ -44,7 +41,7 @@ compile_tests: $(TEST_TARGETS)
 run: $(TARGETS)
 	$(MAKE) start_worker_nodes
 	mkdir -p $(LOG_DIR)
-	TH="$(TH)" $(EJ) $(EJ_OPTS)
+	TH="$(TH)" erl $(ERL_OPTS)
 	$(MAKE) stop_worker_nodes
 
 run_th:

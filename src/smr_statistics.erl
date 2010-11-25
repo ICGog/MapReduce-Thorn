@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--export([start_link/1, register_worker/2, unregister_worker/2,
+-export([start_link/0, register_worker/2, unregister_worker/2,
         worker_failed/2, worker_batch_started/6, worker_batch_ended/5,
         worker_batch_failed/3]).
 
@@ -27,9 +27,8 @@
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link(EnableWebsite) ->
-    gen_server:start_link({global, smr_statistics}, ?MODULE, [EnableWebsite],
-                          []).
+start_link() ->
+    gen_server:start_link({global, smr_statistics}, ?MODULE, [], []).
 
 register_worker(Pid, Node) ->
     gen_server:cast(Pid, {register_worker, Node}).
@@ -61,10 +60,7 @@ get_all_workers(Pid) ->
 % Handlers
 %------------------------------------------------------------------------------
 
-init([EnableWebsite]) ->
-    case EnableWebsite of true  -> {ok, _} = smr_http:start();
-                          false -> ok
-    end,
+init([]) ->
     {ok, #state{}}.
 
 handle_call(get_all_workers, _From, State = #state{workers = Workers}) ->

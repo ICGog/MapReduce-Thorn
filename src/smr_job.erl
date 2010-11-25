@@ -26,8 +26,8 @@
 start_link(Master, MapFun, ReduceFun, Input) ->
     {ok, Job} =
         gen_server:start_link(?MODULE, [Master, MapFun, ReduceFun, Input], []),
-    error_logger:info_msg("Job ~p started~n", [Job]),
     gen_server:cast(Job, start),
+    error_logger:info_msg("Job ~p started~n", [Job]),
     {ok, Job}.
 
 result(Job, Worker, Result) ->
@@ -128,4 +128,3 @@ spare_worker(State = #state{spare_workers = [], master = Master}) ->
                      smr_master:allocate_workers(Master)});
 spare_worker(State = #state{spare_workers = [Worker | RestWorkers]}) ->
     {Worker, State#state{spare_workers = RestWorkers}}.
-
