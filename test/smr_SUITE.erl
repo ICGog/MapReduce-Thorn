@@ -31,46 +31,59 @@ whole_system_2_test() ->
 
 basic_whole_system(TestSuite) ->
     smr:start(),
-    Master = smr:master(),
-    Host = get_host(),
-    [ok, ok, ok, ok, ok] =
-        [smr_master:spawn_worker(Master, list_to_atom(Node ++ "@" ++ Host))
-         || Node <- ["test_w1", "test_w2", "test_w3", "test_w4", "test_w5"]],
-    whole_system(TestSuite, Master),
+    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+    whole_system(TestSuite),
     smr:stop().
 
 statistics_get_all_workers_test() ->
     smr:start(),
-    Master = smr:master(),
+    [Worker1, Worker2] = start_test_slaves([test_w1, test_w3]),
     Statistics = smr:statistics(),
-    Host = get_host(),
+
     ?assertMatch([], smr_statistics:get_all_workers(Statistics)),
-    Worker1 = list_to_atom("test_w1@" ++ Host),
-    ok = smr_master:spawn_worker(Master, Worker1),
+
+    attached = smr:attach_worker_node(Worker1),
     timer:sleep(20), %% Wait to propagate to statistics
     ?assertMatch([Worker1], smr_statistics:get_all_workers(Statistics)),
-    Worker2 = list_to_atom("test_w3@" ++ Host),
-    ok = smr_master:spawn_worker(Master, Worker2),
+
+    attached = smr:attach_worker_node(Worker2),
     timer:sleep(20), %% Wait to propagate to statistics
     ExpectedW12 = lists:sort([Worker1, Worker2]),
     ResultW12 = lists:sort(smr_statistics:get_all_workers(Statistics)),
     ?assertMatch(ExpectedW12, ResultW12),
-    ok = smr_master:shutdown_worker(Master, Worker1),
+
+    killed = smr:kill_worker_node(Worker1),
     timer:sleep(20), %% Wait to propagate to statistics
     ?assertMatch([Worker2], smr_statistics:get_all_workers(Statistics)),
+    
     smr:stop().
 
-get_host() ->
-    [_ , Host] = string:tokens(atom_to_list(node()), "@"),
-    Host.
-
-whole_system({MapFun, ReduceFun, Input, ExpectedResult}, Master) ->
-    {ok, Result} = smr_master:map_reduce(Master, MapFun, ReduceFun, Input),
+whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
+    {ok, Result} =
+        smr_master:map_reduce(smr:master(), MapFun, ReduceFun, Input),
+    
     ExpectedLength = length(ExpectedResult),
     ?assertMatch(ExpectedLength, length(Result)),
+
     SortedResult = orddict:to_list(orddict:from_list(Result)),
     ?assertMatch(ExpectedLength, length(SortedResult)),
+
     SortedExpected = orddict:to_list(orddict:from_list(ExpectedResult)),
     ?assertMatch(ExpectedLength, length(ExpectedResult)),
+
     lists:zipwith(fun (E, R) -> ?assertMatch(E, R) end,
                   SortedExpected, SortedResult).
+
+start_test_slaves(Names) ->
+    lists:map(fun (Name) -> {ok, Node} = slave:start(
+                                net_adm:localhost(),
+                                Name,
+                                os:getenv("WORKER_ERL_OPTS")),
+                            Node
+              end, Names).
+
+start_and_add_test_slaves(Names) ->
+    Nodes = start_test_slaves(Names),
+    lists:foreach(fun (Node) -> attached = smr:attach_worker_node(Node) end,
+                  Nodes),
+    Nodes.

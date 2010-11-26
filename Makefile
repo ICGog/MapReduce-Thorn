@@ -3,7 +3,7 @@
 
 export SMR_NODE=smr_master
 SMR_WORKER_NODES=w1 w2 w3 w4 w5
-SMR_TEST_WORKER_NODES=test_w1 test_w2 test_w3 test_w4 test_w5
+SMR_TEST_WORKER_NODES=
 
 export INCLUDE_DIR=include
 export SOURCE_DIR=src
@@ -12,6 +12,8 @@ TEST_DIR=test
 export LOG_DIR=log
 export WWW_DIR=www
 LIB_DIR=lib
+
+ERL_HOSTS=.hosts.erlang
 
 JINTERFACE_JAR=$(ERL_TOP)/lib/jinterface-?.?.?/priv/OtpErlang.jar
 
@@ -38,7 +40,7 @@ compile: $(TARGETS)
 
 compile_tests: $(TEST_TARGETS)
 
-run: $(TARGETS)
+run: $(TARGETS) $(ERL_HOSTS)
 	$(MAKE) start_worker_nodes
 	mkdir -p $(LOG_DIR)
 	TH="$(TH)" erl $(ERL_OPTS)
@@ -90,3 +92,6 @@ $(TEST_TARGETS): $(TEST_DIR)
 .PHONY: $(TEST_DIR)
 $(TEST_DIR):
 	$(MAKE) -C $(TEST_DIR) compile
+
+$(ERL_HOSTS):
+	touch $@
