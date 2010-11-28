@@ -59,8 +59,10 @@ statistics_get_all_workers_test() ->
     smr:stop().
 
 whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
-    {ok, Result} =
-        smr_master:map_reduce(smr:master(), MapFun, ReduceFun, Input),
+    Master = smr:master(),
+    {ok, JobId} = smr_master:new_job(Master, MapFun, ReduceFun),
+    smr_master:add_input(Master, JobId, Input),
+    {ok, Result} = smr_master:do_job(Master, JobId),
     
     ExpectedLength = length(ExpectedResult),
     ?assertMatch(ExpectedLength, length(Result)),

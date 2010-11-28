@@ -3,33 +3,34 @@
 
 -behavior(gen_server).
 
--export([start_link/4, result/3]).
+-export([start_link/3, add_input/2, start/1, result/3]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
 -record(state, {sup,
-                phase, % map | reduce
+                phase = input, % input | map | reduce
                 map_fun,
                 reduce_fun,
                 master,
                 ongoing = 0,
-                input,
+                input = [],
                 result}).
 
 -define(MAP_BATCH_SIZE, 1).
 -define(REDUCE_BATCH_SIZE, 1).
 
 %------------------------------------------------------------------------------
-% API
+% Internal API
 %------------------------------------------------------------------------------
 
-start_link(Master, MapFun, ReduceFun, Input) ->
-    {ok, Job} = gen_server:start_link(?MODULE, [self(), Master, MapFun,
-                                                ReduceFun, Input],
-                                      []),
-    gen_server:cast(Job, start),
-    error_logger:info_msg("Job ~p started~n", [Job]),
-    {ok, Job}.
+start_link(Master, MapFun, ReduceFun) ->
+    gen_server:start_link(?MODULE, [self(), Master, MapFun, ReduceFun], []).
+
+add_input(Job, Input) ->
+    gen_server:cast(Job, {add_input, Input}).
+
+start(Job) ->
+    gen_server:cast(Job, start).
 
 result(Job, Worker, Result) ->
     gen_server:cast(Job, {result, Worker, Result}).
@@ -38,9 +39,9 @@ result(Job, Worker, Result) ->
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Sup, Master, MapFun, ReduceFun, Input]) ->
+init([Sup, Master, MapFun, ReduceFun]) ->
+    error_logger:info_msg("Job ~p created~n", [self()]),
     {ok, #state{sup = Sup,
-                input = Input,
                 map_fun = MapFun,
                 reduce_fun = ReduceFun,
                 master = Master}}.
@@ -50,13 +51,14 @@ handle_call(_Request, _From, State) ->
 
 handle_cast(start, State) ->
     {noreply, set_phase(map, State)};
+handle_cast({add_input, NewInput}, State = #state{phase = input,
+                                                  input = CurInput}) ->
+    {noreply, State#state{input = NewInput ++ CurInput}};
 handle_cast({result, _, Result}, State0) ->
-    State1 = agregate_result(Result, State0),
-    case State1 of
-        #state{ongoing = 1} ->
-            handle_phase_finished(State1#state{ongoing = 0});
-        #state{ongoing = Ongoing} ->
-            {noreply, State1#state{ongoing = Ongoing - 1}}
+    State1 = #state{ongoing = Ongoing} = agregate_result(Result, State0),
+    State2 = State1#state{ongoing = Ongoing - 1},
+    case State2 of #state{ongoing = 0} -> handle_phase_finished(State2);
+                   _                   -> {noreply, State2}
     end.
 
 handle_info(Msg, State) ->

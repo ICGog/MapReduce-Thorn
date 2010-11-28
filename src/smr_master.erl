@@ -3,15 +3,22 @@
 
 -behavior(gen_server).
 
--export([start_link/0, map_reduce/4]).
+-export([start_link/0, new_job/3, add_input/3, do_job/2]).
 -export([job_result/3]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
 -record(state, {sup,
-                jobs = dict:new()}).
+                jobs = dict:new(),    %% (JobPid -> #job{})
+                cur_job_id = 0,
+                job_pids = dict:new()  %% (JobId -> JobPid)
+               }).
 
--record(job, {pid, from, map_fun, reduce_fun}).
+-record(job, {pid,
+              id,
+              from,
+              map_fun,
+              reduce_fun}).
 
 %------------------------------------------------------------------------------
 % API
@@ -20,8 +27,14 @@
 start_link() ->
     gen_server:start_link({global, smr_master}, ?MODULE, [self()], []).
 
-map_reduce(Pid, Map, Reduce, Input) -> 
-    gen_server:call(Pid, {map_reduce, Map, Reduce, Input}, infinity).
+new_job(Pid, Map, Reduce) ->
+    gen_server:call(Pid, {new_job, Map, Reduce}, infinity).
+
+add_input(Pid, JobId, Input) ->
+    gen_server:cast(Pid, {add_input, JobId, Input}).
+
+do_job(Pid, JobId) ->
+    gen_server:call(Pid, {do_job, JobId}, infinity).
 
 %------------------------------------------------------------------------------
 % Internal API
@@ -37,18 +50,34 @@ job_result(Pid, JobPid, Result) ->
 init([Sup]) ->
     {ok, #state{sup = Sup}}.
 
-handle_call({map_reduce, Map, Reduce, Input}, From, 
-            State = #state{sup = Sup, jobs = Jobs}) ->
+handle_call({new_job, Map, Reduce}, _From,
+            State = #state{sup = Sup,
+                           jobs = Jobs,
+                           cur_job_id = JobId,
+                           job_pids = JobPids}) ->
     {ok, JobSup} = smr_job_sup_sup:start_job_sup(smr_sup:job_sup_sup(Sup),
-                                                 self(), Map, Reduce, Input),
+                                                 self(), Map, Reduce),
     JobPid = smr_job_sup:job(JobSup),
     erlang:monitor(process, JobPid),
-    {noreply, State#state{jobs = dict:store(JobPid, #job{pid = JobPid,
-                                                         from = From,
-                                                         map_fun = Map,
-                                                         reduce_fun = Reduce},
-                                            Jobs)}}.
+    NewJobPids = dict:store(JobId, JobPid, JobPids),
+    NewJobs = dict:store(JobPid, #job{pid = JobPid,
+                                      id = JobId,
+                                      map_fun = Map,
+                                      reduce_fun = Reduce}, Jobs),
+    {reply, {ok, JobId}, State#state{jobs = NewJobs,
+                                     job_pids = NewJobPids,
+                                     cur_job_id = JobId + 1}};
+handle_call({do_job, JobId}, From, State = #state{job_pids = JobPids,
+                                                  jobs = Jobs}) ->
+    JobPid = dict:fetch(JobId, JobPids),
+    Job = dict:fetch(JobPid, Jobs),
+    smr_job:start(JobPid),
+    {noreply,
+     State#state{jobs = dict:store(JobPid, Job#job{from = From}, Jobs)}}.
 
+handle_cast({add_input, JobId, Input}, State = #state{job_pids = JobPids}) ->
+    smr_job:add_input(dict:fetch(JobId, JobPids), Input),
+    {noreply, State};
 handle_cast({job_result, JobPid, Result}, State = #state{jobs = Jobs}) ->
     error_logger:info_msg("MapReduce job ~p successfully completed~n",
                           [JobPid]),
@@ -56,8 +85,7 @@ handle_cast({job_result, JobPid, Result}, State = #state{jobs = Jobs}) ->
     {noreply, State}.
 
 handle_info({'DOWN', _, process, Pid, Reason}, State = #state{jobs = Jobs}) ->
-    true = dict:is_key(Pid, Jobs), %% assertion
-    handle_job_exit(Pid, Reason, State).
+    handle_job_exit(Pid, dict:fetch(Pid, Jobs), Reason, State).
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -69,13 +97,13 @@ terminate(_Reason, _State) ->
 % Internal
 %------------------------------------------------------------------------------
 
-handle_job_exit(Pid, Reason, State = #state{jobs = Jobs}) ->
+handle_job_exit(Pid, #job{id = Id, from = From}, Reason,
+                State = #state{jobs = Jobs, job_pids = JobPids}) ->
     case Reason of
-        normal ->
-            ok;
-        _ ->
-            error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
-                                  [Pid, Reason]),
-            gen_server:reply((dict:fetch(Pid, Jobs))#job.from, {error, Reason})
+        normal -> ok;
+        _      -> error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
+                                        [Pid, Reason]),
+                  gen_server:reply(From, {error, Reason})
     end,
-    {noreply, State#state{jobs = dict:erase(Pid, Jobs)}}.
+    {noreply, State#state{jobs     = dict:erase(Pid, Jobs),
+                          job_pids = dict:erase(Id, JobPids)}}.
