@@ -7,12 +7,12 @@
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
--record(state, {phase, % map | reduce
+-record(state, {sup,
+                phase, % map | reduce
                 map_fun,
                 reduce_fun,
                 master,
-                spare_workers = [],
-                ongoing = dict:new(),
+                ongoing = 0,
                 input,
                 result}).
 
@@ -24,8 +24,9 @@
 %------------------------------------------------------------------------------
 
 start_link(Master, MapFun, ReduceFun, Input) ->
-    {ok, Job} =
-        gen_server:start_link(?MODULE, [Master, MapFun, ReduceFun, Input], []),
+    {ok, Job} = gen_server:start_link(?MODULE, [self(), Master, MapFun,
+                                                ReduceFun, Input],
+                                      []),
     gen_server:cast(Job, start),
     error_logger:info_msg("Job ~p started~n", [Job]),
     {ok, Job}.
@@ -37,8 +38,9 @@ result(Job, Worker, Result) ->
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Master, MapFun, ReduceFun, Input]) ->
-    {ok, #state{input = Input,
+init([Sup, Master, MapFun, ReduceFun, Input]) ->
+    {ok, #state{sup = Sup,
+                input = Input,
                 map_fun = MapFun,
                 reduce_fun = ReduceFun,
                 master = Master}}.
@@ -48,11 +50,13 @@ handle_call(_Request, _From, State) ->
 
 handle_cast(start, State) ->
     {noreply, set_phase(map, State)};
-handle_cast({result, Worker, Result}, State0) ->
+handle_cast({result, _, Result}, State0) ->
     State1 = agregate_result(Result, State0),
-    case remove_ongoing(Worker, State1) of
-        {all_finished, State2} -> handle_phase_finished(State2);
-        {ongoing, State3}      -> {noreply, State3}
+    case State1 of
+        #state{ongoing = 1} ->
+            handle_phase_finished(State1#state{ongoing = 0});
+        #state{ongoing = Ongoing} ->
+            {noreply, State1#state{ongoing = Ongoing - 1}}
     end.
 
 handle_info(Msg, State) ->
@@ -78,14 +82,14 @@ handle_phase_finished(State = #state{phase = reduce,
 
 set_phase(map, State = #state{input = Input}) ->
     error_logger:info_msg("Job ~p: map phase started~n", [self()]),
-    send_jobs(Input, State#state{phase = map,
-                                 input = undefined, % free
-                                 result = dict:new()});
+    send_tasks(Input, State#state{phase = map,
+                                  input = undefined, % free
+                                  result = dict:new()});
 set_phase(reduce, State = #state{input = Input}) ->
     error_logger:info_msg("Job ~p: reduce phase started~n", [self()]),
-    send_jobs(Input, State#state{phase = reduce,
-                                 input = undefined, % free
-                                 result = []}).
+    send_tasks(Input, State#state{phase = reduce,
+                                  input = undefined, % free
+                                  result = []}).
 
 agregate_result(Result, State = #state{phase = map, result = Dict}) ->
     State#state{result =
@@ -98,33 +102,18 @@ agregate_result(Result, State = #state{phase = map, result = Dict}) ->
 agregate_result(Result, State = #state{phase = reduce, result = List}) ->
     State#state{result = Result ++ List}.
 
-remove_ongoing(Worker, State = #state{ongoing = Ongoing0}) ->
-    Ongoing1 = dict:update_counter(Worker, -1, Ongoing0),
-    Ongoing2 = case dict:fetch(Worker, Ongoing1) of
-                   0 -> dict:erase(Worker, Ongoing1);
-                   _ -> Ongoing1
-               end,
-    {case dict:size(Ongoing2) of 0 -> all_finished;
-                                 _ -> ongoing
-     end, State#state{ongoing = Ongoing2}}.
-
-send_jobs([], State) ->
+send_tasks([], State) ->
     State;
-send_jobs(Input, State0 = #state{phase = Phase,
+send_tasks(Input, State = #state{sup = Sup,
+                                 phase = Phase,
                                  map_fun = MapFun,
                                  reduce_fun = ReduceFun,
                                  ongoing = Ongoing}) ->
-    {Worker, State1} = spare_worker(State0),
-    {JobInput, RestInput} = lists:split(?MAP_BATCH_SIZE, Input),
-    {JobType, Fun} = case Phase of map    -> {map, MapFun};
-                                   reduce -> {reduce, ReduceFun}
-                     end,
-    smr_worker:do_job(Worker, self(), JobType, Fun, JobInput),
-    send_jobs(RestInput, State1#state{ongoing =
-                             dict:update_counter(Worker, 1, Ongoing)}).
-
-spare_worker(State = #state{spare_workers = [], master = Master}) ->
-    spare_worker(State#state{spare_workers =
-                     smr_master:allocate_workers(Master)});
-spare_worker(State = #state{spare_workers = [Worker | RestWorkers]}) ->
-    {Worker, State#state{spare_workers = RestWorkers}}.
+    {TaskInput, RestInput} = lists:split(?MAP_BATCH_SIZE, Input),
+    {TaskType, Fun} = case Phase of map    -> {map, MapFun};
+                                    reduce -> {reduce, ReduceFun}
+                      end,
+    {ok, _} =
+        smr_task_sup_sup:start_task(smr_job_sup:task_sup_sup(Sup),
+                                    self(), TaskType, Fun, TaskInput),
+    send_tasks(RestInput, State#state{ongoing = Ongoing + 1}).
