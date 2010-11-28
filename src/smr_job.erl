@@ -105,15 +105,15 @@ agregate_result(Result, State = #state{phase = reduce, result = List}) ->
 send_tasks([], State) ->
     State;
 send_tasks(Input, State = #state{sup = Sup,
-                                phase = Phase,
-                                map_fun = MapFun,
-                                reduce_fun = ReduceFun,
-                                ongoing = Ongoing}) ->
+                                 phase = Phase,
+                                 map_fun = MapFun,
+                                 reduce_fun = ReduceFun,
+                                 ongoing = Ongoing}) ->
     {TaskInput, RestInput} = lists:split(?MAP_BATCH_SIZE, Input),
     {TaskType, Fun} = case Phase of map    -> {map, MapFun};
                                     reduce -> {reduce, ReduceFun}
-                     end,
+                      end,
     {ok, _} =
         smr_task_sup_sup:start_task(smr_job_sup:task_sup_sup(Sup),
-                                        self(), TaskType, Fun, TaskInput),
+                                    self(), TaskType, Fun, TaskInput),
     send_tasks(RestInput, State#state{ongoing = Ongoing + 1}).
