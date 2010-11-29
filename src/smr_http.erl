@@ -3,12 +3,7 @@
 
 -export([start/0, get_all_workers/3, get_workers/3, kill_worker/3]).
 
-
-
--record(worker, {node, num_exec, num_failed, num_succ, num_jobs, busy_time, num_map_jobs, num_reduce_jobs, start_time}).
-
-
-
+-include("smr.hrl").
 
 start() ->
     inets:start(),
@@ -69,11 +64,10 @@ kill_worker(SessionId, Env, _Input) ->
 %------------------------------------------------------------------------------
 
 worker_to_json_spec(#worker{node = Node, num_exec = Exec,
-        num_failed = Failed, num_succ = Succ, num_jobs = Jobs, 
-        busy_time = BTime, num_map_jobs = NumMJobs, 
-        num_reduce_jobs = NumRJobs}) ->
+        num_failed = Failed, num_succ = Succ, busy_time = BTime,
+        num_map_tasks = NumMTasks, num_reduce_tasks = NumRTasks}) ->
      % TODO: Add STime to the JSON OBJ.
      {obj, [{node, Node}, {num_exec, Exec}, {num_failed, Failed},
-            {num_succ, Succ}, {num_jobs, Jobs}, {num_map_jobs, NumMJobs},
-            {num_reduce_jobs, NumRJobs}, {busy_time, BTime}]}.
+            {num_succ, Succ}, {num_map_tasks, NumMTasks},
+            {num_reduce_tasks, NumRTasks}, {busy_time, BTime}]}.
 

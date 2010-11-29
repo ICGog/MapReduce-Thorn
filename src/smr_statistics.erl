@@ -3,24 +3,16 @@
 -behaviour(gen_server).
 
 -export([start_link/1, register_worker/2, worker_failed/2,
-         worker_batch_started/6, worker_batch_ended/5, worker_batch_failed/3]).
+         worker_batch_started/5, worker_batch_ended/4, worker_batch_failed/2]).
 
 -export([get_all_workers/1, get_workers/1]).
 
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
--record(state, {workers = dict:new()}).
+-include("smr.hrl").
 
--record(worker, {node, 
-                 num_exec = 0,
-                 num_failed = 0,
-                 num_succ = 0,
-                 num_jobs = 0,
-                 busy_time = 0,
-                 num_map_jobs = 0,
-                 num_reduce_jobs = 0,
-                 start_time = dict:new()}).
+-record(state, {workers = dict:new()}).
 
 %------------------------------------------------------------------------------
 % Query API
@@ -45,15 +37,14 @@ register_worker(Pid, Node) ->
 worker_failed(Pid, Node) ->
     gen_server:cast(Pid, {worker_failed, Node}).
 
-worker_batch_started(Pid, Node, JobType, JobId, Time, BatchSize) ->
-    gen_server:cast(Pid, {batch_started, Node, JobType, JobId, Time, 
-                          BatchSize}).
+worker_batch_started(Pid, Node, JobType, JobId, Time) ->
+    gen_server:cast(Pid, {batch_started, Node, JobType, JobId, Time}).
 
-worker_batch_failed(Pid, Node, BatchSize) ->
-    gen_server:cast(Pid, {batch_failed, Node, BatchSize}).
+worker_batch_failed(Pid, Node) ->
+    gen_server:cast(Pid, {batch_failed, Node}).
 
-worker_batch_ended(Pid, Node, JobId, Time, BatchSize) ->
-    gen_server:cast(Pid, {batch_ended, Node, JobId, Time, BatchSize}).
+worker_batch_ended(Pid, Node, JobId, Time) ->
+    gen_server:cast(Pid, {batch_ended, Node, JobId, Time}).
 
 %------------------------------------------------------------------------------
 % Handlers
@@ -72,48 +63,52 @@ handle_cast({register_worker, Node}, State) ->
 handle_cast({worker_failed, Node},
             State = #state{workers = Workers}) ->
     Worker = #worker{num_failed = Failed,
-                     num_exec = Exec} = dict:fetch(Node, Workers),
+                     num_exec = Exec,
+                     start_time = STime} = dict:fetch(Node, Workers),
+    % TODO: Find a way of updating busy_time.
     {noreply, State#state{
                 workers = dict:store(Node, 
                                      Worker#worker{num_failed = Failed + Exec,
-                                                   num_exec = 0}, 
+                                                   num_exec = 0,
+                                                   start_time = dict:new()},
                                      Workers)}};
-handle_cast({batch_started, Node, JobType, JobId, Time, Size},
+handle_cast({batch_started, Node, JobType, JobId, Time},
             State = #state{workers = Workers}) ->
     Worker = #worker{num_exec = Exec,
-                     num_map_jobs = NumMap,
-                     num_reduce_jobs = NumReduce,
+                     num_map_tasks = NumMap,
+                     num_reduce_tasks = NumReduce,
                      start_time = StartTime} = dict:fetch(Node, Workers),
-    Worker1 = Worker#worker{num_exec = Exec + Size,
+    Worker1 = Worker#worker{num_exec = Exec + 1,
                             start_time = dict:store(JobId, Time, StartTime)},
     NewWorker = case JobType of
-                    map    -> Worker1#worker{num_map_jobs = NumMap};
-                    reduce -> Worker1#worker{num_reduce_jobs = NumReduce}
+                    map    -> Worker1#worker{num_map_tasks = NumMap + 1};
+                    reduce -> Worker1#worker{num_reduce_tasks = NumReduce + 1}
                 end,
     {noreply, State#state{workers = dict:store(Node, NewWorker, Workers)}};
-handle_cast({batch_ended, Node, JobId, Time, Size},
+handle_cast({batch_ended, Node, JobId, Time},
             State = #state{workers = Workers}) ->
     Worker = #worker{num_exec = Exec,
                      num_succ = Succ,
                      start_time = STime,
                      busy_time = BTime} = dict:fetch(Node, Workers),
+    % TODO: Find a way of correctly computing busy_time.
     NewBTime = BTime + Time - dict:fetch(JobId, STime),
     {noreply, State#state{workers = 
                  dict:store(Node,
-                            Worker#worker{num_exec = Exec - Size,
-                                          num_succ = Succ + Size,
+                            Worker#worker{num_exec = Exec - 1,
+                                          num_succ = Succ + 1,
                                           busy_time = NewBTime,
                                           start_time = dict:erase(JobId, 
                                                                   STime)},
                             Workers)}};
-handle_cast({batch_failed, Node, Size},
+handle_cast({batch_failed, Node},
             State = #state{workers = Workers}) ->
     Worker = #worker{num_failed = Failed,
                      num_exec = Exec} = dict:fetch(Node, Workers),
     {noreply, State#state{workers = dict:store(Node,
                                                Worker#worker{
-                                                  num_exec = Exec - Size,
-                                                  num_failed = Failed + Size},
+                                                  num_exec = Exec - 1,
+                                                  num_failed = Failed + 1},
                                                Workers)}}.
 
 handle_info({nodedown, Node}, State = #state{workers = Workers}) ->
