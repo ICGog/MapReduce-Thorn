@@ -9,7 +9,7 @@ Example usage:
 
 make SMR_WORKER_NODES="w1 w2 w3 w4 w5" run
 
-smr:start(),
+smr:start().
 
 [smr:attach_worker_node(list_to_atom(Node ++ "@" ++ net_adm:localhost())) ||
  Node <- ["w1", "w2", "w3", "w4", "w5"]].
@@ -28,7 +28,8 @@ MapFun = fun ({_Name, Document}) ->
 
 ReduceFun = fun ({_Word, CountList}) -> lists:sum(CountList) end.
 
-
-{ok, Result} = smr_master:map_reduce(smr:master(), MapFun, ReduceFun, Input).
+{ok, Id} = smr_master:new_job(smr:master(), MapFun, ReduceFun),
+smr_master:add_input(smr:master(), Id, Input),
+{ok, Result} = smr_master:do_job(smr:master(), Id).
 
 lists:foreach(fun ({Word, Count}) -> io:format("~s -> ~p~n", [Word, Count]) end, Result).
