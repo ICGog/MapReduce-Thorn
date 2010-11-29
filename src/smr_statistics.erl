@@ -5,7 +5,7 @@
 -export([start_link/1, register_worker/2, worker_failed/2,
          worker_batch_started/6, worker_batch_ended/5, worker_batch_failed/3]).
 
--export([get_all_workers/1]).
+-export([get_all_workers/1, get_workers/1]).
 
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
@@ -28,6 +28,9 @@
 
 get_all_workers(Pid) ->
     gen_server:call(Pid, get_all_workers).
+
+get_workers(Pid) ->
+    gen_server:call(Pid, get_workers).
 
 %------------------------------------------------------------------------------
 % Internal API
@@ -60,7 +63,9 @@ init([Nodes]) ->
     {ok, lists:foldl(fun internal_register_worker/2, #state{}, Nodes)}.
 
 handle_call(get_all_workers, _From, State = #state{workers = Workers}) ->
-    {reply, dict:fetch_keys(Workers), State}.
+    {reply, dict:fetch_keys(Workers), State};
+handle_call(get_workers, _From, State = #state{workers = Workers}) ->
+    {reply, dict:to_list(Workers), State}.
 
 handle_cast({register_worker, Node}, State) ->
     {noreply, internal_register_worker(Node, State)};
