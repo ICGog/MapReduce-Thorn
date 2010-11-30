@@ -3,7 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/3, add_input/2, start/1, result/3]).
+-export([start_link/3, add_input/2, start/1, result/3, batch_started/2]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
@@ -16,8 +16,7 @@
                 input = [],
                 result}).
 
--define(MAP_BATCH_SIZE, 1).
--define(REDUCE_BATCH_SIZE, 1).
+-define(BATCH_SIZE, 10).
 
 %------------------------------------------------------------------------------
 % Internal API
@@ -35,6 +34,9 @@ start(Job) ->
 result(Job, Worker, Result) ->
     gen_server:cast(Job, {result, Worker, Result}).
 
+batch_started(Job, WorkerPid) ->
+    gen_server:call(Job, {batch_started, WorkerPid}, infinity).
+
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
@@ -46,8 +48,9 @@ init([Sup, Master, MapFun, ReduceFun]) ->
                 reduce_fun = ReduceFun,
                 master = Master}}.
 
-handle_call(_Request, _From, State) ->
-    {stop, unexpected_call, State}.
+handle_call({batch_started, WorkerPid}, _From, State) ->
+    erlang:monitor(process, WorkerPid),
+    {reply, ok, State}.
 
 handle_cast(start, State) ->
     {noreply, set_phase(map, State)};
@@ -61,8 +64,13 @@ handle_cast({result, _, Result}, State0) ->
                    _                   -> {noreply, State2}
     end.
 
-handle_info(Msg, State) ->
-    {stop, {unexpected_message, Msg}, State}.
+handle_info({'DOWN', _, process, Pid, Reason}, State) ->
+    case Reason of
+        normal -> {noreply, State};
+        _      -> smr_statistics:worker_batch_failed(smr:statistics(),
+                                                     node(Pid)),
+                  {noreply, State}
+    end.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -111,11 +119,26 @@ send_tasks(Input, State = #state{sup = Sup,
                                  map_fun = MapFun,
                                  reduce_fun = ReduceFun,
                                  ongoing = Ongoing}) ->
-    {TaskInput, RestInput} = lists:split(?MAP_BATCH_SIZE, Input),
+    {TaskInput, RestInput} = split_input(?BATCH_SIZE, Input),
     {TaskType, Fun} = case Phase of map    -> {map, MapFun};
                                     reduce -> {reduce, ReduceFun}
                       end,
-    {ok, _} =
-        smr_task_sup_sup:start_task(smr_job_sup:task_sup_sup(Sup),
-                                    self(), TaskType, Fun, TaskInput),
+    JobPid = self(),
+    spawn_link(
+        fun () ->
+                {ok, _} = smr_task_sup_sup:start_task(
+                              smr_job_sup:task_sup_sup(Sup),
+                              JobPid, TaskType, Fun, TaskInput)
+        end),
     send_tasks(RestInput, State#state{ongoing = Ongoing + 1}).
+
+split_input(N, Input) ->
+    split_input(N, Input, []).
+
+split_input(0, Input, Before) ->
+    {Before, Input};
+split_input(_, [], Before) ->
+    {Before, []};
+split_input(N, [KV | RestInput], Before) ->
+    split_input(N - 1, RestInput, [KV | Before]).
+
