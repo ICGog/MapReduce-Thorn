@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 -export([start_link/1, register_worker/2, worker_failed/2,
-         worker_batch_started/5, worker_batch_ended/4, worker_batch_failed/2]).
+         worker_batch_started/3, worker_batch_ended/2, worker_batch_failed/2]).
 
 -export([get_all_workers/1, get_workers/1]).
 
@@ -37,14 +37,14 @@ register_worker(Pid, Node) ->
 worker_failed(Pid, Node) ->
     gen_server:cast(Pid, {worker_failed, Node}).
 
-worker_batch_started(Pid, Node, JobType, JobId, Time) ->
-    gen_server:cast(Pid, {batch_started, Node, JobType, JobId, Time}).
+worker_batch_started(Pid, Node, TaskType) ->
+    gen_server:cast(Pid, {batch_started, Node, TaskType}).
 
 worker_batch_failed(Pid, Node) ->
     gen_server:cast(Pid, {batch_failed, Node}).
 
-worker_batch_ended(Pid, Node, JobId, Time) ->
-    gen_server:cast(Pid, {batch_ended, Node, JobId, Time}).
+worker_batch_ended(Pid, Node) ->
+    gen_server:cast(Pid, {batch_ended, Node}).
 
 %------------------------------------------------------------------------------
 % Handlers
@@ -63,43 +63,34 @@ handle_cast({register_worker, Node}, State) ->
 handle_cast({worker_failed, Node},
             State = #state{workers = Workers}) ->
     Worker = #worker{num_failed = Failed,
-                     num_exec = Exec,
-                     start_time = STime} = dict:fetch(Node, Workers),
+                     num_exec = Exec} = dict:fetch(Node, Workers),
     % TODO: Find a way of updating busy_time.
     {noreply, State#state{
                 workers = dict:store(Node, 
                                      Worker#worker{num_failed = Failed + Exec,
-                                                   num_exec = 0,
-                                                   start_time = dict:new()},
+                                                   num_exec = 0},
                                      Workers)}};
-handle_cast({batch_started, Node, JobType, JobId, Time},
+handle_cast({batch_started, Node, TaskType},
             State = #state{workers = Workers}) ->
     Worker = #worker{num_exec = Exec,
                      num_map_tasks = NumMap,
-                     num_reduce_tasks = NumReduce,
-                     start_time = StartTime} = dict:fetch(Node, Workers),
-    Worker1 = Worker#worker{num_exec = Exec + 1,
-                            start_time = dict:store(JobId, Time, StartTime)},
-    NewWorker = case JobType of
+                     num_reduce_tasks = NumReduce} = dict:fetch(Node, Workers),
+    Worker1 = Worker#worker{num_exec = Exec + 1},
+    NewWorker = case TaskType of
                     map    -> Worker1#worker{num_map_tasks = NumMap + 1};
                     reduce -> Worker1#worker{num_reduce_tasks = NumReduce + 1}
                 end,
     {noreply, State#state{workers = dict:store(Node, NewWorker, Workers)}};
-handle_cast({batch_ended, Node, JobId, Time},
+handle_cast({batch_ended, Node},
             State = #state{workers = Workers}) ->
     Worker = #worker{num_exec = Exec,
                      num_succ = Succ,
-                     start_time = STime,
                      busy_time = BTime} = dict:fetch(Node, Workers),
     % TODO: Find a way of correctly computing busy_time.
-    NewBTime = BTime + Time - dict:fetch(JobId, STime),
     {noreply, State#state{workers = 
                  dict:store(Node,
                             Worker#worker{num_exec = Exec - 1,
-                                          num_succ = Succ + 1,
-                                          busy_time = NewBTime,
-                                          start_time = dict:erase(JobId, 
-                                                                  STime)},
+                                          num_succ = Succ + 1},
                             Workers)}};
 handle_cast({batch_failed, Node},
             State = #state{workers = Workers}) ->
@@ -129,3 +120,4 @@ terminate(_Reason, _State) ->
 internal_register_worker(Node, State = #state{workers = Workers}) ->
     monitor_node(Node, true),
     State#state{workers = dict:store(Node, #worker{node = Node}, Workers)}.
+

@@ -14,10 +14,20 @@ start_link(JobPid, TaskType, TaskFun, Input) ->
 %------------------------------------------------------------------------------
 
 init([JobPid, TaskType, TaskFun, Input]) ->
-    Pid = pool:pspawn(smr_task, TaskType, [self(), JobPid, TaskFun, Input]),
+    Pid = spawn_no_master(JobPid, TaskType, TaskFun, Input),
     link(Pid),
+    %% SEND PID TO JOB.
     Pid ! start,
     {ok, Pid, Pid}.
+
+spawn_no_master(JobPid, TaskType, TaskFun, Input) ->
+    Pid = pool:pspawn(smr_task, TaskType, [self(), JobPid, TaskFun, Input]),
+    Master = node(smr:master()),
+    case node(Pid) of 
+        Master -> terminate(shutdown, Pid),
+                  spawn_no_master(JobPid, TaskType, TaskFun, Input);
+        _      -> Pid
+    end.
 
 terminate(shutdown, Pid) ->
     exit(Pid, kill).
