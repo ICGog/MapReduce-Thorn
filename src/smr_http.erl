@@ -41,7 +41,7 @@ get_all_workers(SessionId, _Env, _Input) ->
     mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(Workers)]).
 
 get_workers(SessionId, _Env, _Input) ->
-    Workers = lists:map(fun({_, Value}) -> worker_to_json_spec(Value) end, 
+    Workers = lists:map(fun({_, Value}) -> worker_to_json_spec(Value) end,
                         smr_statistics:get_workers(smr:statistics())),
     mod_esi:deliver(SessionId, 
                     [rfc4627_header(), rfc4627:encode(Workers)]).
@@ -63,11 +63,12 @@ kill_worker(SessionId, Env, _Input) ->
 % Internal
 %------------------------------------------------------------------------------
 
-worker_to_json_spec(#worker{node = Node, num_exec = Exec,
-        num_failed = Failed, num_succ = Succ, busy_time = BTime,
-        num_map_tasks = NumMTasks, num_reduce_tasks = NumRTasks}) ->
-     % TODO: Add STime to the JSON OBJ.
-     {obj, [{node, Node}, {num_exec, Exec}, {num_failed, Failed},
-            {num_succ, Succ}, {num_map_tasks, NumMTasks},
-            {num_reduce_tasks, NumRTasks}, {busy_time, BTime}]}.
+worker_to_json_spec(Worker) ->
+    record_to_json_spec(Worker, record_info(fields, worker)).
 
+record_to_json_spec(Record, Fields) ->
+     {obj, record_to_map(Record, Fields)}.
+
+record_to_map(Record, Fields) ->
+    [_ | Values] = tuple_to_list(Record),
+    lists:zip(Fields, Values).
