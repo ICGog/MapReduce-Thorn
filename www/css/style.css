@@ -11,16 +11,34 @@ body h1 {
 	font-style: normal;
 }
 
+body a {
+	color: #000000;
+	text-decoration: none;
+
+}
+
+
+/* Column styles */
+
+.main {
+	float:	left;
+	width:	75%;
+}
+
+.menu {
+	width: 25%;
+	float:	right;	
+}
+
+
 /* Header styles */
 
 .header {
 	font-size: 150%;
 	width: 100%;
-	height: 20%;
 }
 
-.header #page_title {
-	float: left;
+.header #page_title {	
 	width: 60%;
 }
 
@@ -37,6 +55,13 @@ body h1 {
 	margin-left: 5px;
 }
 
+.job {
+	width: 80%;
+	border: 1px solid #666;
+	margin-left: 10px;
+	padding: 5px;
+}
+
 
 /* Node styles */
 
@@ -48,6 +73,7 @@ body h1 {
 	 width: 80%; 
 	 border: 1px solid #666;
 	 margin: 10px;  
+	 padding: 5px;
 	 float: left;
 }
 
@@ -87,9 +113,7 @@ body h1 {
 
 /* Footer styles */ 
 
-.footer {
-	position: fixed;
-	bottom: 10px;
+.footer {	
 	color: #AAAAAA;
 	font-size: 75%;		
 }
@@ -101,3 +125,17 @@ body h1 {
 .footer #framework_version {
 	margin-left: 1em;	
 }
+
+/* Other style */
+.invisible {
+	display: none;
+}
+
+.button {
+	cursor:pointer;cursor:hand;
+}
+
+.expander {
+	cursor:pointer;cursor:hand;
+}
+

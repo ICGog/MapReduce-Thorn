@@ -1,28 +1,127 @@
 /* This script updates the presented data */
 
+var doUpdate = true;
+var updateTimeout;
+
 function initialize()
 {	
-	$("#framework_name").append(" 0.1");		
-	$("#logo").click( function()	  {
-		  	$("img").fadeTo("slow",0);	
-	  });  	
-  
+	$("#framework_name").append(" 0.1");			  
+	
+	$("#expand_jobs").click(function() 
+	{
+		$('.foldable').next().toggle('fast');				
+	});
+	
+	$(".expander").click(function() 
+	{
+		$(this).next().toggle('fast');				
+	});
+	
+	
+	$("#update_toggle").click(function() 
+	{
+		doUpdate = !doUpdate;
+		if(doUpdate)		
+		{			
+			$("#update_toggle").text("[Disable Updates]");
+			update();
+		} 
+		else 
+		{			
+			$("#update_toggle").text("[Enable Updates]");
+			clearTimeout(updateTimeout);		
+		}
+	});
+	
+	$( "#dialog-confirm" ).dialog({
+			autoOpen: false,
+			resizable: false,
+			height:200,
+			width: 400,
+			modal: true,
+			buttons: {
+				"Kill, please": function() {
+					$( this ).dialog( "close" );
+				},
+				"No, thanks": function() {
+					$( this ).dialog( "close" );
+				}
+			}
+	});
+	
+	
+	
 	update();	
 }
 
 function update()
 {
-		var ns = getNodes();
-		var js = getJobs();
+		ns = getNodes();
+		js = getJobs();
+		
+	$(".joblist").empty();
+		
+	if(!js.length)
+		$(".joblist")
+		.append($("<div/>").text("No running jobs"));
+		
+	for(var j in js) 
+	{
+		jobname = js[j].name;
+		owner = js[j].owner;
+		id = j + jobname;
+		
+		
+		innerHTML = "<div class=\"foldable\"><b>" + jobname + "</b> : " + js[j].completed + "% complete";
+		innerHTML += "<div class=\"progressbar\">" + js[j].completed + "</div></div>";
+		innerHTML += "<div>";
+		innerHTML += "<div>Owner: <b>" + owner + "</b></div>";	
+		innerHTML += "<div class=\"button\" id=\"M" + id + "\">[View map code]</div>";
+		innerHTML += "<div class=\"button\" id=\"R" + id + "\">[View reduce code]</div>";
+		innerHTML += "<div class=\"button\" id=\"K" + id + "\">[Kill job]</div>";	
+		innerHTML += "</div>";	
 	
-	   $(".nodelist").empty();
+	 	$(".joblist")
+        .append(
+           $("<div/>").addClass("job").attr("id", "acc")
+        .append($("<div/>").html(innerHTML)));      
+        
+      	$('#M' + id).click(function() 
+      	{      	 
+		 $(this).append($("<div/>").load("\ #map_code")).show();			 	 
+		 return false;		
+		});
+		
+		$('#R' + id).click(function() 
+		{		 
+		 $(this).append($("<div/>").load("\ #reduce_code"));			 	 
+		 return false;		
+		});
+		
+		$('#K' + id).click(function() 
+		{			
+			killJob(jobname);
+		});
+        
+	} 
+	
+	//START Foreign code
+	$('.progressbar').each(function() 
+	{
+             var value = parseInt($(this).text());
+            $(this).empty().progressbar({value: value});
+    }); 
+    //END Foreign code
+		
+ 	$(".nodelist").empty();
 	   
-	   if(!ns.length)
-   	$(".nodelist")
-   	.append($("<div/>").text("No nodes available"));
+   	if(!ns.length)
+   		$(".nodelist")
+   		.append($("<div/>").text("No workers available"));
    
 	  
-	for(var n in ns) {
+	for(var n in ns) 
+	{
 		        
         $(".nodelist")
         .append($("<div/>").addClass("node")
@@ -35,5 +134,19 @@ function update()
 	} 		
 	
 	
-	setTimeout("update()", 5000);
+	$('.foldable').click(function() 
+	{
+		$(this).next().toggle('fast');
+		return false;
+	}).next().hide();
+	
+	if(doUpdate)
+	{
+	  updateTimeout = setTimeout("update()", 20000);
+	}	
+}
+
+function killJob(jobname) {
+	$( "#dialog-confirm" ).text("Are you sure you want to kill " + jobname + "?");
+	$("#dialog-confirm").dialog('open');		
 }
