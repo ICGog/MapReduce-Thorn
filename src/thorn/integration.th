@@ -1,2 +1,23 @@
 import MAPREDUCE.*;
-println(doubleNum("AA"));
+//import thorn.runtime.compiler.*;
+
+[m, r, c, p] = argv(); // this is how you get args from command line
+
+//var a := "abc";
+//var b := 10;
+//lst = %[ch | for ch <- "abc"];
+//println("abc"(0));
+//println("abc");
+//lst = %[];
+//println(lst);
+//println(mapreduce(m.file().contents(),r.file().contents(),[b].asBytes(),"cookieeeeee","peer"));
+//println(mapreduce(m,r,a,c,p));
+var strlist := [["A",10],["B",90],["C",100]];
+
+sendStringToErlang(m.file().contents(),r.file().contents(),strlist,3,"cookie","gigi@vector43");
+
+println(getStringFromErlang("cookie","gigi@vector43"));
+
+sendBytesToErlang(m.file().contents(),r.file().contents(),[[[100].asBytes(),[10].asBytes()]],"cookie","gigi@vector43");
+
+println(getBytesFromErlang([],"cookie","gigi@vector43"));
