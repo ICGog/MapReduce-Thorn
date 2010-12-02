@@ -3,7 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/0, new_job/3, add_input/3, do_job/2]).
+-export([start_link/0, new_job/3, new_job/5, add_input/3, do_job/2]).
 -export([job_result/3]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
@@ -20,6 +20,8 @@
               map_fun,
               reduce_fun}).
 
+-define(DEFAULT_BATCH_SIZE, 10).
+
 %------------------------------------------------------------------------------
 % API
 %------------------------------------------------------------------------------
@@ -28,7 +30,11 @@ start_link() ->
     gen_server:start_link({global, smr_master}, ?MODULE, [self()], []).
 
 new_job(Pid, Map, Reduce) ->
-    gen_server:call(Pid, {new_job, Map, Reduce}, infinity).
+    new_job(Pid, Map, Reduce, ?DEFAULT_BATCH_SIZE, ?DEFAULT_BATCH_SIZE).
+
+new_job(Pid, Map, Reduce, MapBatchSize, ReduceBatchSize) ->
+    gen_server:call(Pid, {new_job, Map, Reduce, MapBatchSize, ReduceBatchSize},
+                    infinity).
 
 add_input(Pid, JobId, Input) ->
     gen_server:cast(Pid, {add_input, JobId, Input}).
@@ -50,13 +56,14 @@ job_result(Pid, JobPid, Result) ->
 init([Sup]) ->
     {ok, #state{sup = Sup}}.
 
-handle_call({new_job, Map, Reduce}, _From,
+handle_call({new_job, Map, Reduce, MapBatchSize, ReduceBatchSize}, _From,
             State = #state{sup = Sup,
                            jobs = Jobs,
                            cur_job_id = JobId,
                            job_pids = JobPids}) ->
     {ok, JobSup} = smr_job_sup_sup:start_job_sup(smr_sup:job_sup_sup(Sup),
-                                                 self(), Map, Reduce),
+                                                 self(), Map, Reduce,
+                                                 MapBatchSize, ReduceBatchSize),
     JobPid = smr_job_sup:job(JobSup),
     erlang:monitor(process, JobPid),
     NewJobPids = dict:store(JobId, JobPid, JobPids),

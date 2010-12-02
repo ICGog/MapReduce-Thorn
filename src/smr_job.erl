@@ -3,7 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/3, add_input/2, start/1, result/3, batch_started/2]).
+-export([start_link/5, add_input/2, start/1, result/3, batch_started/2]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
@@ -14,16 +14,17 @@
                 master,
                 ongoing = 0,
                 input = [],
-                result}).
-
--define(BATCH_SIZE, 10).
+                result,
+                map_batch_size,
+                reduce_batch_size}).
 
 %------------------------------------------------------------------------------
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link(Master, MapFun, ReduceFun) ->
-    gen_server:start_link(?MODULE, [self(), Master, MapFun, ReduceFun], []).
+start_link(Master, MapFun, ReduceFun, MapBatchSize, ReduceBatchSize) ->
+    gen_server:start_link(?MODULE, [self(), Master, MapFun, ReduceFun,
+                                    MapBatchSize, ReduceBatchSize], []).
 
 add_input(Job, Input) ->
     gen_server:cast(Job, {add_input, Input}).
@@ -41,12 +42,14 @@ batch_started(Job, WorkerPid) ->
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Sup, Master, MapFun, ReduceFun]) ->
+init([Sup, Master, MapFun, ReduceFun, MapBatchSize, ReduceBatchSize]) ->
     error_logger:info_msg("Job ~p created~n", [self()]),
     {ok, #state{sup = Sup,
                 map_fun = MapFun,
                 reduce_fun = ReduceFun,
-                master = Master}}.
+                master = Master,
+                map_batch_size = MapBatchSize,
+                reduce_batch_size = ReduceBatchSize}}.
 
 handle_call({batch_started, WorkerPid}, _From, State) ->
     erlang:monitor(process, WorkerPid),
@@ -104,10 +107,8 @@ set_phase(reduce, State = #state{input = Input}) ->
 agregate_result(Result, State = #state{phase = map, result = Dict}) ->
     State#state{result =
         lists:foldl(fun ({K, V}, DictAcc) ->
-                            case dict:is_key(K, DictAcc) of
-                                true  -> dict:append(K, V, DictAcc);
-                                false -> dict:store(K, [V], DictAcc)
-                            end
+                            dict:update(K, fun (Old) -> [V | Old] end, [V],
+                                        DictAcc)
                     end, Dict, Result)};
 agregate_result(Result, State = #state{phase = reduce, result = List}) ->
     State#state{result = Result ++ List}.
@@ -118,8 +119,12 @@ send_tasks(Input, State = #state{sup = Sup,
                                  phase = Phase,
                                  map_fun = MapFun,
                                  reduce_fun = ReduceFun,
-                                 ongoing = Ongoing}) ->
-    {TaskInput, RestInput} = split_input(?BATCH_SIZE, Input),
+                                 ongoing = Ongoing,
+                                 map_batch_size = MBS,
+                                 reduce_batch_size = RBS}) ->
+    {TaskInput, RestInput} = split_input(case Phase of map    -> MBS;
+                                                       reduce -> RBS
+                                         end, Input),
     {TaskType, Fun} = case Phase of map    -> {map, MapFun};
                                     reduce -> {reduce, ReduceFun}
                       end,
@@ -141,4 +146,3 @@ split_input(_, [], Before) ->
     {Before, []};
 split_input(N, [KV | RestInput], Before) ->
     split_input(N - 1, RestInput, [KV | Before]).
-

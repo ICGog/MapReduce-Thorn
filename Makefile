@@ -33,6 +33,7 @@ TEST_TARGETS=$(patsubst $(TEST_DIR)/%.erl, $(TEST_DIR)/%.beam, $(TEST_SOURCES))
 
 ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall -v +debug_info
 ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE)
+WORKER_ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR)
 
 all: compile
 
@@ -43,7 +44,7 @@ compile_tests: $(TEST_TARGETS)
 run: $(TARGETS) $(ERL_HOSTS)
 	$(MAKE) start_worker_nodes
 	mkdir -p $(LOG_DIR)
-	TH="$(TH)" erl $(ERL_OPTS)
+	WORKER_ERL_OPTS="$(WORKER_ERL_OPTS)" TH="$(TH)" erl $(ERL_OPTS)
 	$(MAKE) stop_worker_nodes
 
 run_th:
