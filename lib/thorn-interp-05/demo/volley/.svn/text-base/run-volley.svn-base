@@ -1,0 +1,2 @@
+source ~/.bashrc
+th -s volley.th

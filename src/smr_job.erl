@@ -3,60 +3,74 @@
 
 -behavior(gen_server).
 
--export([start_link/4, result/3]).
+-export([start_link/3, add_input/2, start/1, result/3, batch_started/2]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
--record(state, {phase, % map | reduce
+-record(state, {sup,
+                phase = input, % input | map | reduce
                 map_fun,
                 reduce_fun,
                 master,
-                spare_workers = [],
-                ongoing = dict:new(),
-                input,
+                ongoing = 0,
+                input = [],
                 result}).
 
--define(MAP_BATCH_SIZE, 1).
--define(REDUCE_BATCH_SIZE, 1).
+-define(BATCH_SIZE, 10).
 
 %------------------------------------------------------------------------------
-% API
+% Internal API
 %------------------------------------------------------------------------------
 
-start_link(Master, MapFun, ReduceFun, Input) ->
-    {ok, Job} =
-        gen_server:start_link(?MODULE, [Master, MapFun, ReduceFun, Input], []),
-    error_logger:info_msg("Job ~p started~n", [Job]),
-    gen_server:cast(Job, start),
-    {ok, Job}.
+start_link(Master, MapFun, ReduceFun) ->
+    gen_server:start_link(?MODULE, [self(), Master, MapFun, ReduceFun], []).
+
+add_input(Job, Input) ->
+    gen_server:cast(Job, {add_input, Input}).
+
+start(Job) ->
+    gen_server:cast(Job, start).
 
 result(Job, Worker, Result) ->
     gen_server:cast(Job, {result, Worker, Result}).
+
+batch_started(Job, WorkerPid) ->
+    gen_server:call(Job, {batch_started, WorkerPid}, infinity).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Master, MapFun, ReduceFun, Input]) ->
-    {ok, #state{input = Input,
+init([Sup, Master, MapFun, ReduceFun]) ->
+    error_logger:info_msg("Job ~p created~n", [self()]),
+    {ok, #state{sup = Sup,
                 map_fun = MapFun,
                 reduce_fun = ReduceFun,
                 master = Master}}.
 
-handle_call(_Request, _From, State) ->
-    {stop, unexpected_call, State}.
+handle_call({batch_started, WorkerPid}, _From, State) ->
+    erlang:monitor(process, WorkerPid),
+    {reply, ok, State}.
 
 handle_cast(start, State) ->
     {noreply, set_phase(map, State)};
-handle_cast({result, Worker, Result}, State0) ->
-    State1 = agregate_result(Result, State0),
-    case remove_ongoing(Worker, State1) of
-        {all_finished, State2} -> handle_phase_finished(State2);
-        {ongoing, State3}      -> {noreply, State3}
+handle_cast({add_input, NewInput}, State = #state{phase = input,
+                                                  input = CurInput}) ->
+    {noreply, State#state{input = NewInput ++ CurInput}};
+handle_cast({result, _, Result}, State0) ->
+    State1 = #state{ongoing = Ongoing} = agregate_result(Result, State0),
+    State2 = State1#state{ongoing = Ongoing - 1},
+    case State2 of #state{ongoing = 0} -> handle_phase_finished(State2);
+                   _                   -> {noreply, State2}
     end.
 
-handle_info(Msg, State) ->
-    {stop, {unexpected_message, Msg}, State}.
+handle_info({'DOWN', _, process, Pid, Reason}, State) ->
+    case Reason of
+        normal -> {noreply, State};
+        _      -> smr_statistics:worker_batch_failed(smr:statistics(),
+                                                     node(Pid)),
+                  {noreply, State}
+    end.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -78,14 +92,14 @@ handle_phase_finished(State = #state{phase = reduce,
 
 set_phase(map, State = #state{input = Input}) ->
     error_logger:info_msg("Job ~p: map phase started~n", [self()]),
-    send_jobs(Input, State#state{phase = map,
-                                 input = undefined, % free
-                                 result = dict:new()});
+    send_tasks(Input, State#state{phase = map,
+                                  input = undefined, % free
+                                  result = dict:new()});
 set_phase(reduce, State = #state{input = Input}) ->
     error_logger:info_msg("Job ~p: reduce phase started~n", [self()]),
-    send_jobs(Input, State#state{phase = reduce,
-                                 input = undefined, % free
-                                 result = []}).
+    send_tasks(Input, State#state{phase = reduce,
+                                  input = undefined, % free
+                                  result = []}).
 
 agregate_result(Result, State = #state{phase = map, result = Dict}) ->
     State#state{result =
@@ -98,34 +112,33 @@ agregate_result(Result, State = #state{phase = map, result = Dict}) ->
 agregate_result(Result, State = #state{phase = reduce, result = List}) ->
     State#state{result = Result ++ List}.
 
-remove_ongoing(Worker, State = #state{ongoing = Ongoing0}) ->
-    Ongoing1 = dict:update_counter(Worker, -1, Ongoing0),
-    Ongoing2 = case dict:fetch(Worker, Ongoing1) of
-                   0 -> dict:erase(Worker, Ongoing1);
-                   _ -> Ongoing1
-               end,
-    {case dict:size(Ongoing2) of 0 -> all_finished;
-                                 _ -> ongoing
-     end, State#state{ongoing = Ongoing2}}.
-
-send_jobs([], State) ->
+send_tasks([], State) ->
     State;
-send_jobs(Input, State0 = #state{phase = Phase,
+send_tasks(Input, State = #state{sup = Sup,
+                                 phase = Phase,
                                  map_fun = MapFun,
                                  reduce_fun = ReduceFun,
                                  ongoing = Ongoing}) ->
-    {Worker, State1} = spare_worker(State0),
-    {JobInput, RestInput} = lists:split(?MAP_BATCH_SIZE, Input),
-    {JobType, Fun} = case Phase of map    -> {map, MapFun};
-                                   reduce -> {reduce, ReduceFun}
-                     end,
-    smr_worker:do_job(Worker, self(), JobType, Fun, JobInput),
-    send_jobs(RestInput, State1#state{ongoing =
-                             dict:update_counter(Worker, 1, Ongoing)}).
+    {TaskInput, RestInput} = split_input(?BATCH_SIZE, Input),
+    {TaskType, Fun} = case Phase of map    -> {map, MapFun};
+                                    reduce -> {reduce, ReduceFun}
+                      end,
+    JobPid = self(),
+    spawn_link(
+        fun () ->
+                {ok, _} = smr_task_sup_sup:start_task(
+                              smr_job_sup:task_sup_sup(Sup),
+                              JobPid, TaskType, Fun, TaskInput)
+        end),
+    send_tasks(RestInput, State#state{ongoing = Ongoing + 1}).
 
-spare_worker(State = #state{spare_workers = [], master = Master}) ->
-    spare_worker(State#state{spare_workers =
-                     smr_master:allocate_workers(Master)});
-spare_worker(State = #state{spare_workers = [Worker | RestWorkers]}) ->
-    {Worker, State#state{spare_workers = RestWorkers}}.
+split_input(N, Input) ->
+    split_input(N, Input, []).
+
+split_input(0, Input, Before) ->
+    {Before, Input};
+split_input(_, [], Before) ->
+    {Before, []};
+split_input(N, [KV | RestInput], Before) ->
+    split_input(N - 1, RestInput, [KV | Before]).
 

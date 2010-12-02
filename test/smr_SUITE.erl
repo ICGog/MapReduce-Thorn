@@ -30,56 +30,62 @@ whole_system_2_test() ->
          [{keys, 40 * 50 * 51 div 2}, {values, 50 * 40 * 41 div 2}]}).
 
 basic_whole_system(TestSuite) ->
-    {ok, Master} = smr_master:start_link(false),
-    Host = get_host(),
-    [ok, ok, ok, ok, ok] =
-        [smr_master:spawn_worker(Master, list_to_atom(Node ++ "@" ++ Host))
-         || Node <- ["test_w1", "test_w2", "test_w3", "test_w4", "test_w5"]],
-    whole_system(TestSuite, Master),
-    teardown(Master).
+    smr:start(),
+    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+    whole_system(TestSuite),
+    smr:stop().
 
 statistics_get_all_workers_test() ->
-    {ok, Master} = smr_master:start_link(false),
-    Statistics = global:whereis_name(smr_statistics),
-    Host = get_host(),
+    smr:start(),
+    [Worker1, Worker2] = start_test_slaves([test_w1, test_w3]),
+    Statistics = smr:statistics(),
+
     ?assertMatch([], smr_statistics:get_all_workers(Statistics)),
-    Worker1 = list_to_atom("test_w1@" ++ Host),
-    ok = smr_master:spawn_worker(Master, Worker1),
+
+    attached = smr:attach_worker_node(Worker1),
     timer:sleep(20), %% Wait to propagate to statistics
     ?assertMatch([Worker1], smr_statistics:get_all_workers(Statistics)),
-    Worker2 = list_to_atom("test_w3@" ++ Host),
-    ok = smr_master:spawn_worker(Master, Worker2),
+
+    attached = smr:attach_worker_node(Worker2),
     timer:sleep(20), %% Wait to propagate to statistics
     ExpectedW12 = lists:sort([Worker1, Worker2]),
     ResultW12 = lists:sort(smr_statistics:get_all_workers(Statistics)),
     ?assertMatch(ExpectedW12, ResultW12),
-    ok = smr_master:shutdown_worker(Master, Worker1),
+
+    killed = smr:kill_worker_node(Worker1),
     timer:sleep(20), %% Wait to propagate to statistics
     ?assertMatch([Worker2], smr_statistics:get_all_workers(Statistics)),
-    teardown(Master).
+    
+    smr:stop().
 
-get_host() ->
-    [_ , Host] = string:tokens(atom_to_list(node()), "@"),
-    Host.
-
-teardown(Master) ->
-    process_flag(trap_exit, true),
-    smr_master:shutdown(Master),
-    %% TODO: The need for the exit call will be fixed when moving to proper
-    %%       Erlang supervision
-    timer:sleep(20),
-    exit(global:whereis_name(smr_statistics), kill),
-    receive {'EXIT', Master, normal} -> ok
-    after 1000 -> exit(expected_to_exit)
-    end.
-
-whole_system({MapFun, ReduceFun, Input, ExpectedResult}, Master) ->
-    {ok, Result} = smr_master:map_reduce(Master, MapFun, ReduceFun, Input),
+whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
+    Master = smr:master(),
+    {ok, JobId} = smr_master:new_job(Master, MapFun, ReduceFun),
+    smr_master:add_input(Master, JobId, Input),
+    {ok, Result} = smr_master:do_job(Master, JobId),
+    
     ExpectedLength = length(ExpectedResult),
     ?assertMatch(ExpectedLength, length(Result)),
+
     SortedResult = orddict:to_list(orddict:from_list(Result)),
     ?assertMatch(ExpectedLength, length(SortedResult)),
+
     SortedExpected = orddict:to_list(orddict:from_list(ExpectedResult)),
     ?assertMatch(ExpectedLength, length(ExpectedResult)),
+
     lists:zipwith(fun (E, R) -> ?assertMatch(E, R) end,
                   SortedExpected, SortedResult).
+
+start_test_slaves(Names) ->
+    lists:map(fun (Name) -> {ok, Node} = slave:start(
+                                net_adm:localhost(),
+                                Name,
+                                os:getenv("WORKER_ERL_OPTS")),
+                            Node
+              end, Names).
+
+start_and_add_test_slaves(Names) ->
+    Nodes = start_test_slaves(Names),
+    lists:foreach(fun (Node) -> attached = smr:attach_worker_node(Node) end,
+                  Nodes),
+    Nodes.

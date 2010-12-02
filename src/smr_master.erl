@@ -3,47 +3,38 @@
 
 -behavior(gen_server).
 
--export([start_link/1, spawn_worker/2, shutdown_worker/2, get_worker_nodes/1,
-         get_worker_pids/1, map_reduce/4, shutdown/1]).
--export([job_result/3, allocate_workers/1]).
+-export([start_link/0, new_job/3, add_input/3, do_job/2]).
+-export([job_result/3]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
--record(state, {parent,
-                workers = dict:new(),
-                jobs = dict:new(),
-                workers_pid = dict:new(),
-                stats_pid}).
+-record(state, {sup,
+                jobs = dict:new(),    %% (JobPid -> #job{})
+                cur_job_id = 0,
+                job_pids = dict:new()  %% (JobId -> JobPid)
+               }).
 
--record(worker, {node, pid}).
-
--record(job, {pid, from, map_fun, reduce_fun, input}).
-
--define(MIN_BACKOFF_MS, 64).
--define(MAX_BACKOFF_MS, 32768).
+-record(job, {pid,
+              id,
+              from,
+              map_fun,
+              reduce_fun}).
 
 %------------------------------------------------------------------------------
 % API
 %------------------------------------------------------------------------------
 
-start_link(EnableWebsite) ->
-    gen_server:start_link(?MODULE, [self(), EnableWebsite], []).
+start_link() ->
+    gen_server:start_link({global, smr_master}, ?MODULE, [self()], []).
 
-spawn_worker(Pid, Node) -> 
-    gen_server:call(Pid, {spawn_worker, Node}, infinity).
+new_job(Pid, Map, Reduce) ->
+    gen_server:call(Pid, {new_job, Map, Reduce}, infinity).
 
-shutdown_worker(Pid, Node) -> 
-    gen_server:call(Pid, {shutdown_worker, Node}, infinity).
+add_input(Pid, JobId, Input) ->
+    gen_server:cast(Pid, {add_input, JobId, Input}).
 
-get_worker_nodes(Pid) -> gen_server:call(Pid, get_worker_nodes, infinity).
-
-get_worker_pids(Pid) -> gen_server:call(Pid, get_worker_pids, infinity).
-
-map_reduce(Pid, Map, Reduce, Input) -> 
-    gen_server:call(Pid, {map_reduce, Map, Reduce, Input}, infinity).
-
-shutdown(Pid) ->
-    gen_server:cast(Pid, shutdown).
+do_job(Pid, JobId) ->
+    gen_server:call(Pid, {do_job, JobId}, infinity).
 
 %------------------------------------------------------------------------------
 % Internal API
@@ -52,84 +43,49 @@ shutdown(Pid) ->
 job_result(Pid, JobPid, Result) ->
     gen_server:cast(Pid, {job_result, JobPid, Result}).
 
-allocate_workers(Pid) ->
-    gen_server:call(Pid, allocate_workers, infinity).
-
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Parent, EnableWebsite]) ->
-    process_flag(trap_exit, true),
-    {ok, StatsPid} = smr_statistics:start_link(EnableWebsite),
-    {ok, #state{parent = Parent, stats_pid = StatsPid}}.
+init([Sup]) ->
+    {ok, #state{sup = Sup}}.
 
-handle_call({spawn_worker, Node}, _From,
-            State = #state{workers = Workers, stats_pid = StatsPid}) ->
-    case dict:find(Node, Workers) of
-        {ok, _Val} -> {reply, {error, already_registered}, State};
-        error      -> smr_statistics:register_worker(StatsPid, Node),
-                      {reply, ok, restart_worker(Node, State)}
-    end;
+handle_call({new_job, Map, Reduce}, _From,
+            State = #state{sup = Sup,
+                           jobs = Jobs,
+                           cur_job_id = JobId,
+                           job_pids = JobPids}) ->
+    {ok, JobSup} = smr_job_sup_sup:start_job_sup(smr_sup:job_sup_sup(Sup),
+                                                 self(), Map, Reduce),
+    JobPid = smr_job_sup:job(JobSup),
+    erlang:monitor(process, JobPid),
+    NewJobPids = dict:store(JobId, JobPid, JobPids),
+    NewJobs = dict:store(JobPid, #job{pid = JobPid,
+                                      id = JobId,
+                                      map_fun = Map,
+                                      reduce_fun = Reduce}, Jobs),
+    {reply, {ok, JobId}, State#state{jobs = NewJobs,
+                                     job_pids = NewJobPids,
+                                     cur_job_id = JobId + 1}};
+handle_call({do_job, JobId}, From, State = #state{job_pids = JobPids,
+                                                  jobs = Jobs}) ->
+    JobPid = dict:fetch(JobId, JobPids),
+    Job = dict:fetch(JobPid, Jobs),
+    smr_job:start(JobPid),
+    {noreply,
+     State#state{jobs = dict:store(JobPid, Job#job{from = From}, Jobs)}}.
 
-handle_call({shutdown_worker, Node}, _From,
-            State = #state{workers = Workers}) ->
-    case dict:find(Node, Workers) of
-        {ok, #worker{pid = Pid}} -> smr_worker:shutdown(Pid),
-                                    {reply, ok, State};
-        error ->                    {reply, {error, not_registered}, State}
-    end;
-
-handle_call(get_worker_nodes, _From, State) ->
-    {reply, dict:fetch_keys(State#state.workers), State};
-
-handle_call(get_worker_pids, _From, State) ->
-    {reply, dict:fetch_keys(State#state.workers_pid), State};
-
-handle_call(allocate_workers, _From, State = #state{workers = Workers}) ->
-    {reply, dict:fold(fun (_, #worker{pid = Pid}, Acc) -> [Pid | Acc] end,
-                      [], Workers),
-     State};
-
-handle_call({map_reduce, Map, Reduce, Input}, From, 
-            State = #state{jobs = Jobs}) ->
-    {ok, JobPid} = smr_job:start_link(self(), Map, Reduce, Input),
-    {noreply, State#state{jobs = dict:store(JobPid, #job{pid = JobPid,
-                                                         from = From,
-                                                         map_fun = Map,
-                                                         reduce_fun = Reduce,
-                                                         input = Input},
-                                            Jobs)}}.
-
+handle_cast({add_input, JobId, Input}, State = #state{job_pids = JobPids}) ->
+    smr_job:add_input(dict:fetch(JobId, JobPids), Input),
+    {noreply, State};
 handle_cast({job_result, JobPid, Result}, State = #state{jobs = Jobs}) ->
     error_logger:info_msg("MapReduce job ~p successfully completed~n",
                           [JobPid]),
     gen_server:reply((dict:fetch(JobPid, Jobs))#job.from, {ok, Result}),
-    {noreply, State};
+    {noreply, State}.
 
-handle_cast(shutdown, State) ->
-    {stop, normal, State}.
-
-handle_info({restart_worker, Node, Backoff},
-            State = #state{workers = Workers}) ->
-    case Backoff =< ?MAX_BACKOFF_MS of
-        true  -> {noreply, restart_worker(Node, 2 * Backoff, State)};
-        false -> error_logger:info_msg("Reached maximum restart backoff time "
-                                       "for worker ~p~n", [Node]),
-                 {noreply, State#state{workers = dict:erase(Node, Workers)}}
-    end;
-
-handle_info({'EXIT', Pid, Reason}, State = #state{workers_pid = WorkersPid,
-                                                  jobs = Jobs}) ->
-    case {dict:find(Pid, WorkersPid), dict:is_key(Pid, Jobs)} of
-        {{ok, WorkerNode}, false} -> handle_worker_exit(Pid, WorkerNode, Reason,
-                                                        State);
-        {error, true}             -> handle_job_exit(Pid, Reason, State);
-        {error, false}            -> handle_other_exit(Pid, Reason, State)
-    end;
-
-handle_info(Msg, State) ->
-    {stop, {unexpected_message, Msg}, State}.
+handle_info({'DOWN', _, process, Pid, Reason}, State = #state{jobs = Jobs}) ->
+    handle_job_exit(Pid, dict:fetch(Pid, Jobs), Reason, State).
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -141,57 +97,13 @@ terminate(_Reason, _State) ->
 % Internal
 %------------------------------------------------------------------------------
 
-handle_worker_exit(Pid, Node, normal,
-                   State = #state{stats_pid = Stats,
-                                  workers = Workers,
-                                  workers_pid = WorkersPid}) ->
-    error_logger:info_msg("Worker ~p shutdown successfully~n", [Node]),
-    smr_statistics:unregister_worker(Stats, Node),
-    {noreply, State#state{workers = dict:erase(Node, Workers),
-                          workers_pid = dict:erase(Pid, WorkersPid)}};
-handle_worker_exit(Pid, Node, _Reason,
-                   State = #state{workers_pid = WorkersPid}) ->
-    error_logger:info_msg("Worker ~p crashed~n", [Node]),
-    {noreply,
-     restart_worker(Node,
-                    State#state{workers_pid = dict:erase(Pid, WorkersPid)})}.
-
-handle_job_exit(Pid, Reason, State = #state{jobs = Jobs}) ->
+handle_job_exit(Pid, #job{id = Id, from = From}, Reason,
+                State = #state{jobs = Jobs, job_pids = JobPids}) ->
     case Reason of
-        normal ->
-            ok;
-        _ ->
-            error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
-                                  [Pid, Reason]),
-            gen_server:reply((dict:fetch(id, Jobs))#job.from, {error, Reason})
+        normal -> ok;
+        _      -> error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
+                                        [Pid, Reason]),
+                  gen_server:reply(From, {error, Reason})
     end,
-    {noreply, State#state{jobs = dict:erase(Pid, Jobs)}}.
-
-handle_other_exit(Parent, Reason, State = #state{parent = Parent}) ->
-    case Reason of normal   -> {stop, normal, State};
-                   shutdown -> {stop, normal, State};
-                   _        -> {stop, {parent_died, Reason}, State}
-    end.
-
-restart_worker(Node, State) ->
-    restart_worker(Node, ?MIN_BACKOFF_MS, State).
-
-restart_worker(Node, BackOff, State = #state{workers = Workers,
-                                             workers_pid = WorkersPid}) ->
-    error_logger:info_msg("Starting worker ~p~n", [Node]),
-    case smr_worker:start_link(Node) of
-        {ok, Pid} ->
-            error_logger:info_msg("Worker ~p started~n", [Node]),
-            Worker = case dict:find(Node, Workers) of
-                         {ok, W} -> W;
-                         error   -> #worker{pid = Pid}
-                     end,
-            State#state{workers = dict:store(Node, Worker#worker{node = Node},
-                                             Workers),
-                        workers_pid = dict:store(Pid, Node, WorkersPid)};
-        _Error ->
-            error_logger:info_msg("Waiting for ~p before restarting worker "
-                                  "~p~n", [BackOff, Node]),
-            erlang:send_after(BackOff, self(), {restart_worker, Node, BackOff}),
-            State
-    end.
+    {noreply, State#state{jobs     = dict:erase(Pid, Jobs),
+                          job_pids = dict:erase(Id, JobPids)}}.

@@ -1,0 +1,1 @@
+th -s ping.th -p 4261 -- Pong thorn://localhost:4260
