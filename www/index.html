@@ -13,34 +13,50 @@
    	
 	<script type="text/javascript" src="js/jobs.js"></script>
 	<script type="text/javascript" src="js/nodes.js"></script>		
-	<script type="text/javascript" src="js/update.js"></script>
+    <script type="text/javascript" src="js/stats.js"></script>	
+	<script type="text/javascript" src="js/ov_update.js"></script>
 </head>   
 <body onload="initialize()">
+	<div class="menu">
+	    <div id="logo"><img src="img/logo.png" width="220" height="120" alt=""/></div>
+	    <div class="selected" id="menu_overview">Overview</div>	    
+	    <div class="menuitem" id="menu_details"><a href="details.html">Details</a></div>
+	    <br/>
+	    <div class="button" id="update_toggle">[Disable Updates]</div>
+	    <br/>
+	    <div class="footer">
+	        <div id="framework_name">Thorn mapReduce</div>	   
+	    </div>	
+	</div>
 	<div class="main">
 	<div class="header">
 		<div id="page_title">THORN mapReduce status</div>
 	</div>	
-	<div class="jobs">
-	   <div class="expander"><h1>Running jobs:</h1></div> 
-		<div class="joblist">Fetching joblist failed</div>	
-		
-	</div>
-    <div class="nodes">
-		<div class="expander"><h1>Available workers:</h1></div>
-		<div class="nodelist">Fetching worker list failed</div> 
-	</div>			
-	</div>
-	<div class="menu">
-	<div id="logo"><img src="img/logo.png" width="220" height="120" alt=""/></div>
-	<div class="button" id="update_toggle">[Disable Updates]</div>
-	<br/>
-	<div class="button" id="expand_jobs">[Expand/Fold Jobs]</div>
-	<div class="footer">
-	   <div id="framework_name">Thorn mapReduce</div>	   
-	</div>	
-	</div>
-	<div id="dialog-confirm" title="Kill the job?">
-		<div id="dialog-text"></div>
+		<div class="stats">
+		<div class="expander"><h1>Framework statistics:</h1></div>
+		<table border="0">
+		    <tr>
+		        <td width=300em>Started on:</td>
+		        <td><div id="start_time"></div></td>
+		    </tr>
+   		    <tr>
+   		        <td>Completed jobs:</td>
+   		        <td><div id="completed_count"></div></td>
+   		    </tr>
+   		    <tr>
+   		        <td>Total workers:</td>
+   		        <td><div id="worker_count"></div></td> 
+   		    </tr>
+  		    <tr>
+  		        <td>Total running jobs:</td>
+  		        <td><div id="jobs_count"></div></td> 
+  		    </tr>
+  		    <tr>
+  		        <td>Average busy time:</td>
+  		        <td><div id="busy_time"></div></td>
+  		    </tr>
+	    </table>
+	</div>		
 	</div>
 </body>
 </html>

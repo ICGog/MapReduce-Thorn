@@ -22,12 +22,12 @@ body a {
 
 .main {
 	float:	left;
-	width:	75%;
+	width:	570px;
 }
 
 .menu {
-	width: 25%;
-	float:	right;	
+	width: 230px;
+	float:	left;	
 }
 
 
@@ -39,7 +39,7 @@ body a {
 }
 
 .header #page_title {	
-	width: 60%;
+	/*width: 60%;*/
 }
 
 .header #logo {
@@ -70,7 +70,7 @@ body a {
 }	
 	
 .node {	 	 
-	 width: 80%; 
+	 width: 80%;
 	 border: 1px solid #666;
 	 margin: 10px;  
 	 padding: 5px;
@@ -85,7 +85,7 @@ body a {
 }
 
 .node .value {
-	width: 19%;
+	width: 4em;
 	float: left;
 	text-align: center;
 	border-right: 1px solid #666;
@@ -111,6 +111,17 @@ body a {
 	
 }
 
+/* Statistics styles */
+
+.stats {
+	margin-left: 5px;	
+}	
+
+.statlist {
+
+}
+
+
 /* Footer styles */ 
 
 .footer {	
@@ -126,7 +137,7 @@ body a {
 	margin-left: 1em;	
 }
 
-/* Other style */
+/* Other styles */
 .invisible {
 	display: none;
 }
@@ -135,7 +146,21 @@ body a {
 	cursor:pointer;cursor:hand;
 }
 
+.menutiem {
+	cursor:pointer;cursor:hand;
+	float: left;
+	padding: 3px;
+}
+
 .expander {
 	cursor:pointer;cursor:hand;
+}
+
+.selected {
+    color:  #FDFFDB;
+    background: #942436;
+    padding: 3px;
+    font-weight: bold;	
+
 }
 
