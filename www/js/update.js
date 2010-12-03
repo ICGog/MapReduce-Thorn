@@ -156,7 +156,8 @@ function updateWorkers() {
         .append($("<div/>").addClass("value").text(ns[n].num_succ))
         .append($("<div/>").addClass("value").text(ns[n].num_map_tasks))
         .append($("<div/>").addClass("value").text(ns[n].num_reduce_tasks))
-		.append($("<div/>").addClass("value").text(ns[n].busy_time)));	   
+        .append($("<div/>").addClass("value").text(ns[n].busy_time))
+		.append($("<div/>").addClass("value").text("[kill]")));	   
 	} 		
 
 }
