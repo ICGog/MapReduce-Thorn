@@ -131,9 +131,12 @@ send_tasks(Input, State = #state{sup = Sup,
     JobPid = self(),
     spawn_link(
         fun () ->
-                {ok, _} = smr_task_sup_sup:start_task(
-                              smr_job_sup:task_sup_sup(Sup),
-                              JobPid, TaskType, Fun, TaskInput)
+                case smr_task_sup_sup:start_task(
+                         smr_job_sup:task_sup_sup(Sup),
+                         JobPid, TaskType, Fun, TaskInput) of
+                     {ok, _}         -> ok;
+                     {error, Reason} -> exit(Reason)
+                end
         end),
     send_tasks(RestInput, State#state{ongoing = Ongoing + 1}).
 

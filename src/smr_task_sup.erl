@@ -21,6 +21,9 @@ init([JobPid, TaskType, TaskFun, Input]) ->
     {ok, Pid, Pid}.
 
 spawn_no_master(JobPid, TaskType, TaskFun, Input) ->
+    case length(pool:get_nodes()) of 1 -> exit(no_workers);
+                                     _ -> ok
+    end,
     Pid = pool:pspawn(smr_task, TaskType, [self(), JobPid, TaskFun, Input]),
     Master = node(smr:master()),
     case node(Pid) of 

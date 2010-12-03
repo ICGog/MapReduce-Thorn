@@ -11,8 +11,7 @@ make SMR_WORKER_NODES="w1 w2 w3 w4 w5" run
 
 smr:start().
 
-[smr:attach_worker_node(list_to_atom(Node ++ "@" ++ net_adm:localhost())) ||
- Node <- ["w1", "w2", "w3", "w4", "w5"]].
+smr:auto_attach_worker_nodes().
 
 Input = [{abc, "Thus the MapReduce framework transforms a list of (key, value) pairs into a list of values. This behavior is different from the functional programming map and reduce combination, which accepts a list of arbitrary values and returns one single value that combines all the values returned by map."},
          {def, "MapReduce achieves reliability by parceling out a number of operations on the set of data to each node in the network. Each node is expected to report back periodically with completed work and status updates. If a node falls silent for longer than that interval, the master node (similar to the master server in the Google File System) records the node as dead and sends out the node's assigned work to other nodes. Individual operations use atomic operations for naming file outputs as a check to ensure that there are not parallel conflicting threads running. When files are renamed, it is possible to also copy them to another name in addition to the name of the task (allowing for side-effects)."},

@@ -44,7 +44,7 @@ compile_tests: $(TEST_TARGETS)
 run: $(TARGETS) $(ERL_HOSTS)
 	$(MAKE) start_worker_nodes
 	mkdir -p $(LOG_DIR)
-	WORKER_ERL_OPTS="$(WORKER_ERL_OPTS)" TH="$(TH)" erl $(ERL_OPTS)
+	SMR_WORKER_NODES="$(SMR_WORKER_NODES)" WORKER_ERL_OPTS="$(WORKER_ERL_OPTS)" TH="$(TH)" erl $(ERL_OPTS)
 	$(MAKE) stop_worker_nodes
 
 run_th:
