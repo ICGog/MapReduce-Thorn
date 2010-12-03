@@ -1,29 +1,26 @@
 // testing needs to be done when server side is done
-/* assume data return from server : 
-  {"nodes":[
-     {"name":name,"succ":succ,"fail":fail,"busy":busy,"map":map,"red":red},
-     {"name":name,"succ":succ,"fail":fail,"busy":busy,"map":map,"red":red}]}
-*/
+// test data in /js/testworkers.js
+// url would be changed once know specific location
 
-function getResultNodes() {
+function getNodes() {
 
-$.get("http://localhost:8081/smr/smr_http:get_all_workers",
-        function(data){
-	  var nodes = data.nodes;
-	  var number = nodes.length;
-          var current;
-          var result = new Array();
-          for(current = 0; current<number; current++) {
-            var cnode = nodes[current];
-            var worker = new Object();
-	    worker.name = "worker" + cnode.name;
-            worker.succ = cnode.succ;
-	    worker.fail = cnode.fail;
-            worker.busy = cnode.busy;
-            worker.map = cnode.map;
-            worker.red = cnode.red;
-            result[current] = worker;
-          }
-          return result;
+$.get("http://localhost:8081/smr/smr_http:get_workers",
+  function(data){
+    var number = data.length;
+    var current;
+    var result = new Array();
+    for(current = 0; current<number; current++) {
+      var temp = data[current];
+      var worker = new Object();
+      worker.ndoe = temp.node;
+      worker.exec = temp.num_exec;
+      worker.succ = temp.num_succ;
+      worker.fail = temp.num_failed;
+      worker.busy = temp.busy_time;
+      worker.map = temp.num_map_tasks;
+      worker.red = temp.num_reduce_tasks;
+      result[current] = worker;
+    }
+    return result;
 });
 

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>img{ height: 100px; float: left; }</style>
+  <script type="text/javascript" src="/js/jquery.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+
+
+$.get("/js/testjobs.js",
+    function(data){
+      var current;
+      for (current=0; current<data.length; current++) {
+        var temp = data[current];
+        $('#response').append("*<br>");    
+        $('#response').append("Job number # " + current + "<br>");
+        $('#response').append("id = " + temp.id + "<br>");
+        $('#response').append("is_completed = " + temp.is_completed + "<br>");
+        $('#response').append("progress = " + temp.progress + "<br>");
+        $('#response').append("started_on = " + temp.started_on + "<br>");
+        $('#response').append("map_code = " + temp.map_code + "<br>");
+        $('#response').append("reduce_code = " + temp.reduce_code + "<br>");
+
+      }
+    }
+    ,'json');
+
+
+</script>
+<div id="response"> </div>
+</body>
+</html>
+
