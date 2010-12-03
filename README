@@ -9,8 +9,6 @@ Example usage:
 
 make SMR_WORKER_NODES="w1 w2 w3 w4 w5" run
 
-smr:start().
-
 [smr:attach_worker_node(list_to_atom(Node ++ "@" ++ net_adm:localhost())) ||
  Node <- ["w1", "w2", "w3", "w4", "w5"]].
 
