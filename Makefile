@@ -13,6 +13,8 @@ export LOG_DIR=log
 export WWW_DIR=www
 LIB_DIR=lib
 
+WWW_ERROR_LOG=$(WWW_DIR)/log/smr.log
+
 ERL_HOSTS=.hosts.erlang
 
 JINTERFACE_JAR=$(ERL_TOP)/lib/jinterface-?.?.?/priv/OtpErlang.jar
@@ -32,7 +34,7 @@ TEST_SOURCES=$(wildcard $(TEST_DIR)/*.erl)
 TEST_TARGETS=$(patsubst $(TEST_DIR)/%.erl, $(TEST_DIR)/%.beam, $(TEST_SOURCES))
 
 ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall -v +debug_info
-ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE)
+ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE) -eval "ok = error_logger:logfile({open, \"$(WWW_ERROR_LOG)\"})." -s smr
 
 all: compile
 
@@ -58,6 +60,7 @@ all_tests: $(TARGETS) $(TEST_TARGETS)
 	$(MAKE) SMR_WORKER_NODES="$(SMR_TEST_WORKER_NODES)" stop_worker_nodes
 
 clean:
+	rm -f $(WWW_ERROR_LOG)
 	rm -f $(TARGETS)
 	rm -rf $(LOG_DIR)
 	$(MAKE) -C $(TEST_DIR) clean
