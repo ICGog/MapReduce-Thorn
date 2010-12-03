@@ -37,6 +37,12 @@ whole_system_3_test() ->
     sort_test(10000, 0, 1000000, 50),
     smr:stop().
 
+whole_system_4_test() ->
+    smr:start(),
+    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+    sort_test(10000, 0, 100, 5),
+    smr:stop().
+
 sort_test(InputSize, LowerLimit, UpperLimit, NumBuckets) ->
     BucketRange = (UpperLimit - LowerLimit) div NumBuckets,
     SampleInput = [{none,
@@ -122,14 +128,17 @@ whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
 start_test_slaves(Names) ->
     lists:map(fun ({Host, Name}) ->
                       {ok, Node} = slave:start(
-                                Host,
-                                Name,
-                                os:getenv("WORKER_ERL_OPTS"));
-                  (Name) -> {ok, Node} = slave:start(
-                                net_adm:localhost(),
-                                Name,
-                                os:getenv("WORKER_ERL_OPTS")),
-                            Node
+                          Host,
+                          Name,
+                          " -env DISPLAY " ++ net_adm:localhost() ++ ":0 " ++
+                              os:getenv("WORKER_ERL_OPTS")),
+                      Node;
+                  (Name) ->
+                      {ok, Node} = slave:start(
+                          net_adm:localhost(),
+                          Name,
+                          os:getenv("WORKER_ERL_OPTS")),
+                      Node
               end, Names).
 
 start_and_add_test_slaves(Names) ->

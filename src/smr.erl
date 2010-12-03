@@ -3,8 +3,8 @@
 
 -behaviour(application).
 
--export([start/0, stop/0, attach_worker_node/1, kill_worker_node/1,
-         get_worker_nodes/0, master/0, statistics/0]).
+-export([start/0, stop/0, auto_attach_worker_nodes/0, attach_worker_node/1,
+         kill_worker_node/1, get_worker_nodes/0, master/0, statistics/0]).
 -export([start/2, stop/1]).
 
 %%---------------------------------------------------------------------------
@@ -14,6 +14,18 @@ start() ->
 
 stop() ->
     application:stop(smr).
+
+auto_attach_worker_nodes() ->
+    Workers = lists:map(fun (Worker) -> list_to_atom(
+                                            case lists:member($@, Worker) of
+                                                true  -> Worker;
+                                                false -> Worker ++ "@" ++
+                                                             net_adm:localhost()
+                                            end)
+                        end, string:tokens(os:getenv("SMR_WORKER_NODES"),
+                                           " \n\t")),
+    Result = lists:map(fun attach_worker_node/1, Workers),
+    lists:zip(Workers, Result).
 
 attach_worker_node(Node) ->
     case pool:attach(Node) of

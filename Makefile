@@ -68,7 +68,7 @@ start_worker_nodes: $(TARGETS)
 	for node in $(SMR_WORKER_NODES) ; do \
 	    echo ; \
 	    echo "Starting node $$node" ; \
-	    echo 'code:add_pathsa(["$(EBIN_DIR)"]), code:add_pathsa(["$(TEST_DIR)"]).' | TH="$(TH)" erl_call -sname $$node -s -e ; \
+	    echo 'code:add_pathsa(["$(realpath $(EBIN_DIR))"]), code:add_pathsa(["$(realpath $(TEST_DIR))"]).' | TH="$(TH)" erl_call -sname $$node -s -e ; \
 	    done
 
 .PHONY: stop_worker_nodes
