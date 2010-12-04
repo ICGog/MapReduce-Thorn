@@ -36,27 +36,26 @@ basic_whole_system(TestSuite) ->
     smr_pool:kill_all_nodes(),
     smr:stop().
 
-statistics_get_all_workers_test() ->
+pool_get_all_workers_test() ->
     smr:start(),
     [Worker1, Worker2] = start_test_slaves([test_w1, test_w3]),
 
-    ?assertMatch([], smr_statistics:get_all_workers()),
+    ?assertMatch([], smr_pool:get_nodes()),
 
     attached = smr_pool:attach_node(Worker1),
-    timer:sleep(20), %% Wait to propagate to statistics
-    ?assertMatch([Worker1], smr_statistics:get_all_workers()),
+    ?assertMatch([Worker1], smr_pool:get_nodes()),
 
     attached = smr_pool:attach_node(Worker2),
-    timer:sleep(20), %% Wait to propagate to statistics
     ExpectedW12 = lists:sort([Worker1, Worker2]),
-    ResultW12 = lists:sort(smr_statistics:get_all_workers()),
+    ResultW12 = lists:sort(smr_pool:get_nodes()),
     ?assertMatch(ExpectedW12, ResultW12),
 
     killed = smr_pool:kill_node(Worker1),
-    timer:sleep(20), %% Wait to propagate to statistics
-    ?assertMatch([Worker2], smr_statistics:get_all_workers()),
+    ?assertMatch([Worker2], smr_pool:get_nodes()),
 
     smr_pool:kill_all_nodes(),
+    ?assertMatch([], smr_pool:get_nodes()),
+
     smr:stop().
 
 whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->

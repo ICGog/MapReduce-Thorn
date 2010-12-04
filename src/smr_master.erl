@@ -9,7 +9,7 @@
         code_change/3]).
 
 -record(state, {jobs = dict:new(),    %% (JobPid -> #job{})
-                cur_job_id = 0,
+                cur_job_id = 1,
                 job_pids = dict:new()  %% (JobId -> JobPid)
                }).
 
@@ -55,7 +55,7 @@ handle_call({new_job, Map, Reduce}, _From,
             State = #state{jobs = Jobs,
                            cur_job_id = JobId,
                            job_pids = JobPids}) ->
-    {ok, JobSup} = smr_job_sup_sup:start_job_sup(Map, Reduce),
+    {ok, JobSup} = smr_job_sup_sup:start_job_sup(Map, Reduce, JobId),
     JobPid = smr_job_sup:job(JobSup),
     erlang:monitor(process, JobPid),
     NewJobPids = dict:store(JobId, JobPid, JobPids),
@@ -102,6 +102,7 @@ handle_job_exit(Pid, #job{id = Id, from = From}, Reason,
         normal -> ok;
         _      -> error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
                                         [Pid, Reason]),
+                  smr_statistics:job_failed(Id, Reason),
                   gen_server:reply(From, {error, Reason})
     end,
     {noreply, State#state{jobs     = dict:erase(Pid, Jobs),

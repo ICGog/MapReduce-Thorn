@@ -3,11 +3,12 @@
 
 -behavior(gen_server).
 
--export([start_link/2, add_input/2, start/1, result/3, batch_started/2]).
+-export([start_link/3, add_input/2, start/1, result/3, task_started/3]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
 -record(state, {sup,
+                id,
                 phase = input, % input | map | reduce
                 map_fun,
                 reduce_fun,
@@ -21,8 +22,8 @@
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link(MapFun, ReduceFun) ->
-    gen_server:start_link(?MODULE, [self(), MapFun, ReduceFun], []).
+start_link(MapFun, ReduceFun, JobId) ->
+    gen_server:start_link(?MODULE, [self(), MapFun, ReduceFun, JobId], []).
 
 add_input(Job, Input) ->
     gen_server:cast(Job, {add_input, Input}).
@@ -33,22 +34,25 @@ start(Job) ->
 result(Job, Worker, Result) ->
     gen_server:cast(Job, {result, Worker, Result}).
 
-batch_started(Job, Worker) ->
-    gen_server:call(Job, {batch_started, Worker}, infinity).
+task_started(Job, Worker, Size) ->
+    gen_server:call(Job, {task_started, Worker, Size}, infinity).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Sup, MapFun, ReduceFun]) ->
+init([Sup, MapFun, ReduceFun, JobId]) ->
     error_logger:info_msg("Job ~p created~n", [self()]),
+    smr_statistics:job_started(JobId, MapFun, ReduceFun),
     {ok, #state{sup = Sup,
+                id = JobId,
                 map_fun = MapFun,
                 reduce_fun = ReduceFun}}.
 
-handle_call({batch_started, WorkerPid}, _From, State = #state{phase = Phase}) ->
+handle_call({task_started, WorkerPid, Size}, _From,
+            State = #state{phase = Phase, id = JobId}) ->
     erlang:monitor(process, WorkerPid),
-    smr_statistics:worker_batch_started(node(WorkerPid), Phase),
+    smr_statistics:task_started(JobId, node(WorkerPid), Phase, Size),
     {reply, ok, State}.
 
 handle_cast(start, State) ->
@@ -56,18 +60,18 @@ handle_cast(start, State) ->
 handle_cast({add_input, NewInput}, State = #state{phase = input,
                                                   input = CurInput}) ->
     {noreply, State#state{input = NewInput ++ CurInput}};
-handle_cast({result, Worker, Result}, State0) ->
-    smr_statistics:worker_batch_ended(node(Worker)),
+handle_cast({result, Worker, Result}, State0 = #state{id = JobId}) ->
+    smr_statistics:task_finished(JobId, node(Worker)),
     State1 = #state{ongoing = Ongoing} = agregate_result(Result, State0),
     State2 = State1#state{ongoing = Ongoing - 1},
     case State2 of #state{ongoing = 0} -> handle_phase_finished(State2);
                    _                   -> {noreply, State2}
     end.
 
-handle_info({'DOWN', _, process, Pid, Reason}, State) ->
+handle_info({'DOWN', _, process, Pid, Reason}, State = #state{id = JobId}) ->
     case Reason of
         normal -> {noreply, State};
-        _      -> smr_statistics:worker_batch_failed(node(Pid)),
+        _      -> smr_statistics:task_failed(JobId, node(Pid)),
                   {noreply, State}
     end.
 
@@ -84,17 +88,21 @@ terminate(_Reason, _State) ->
 handle_phase_finished(State = #state{phase = map, result = Result}) ->
     {noreply, set_phase(reduce, State#state{input = dict:to_list(Result)})};
 handle_phase_finished(State = #state{phase = reduce,
-                                     result = Result}) ->
+                                     result = Result,
+                                     id = JobId}) ->
+    smr_statistics:job_finished(JobId),
     smr_master:job_result(self(), Result),
     {stop, normal, State}.
 
-set_phase(map, State = #state{input = Input}) ->
+set_phase(map, State = #state{input = Input, id = JobId}) ->
     error_logger:info_msg("Job ~p: map phase started~n", [self()]),
+    smr_statistics:job_next_phase(JobId, map, length(Input)),
     send_tasks(Input, State#state{phase = map,
                                   input = undefined, % free
                                   result = dict:new()});
-set_phase(reduce, State = #state{input = Input}) ->
+set_phase(reduce, State = #state{input = Input, id = JobId}) ->
     error_logger:info_msg("Job ~p: reduce phase started~n", [self()]),
+    smr_statistics:job_next_phase(JobId, reduce, length(Input)),
     send_tasks(Input, State#state{phase = reduce,
                                   input = undefined, % free
                                   result = []}).

@@ -20,13 +20,14 @@ Input = [{abc, "Thus the MapReduce framework transforms a list of (key, value) p
 
 
 MapFun = fun ({_Name, Document}) ->
+                  timer:sleep(10000),
                   dict:to_list(lists:foldl(fun (Word, Dict) ->
                                                    dict:update_counter(Word, 1, Dict)
                                            end, dict:new(),
                                            string:tokens(Document, " ")))
          end.
 
-ReduceFun = fun ({_Word, CountList}) -> lists:sum(CountList) end.
+ReduceFun = fun ({_Word, CountList}) -> timer:sleep(10000), lists:sum(CountList) end.
 
 {ok, Id} = smr_master:new_job(MapFun, ReduceFun),
 smr_master:add_input(Id, Input),

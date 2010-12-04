@@ -4,7 +4,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0, attach_node/1, kill_node/1, kill_all_nodes/0, pspawn/3,
-         pspawn_link/3]).
+         pspawn_link/3, get_nodes/0]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 -export([worker_init/3]).
@@ -31,6 +31,9 @@ kill_node(Node) ->
 kill_all_nodes() ->
     gen_server:call(?NAME, kill_all, infinity).
 
+get_nodes() ->
+    gen_server:call(?NAME, get_all, infinity).
+
 %------------------------------------------------------------------------------
 % Internal API
 %------------------------------------------------------------------------------
@@ -45,8 +48,7 @@ pspawn_link(Module, Function, Args) ->
     pspawn(Module, Function, Args, {true, self()}).
 
 pspawn(Module, Function, Args, Link) ->
-    gen_server:call(?NAME,
-                    {spawn, {Module, Function, Args}, Link}, infinity).
+    gen_server:call(?NAME, {spawn, {Module, Function, Args}, Link}, infinity).
 
 %------------------------------------------------------------------------------
 % Handlers
@@ -85,6 +87,8 @@ handle_call(kill_all, _From, State = #state{nodes = Ns}) ->
                                    quick_kill_node(N, CurState)
                            end, State, Ns),
     {reply, ok, FinalState};
+handle_call(get_all, _From, State = #state{nodes = Ns}) ->
+    {reply, dict:fetch_keys(Ns), State};
 handle_call({spawn, _MFA, _Link} = Spawn, From,
             State = #state{requests = Reqs, free_nodes = FNs}) ->
     case sets:size(FNs) of
@@ -150,6 +154,7 @@ serve({spawn, MFA, Link}, From, State = #state{nodes = Ns, free_nodes = FNs}) ->
     end.
 
 pick(#state{free_nodes = FNs}) ->
+    %% TODO: pick the fastest here
     [N | _] = sets:to_list(FNs),
     N.
 
