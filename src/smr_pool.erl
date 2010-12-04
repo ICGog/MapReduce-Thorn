@@ -154,9 +154,7 @@ serve({spawn, MFA, Link}, From, State = #state{nodes = Ns, free_nodes = FNs}) ->
     end.
 
 pick(#state{free_nodes = FNs}) ->
-    %% TODO: pick the fastest here
-    [N | _] = sets:to_list(FNs),
-    N.
+    smr_statistics:pick_fastest_worker_of(sets:to_list(FNs)).
 
 worker_init({M, F, A}, Link, Pool) ->
     case Link of {true, Caller} -> link(Caller);
