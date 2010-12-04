@@ -11,7 +11,7 @@ make SMR_WORKER_NODES="w1 w2 w3 w4 w5" run
 
 smr:start().
 
-[smr:attach_worker_node(list_to_atom(Node ++ "@" ++ net_adm:localhost())) ||
+[smr_pool:attach_node(list_to_atom(Node ++ "@" ++ net_adm:localhost())) ||
  Node <- ["w1", "w2", "w3", "w4", "w5"]].
 
 Input = [{abc, "Thus the MapReduce framework transforms a list of (key, value) pairs into a list of values. This behavior is different from the functional programming map and reduce combination, which accepts a list of arbitrary values and returns one single value that combines all the values returned by map."},
@@ -28,8 +28,8 @@ MapFun = fun ({_Name, Document}) ->
 
 ReduceFun = fun ({_Word, CountList}) -> lists:sum(CountList) end.
 
-{ok, Id} = smr_master:new_job(smr:master(), MapFun, ReduceFun),
-smr_master:add_input(smr:master(), Id, Input),
-{ok, Result} = smr_master:do_job(smr:master(), Id).
+{ok, Id} = smr_master:new_job(MapFun, ReduceFun),
+smr_master:add_input(Id, Input),
+{ok, Result} = smr_master:do_job(Id).
 
 lists:foreach(fun ({Word, Count}) -> io:format("~s -> ~p~n", [Word, Count]) end, Result).

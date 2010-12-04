@@ -3,13 +3,12 @@
 
 -behavior(gen_server).
 
--export([start_link/0, new_job/3, add_input/3, do_job/2]).
--export([job_result/3]).
+-export([start_link/0, new_job/2, add_input/2, do_job/1]).
+-export([job_result/2]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
--record(state, {sup,
-                jobs = dict:new(),    %% (JobPid -> #job{})
+-record(state, {jobs = dict:new(),    %% (JobPid -> #job{})
                 cur_job_id = 0,
                 job_pids = dict:new()  %% (JobId -> JobPid)
                }).
@@ -20,43 +19,43 @@
               map_fun,
               reduce_fun}).
 
+-define(NAME, {global, ?MODULE}).
+
 %------------------------------------------------------------------------------
 % API
 %------------------------------------------------------------------------------
 
 start_link() ->
-    gen_server:start_link({global, smr_master}, ?MODULE, [self()], []).
+    gen_server:start_link(?NAME, ?MODULE, [], []).
 
-new_job(Pid, Map, Reduce) ->
-    gen_server:call(Pid, {new_job, Map, Reduce}, infinity).
+new_job(Map, Reduce) ->
+    gen_server:call(?NAME, {new_job, Map, Reduce}, infinity).
 
-add_input(Pid, JobId, Input) ->
-    gen_server:cast(Pid, {add_input, JobId, Input}).
+add_input(JobId, Input) ->
+    gen_server:cast(?NAME, {add_input, JobId, Input}).
 
-do_job(Pid, JobId) ->
-    gen_server:call(Pid, {do_job, JobId}, infinity).
+do_job(JobId) ->
+    gen_server:call(?NAME, {do_job, JobId}, infinity).
 
 %------------------------------------------------------------------------------
 % Internal API
 %------------------------------------------------------------------------------
 
-job_result(Pid, JobPid, Result) ->
-    gen_server:cast(Pid, {job_result, JobPid, Result}).
+job_result(JobPid, Result) ->
+    gen_server:cast(?NAME, {job_result, JobPid, Result}).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Sup]) ->
-    {ok, #state{sup = Sup}}.
+init([]) ->
+    {ok, #state{}}.
 
 handle_call({new_job, Map, Reduce}, _From,
-            State = #state{sup = Sup,
-                           jobs = Jobs,
+            State = #state{jobs = Jobs,
                            cur_job_id = JobId,
                            job_pids = JobPids}) ->
-    {ok, JobSup} = smr_job_sup_sup:start_job_sup(smr_sup:job_sup_sup(Sup),
-                                                 self(), Map, Reduce),
+    {ok, JobSup} = smr_job_sup_sup:start_job_sup(Map, Reduce),
     JobPid = smr_job_sup:job(JobSup),
     erlang:monitor(process, JobPid),
     NewJobPids = dict:store(JobId, JobPid, JobPids),

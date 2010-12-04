@@ -2,11 +2,9 @@
 
 -behaviour(gen_server).
 
--export([start_link/1, register_worker/2, worker_failed/2,
-         worker_batch_started/3, worker_batch_ended/2, worker_batch_failed/2]).
-
--export([get_all_workers/1, get_workers/1]).
-
+-export([start_link/0, register_worker/1, worker_failed/1,
+         worker_batch_started/2, worker_batch_ended/1, worker_batch_failed/1]).
+-export([get_all_workers/0, get_workers/0]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
@@ -14,44 +12,46 @@
 
 -record(state, {workers = dict:new()}).
 
+-define(NAME, {global, ?MODULE}).
+
 %------------------------------------------------------------------------------
 % Query API
 %------------------------------------------------------------------------------
 
-get_all_workers(Pid) ->
-    gen_server:call(Pid, get_all_workers).
+get_all_workers() ->
+    gen_server:call(?NAME, get_all_workers).
 
-get_workers(Pid) ->
-    gen_server:call(Pid, get_workers).
+get_workers() ->
+    gen_server:call(?NAME, get_workers).
 
 %------------------------------------------------------------------------------
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link(Nodes) ->
-    gen_server:start_link({global, smr_statistics}, ?MODULE, [Nodes], []).
+start_link() ->
+    gen_server:start_link(?NAME, ?MODULE, [], []).
 
-register_worker(Pid, Node) ->
-    gen_server:cast(Pid, {register_worker, Node}).
+register_worker(Node) ->
+    gen_server:cast(?NAME, {register_worker, Node}).
 
-worker_failed(Pid, Node) ->
-    gen_server:cast(Pid, {worker_failed, Node}).
+worker_failed(Node) ->
+    gen_server:cast(?NAME, {worker_failed, Node}).
 
-worker_batch_started(Pid, Node, TaskType) ->
-    gen_server:cast(Pid, {batch_started, Node, TaskType}).
+worker_batch_started(Node, TaskType) ->
+    gen_server:cast(?NAME, {batch_started, Node, TaskType}).
 
-worker_batch_failed(Pid, Node) ->
-    gen_server:cast(Pid, {batch_failed, Node}).
+worker_batch_failed(Node) ->
+    gen_server:cast(?NAME, {batch_failed, Node}).
 
-worker_batch_ended(Pid, Node) ->
-    gen_server:cast(Pid, {batch_ended, Node}).
+worker_batch_ended(Node) ->
+    gen_server:cast(?NAME, {batch_ended, Node}).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Nodes]) ->
-    {ok, lists:foldl(fun internal_register_worker/2, #state{}, Nodes)}.
+init([]) ->
+    {ok, #state{}}.
 
 handle_call(get_all_workers, _From, State = #state{workers = Workers}) ->
     {reply, dict:fetch_keys(Workers), State};
@@ -120,4 +120,3 @@ terminate(_Reason, _State) ->
 internal_register_worker(Node, State = #state{workers = Workers}) ->
     monitor_node(Node, true),
     State#state{workers = dict:store(Node, #worker{node = Node}, Workers)}.
-

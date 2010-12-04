@@ -33,36 +33,36 @@ basic_whole_system(TestSuite) ->
     smr:start(),
     start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
     whole_system(TestSuite),
+    smr_pool:kill_all_nodes(),
     smr:stop().
 
 statistics_get_all_workers_test() ->
     smr:start(),
     [Worker1, Worker2] = start_test_slaves([test_w1, test_w3]),
-    Statistics = smr:statistics(),
 
-    ?assertMatch([], smr_statistics:get_all_workers(Statistics)),
+    ?assertMatch([], smr_statistics:get_all_workers()),
 
-    attached = smr:attach_worker_node(Worker1),
+    attached = smr_pool:attach_node(Worker1),
     timer:sleep(20), %% Wait to propagate to statistics
-    ?assertMatch([Worker1], smr_statistics:get_all_workers(Statistics)),
+    ?assertMatch([Worker1], smr_statistics:get_all_workers()),
 
-    attached = smr:attach_worker_node(Worker2),
+    attached = smr_pool:attach_node(Worker2),
     timer:sleep(20), %% Wait to propagate to statistics
     ExpectedW12 = lists:sort([Worker1, Worker2]),
-    ResultW12 = lists:sort(smr_statistics:get_all_workers(Statistics)),
+    ResultW12 = lists:sort(smr_statistics:get_all_workers()),
     ?assertMatch(ExpectedW12, ResultW12),
 
-    killed = smr:kill_worker_node(Worker1),
+    killed = smr_pool:kill_node(Worker1),
     timer:sleep(20), %% Wait to propagate to statistics
-    ?assertMatch([Worker2], smr_statistics:get_all_workers(Statistics)),
-    
+    ?assertMatch([Worker2], smr_statistics:get_all_workers()),
+
+    smr_pool:kill_all_nodes(),
     smr:stop().
 
 whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
-    Master = smr:master(),
-    {ok, JobId} = smr_master:new_job(Master, MapFun, ReduceFun),
-    smr_master:add_input(Master, JobId, Input),
-    {ok, Result} = smr_master:do_job(Master, JobId),
+    {ok, JobId} = smr_master:new_job(MapFun, ReduceFun),
+    smr_master:add_input(JobId, Input),
+    {ok, Result} = smr_master:do_job(JobId),
     
     ExpectedLength = length(ExpectedResult),
     ?assertMatch(ExpectedLength, length(Result)),
@@ -86,6 +86,6 @@ start_test_slaves(Names) ->
 
 start_and_add_test_slaves(Names) ->
     Nodes = start_test_slaves(Names),
-    lists:foreach(fun (Node) -> attached = smr:attach_worker_node(Node) end,
+    lists:foreach(fun (Node) -> attached = smr_pool:attach_node(Node) end,
                   Nodes),
     Nodes.

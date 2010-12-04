@@ -20,11 +20,9 @@ compile: $(TEST_TARGETS)
 test: $(TEST_TARGETS)
 	mkdir -p $(WWW_DIR)
 	mkdir -p $(LOG_DIR)
-	echo > .hosts.erlang
 	WORKER_ERL_OPTS="$(WORKER_ERL_OPTS)" erl $(ERL_OPTS) -s smr_SUITE test -s erlang halt
 
 clean:
 	rm -rf $(WWW_DIR)
 	rm -rf $(LOG_DIR)
-	rm -f .hosts.erlang
 	rm -f $(TEST_TARGETS)

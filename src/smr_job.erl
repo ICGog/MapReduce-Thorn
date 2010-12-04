@@ -3,7 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/3, add_input/2, start/1, result/3, batch_started/2]).
+-export([start_link/2, add_input/2, start/1, result/3, batch_started/2]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
@@ -11,7 +11,6 @@
                 phase = input, % input | map | reduce
                 map_fun,
                 reduce_fun,
-                master,
                 ongoing = 0,
                 input = [],
                 result}).
@@ -22,8 +21,8 @@
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link(Master, MapFun, ReduceFun) ->
-    gen_server:start_link(?MODULE, [self(), Master, MapFun, ReduceFun], []).
+start_link(MapFun, ReduceFun) ->
+    gen_server:start_link(?MODULE, [self(), MapFun, ReduceFun], []).
 
 add_input(Job, Input) ->
     gen_server:cast(Job, {add_input, Input}).
@@ -34,22 +33,22 @@ start(Job) ->
 result(Job, Worker, Result) ->
     gen_server:cast(Job, {result, Worker, Result}).
 
-batch_started(Job, WorkerPid) ->
-    gen_server:call(Job, {batch_started, WorkerPid}, infinity).
+batch_started(Job, Worker) ->
+    gen_server:call(Job, {batch_started, Worker}, infinity).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Sup, Master, MapFun, ReduceFun]) ->
+init([Sup, MapFun, ReduceFun]) ->
     error_logger:info_msg("Job ~p created~n", [self()]),
     {ok, #state{sup = Sup,
                 map_fun = MapFun,
-                reduce_fun = ReduceFun,
-                master = Master}}.
+                reduce_fun = ReduceFun}}.
 
-handle_call({batch_started, WorkerPid}, _From, State) ->
+handle_call({batch_started, WorkerPid}, _From, State = #state{phase = Phase}) ->
     erlang:monitor(process, WorkerPid),
+    smr_statistics:worker_batch_started(node(WorkerPid), Phase),
     {reply, ok, State}.
 
 handle_cast(start, State) ->
@@ -57,7 +56,8 @@ handle_cast(start, State) ->
 handle_cast({add_input, NewInput}, State = #state{phase = input,
                                                   input = CurInput}) ->
     {noreply, State#state{input = NewInput ++ CurInput}};
-handle_cast({result, _, Result}, State0) ->
+handle_cast({result, Worker, Result}, State0) ->
+    smr_statistics:worker_batch_ended(node(Worker)),
     State1 = #state{ongoing = Ongoing} = agregate_result(Result, State0),
     State2 = State1#state{ongoing = Ongoing - 1},
     case State2 of #state{ongoing = 0} -> handle_phase_finished(State2);
@@ -67,8 +67,7 @@ handle_cast({result, _, Result}, State0) ->
 handle_info({'DOWN', _, process, Pid, Reason}, State) ->
     case Reason of
         normal -> {noreply, State};
-        _      -> smr_statistics:worker_batch_failed(smr:statistics(),
-                                                     node(Pid)),
+        _      -> smr_statistics:worker_batch_failed(node(Pid)),
                   {noreply, State}
     end.
 
@@ -85,9 +84,8 @@ terminate(_Reason, _State) ->
 handle_phase_finished(State = #state{phase = map, result = Result}) ->
     {noreply, set_phase(reduce, State#state{input = dict:to_list(Result)})};
 handle_phase_finished(State = #state{phase = reduce,
-                              result = Result,
-                              master = Master}) ->
-    smr_master:job_result(Master, self(), Result),
+                                     result = Result}) ->
+    smr_master:job_result(self(), Result),
     {stop, normal, State}.
 
 set_phase(map, State = #state{input = Input}) ->
@@ -141,4 +139,3 @@ split_input(_, [], Before) ->
     {Before, []};
 split_input(N, [KV | RestInput], Before) ->
     split_input(N - 1, RestInput, [KV | Before]).
-

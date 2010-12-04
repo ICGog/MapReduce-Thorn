@@ -13,8 +13,6 @@ export LOG_DIR=log
 export WWW_DIR=www
 LIB_DIR=lib
 
-ERL_HOSTS=.hosts.erlang
-
 JINTERFACE_JAR=$(ERL_TOP)/lib/jinterface-?.?.?/priv/OtpErlang.jar
 
 THORNROOT=lib/thorn-interp-05
@@ -40,7 +38,7 @@ compile: $(TARGETS)
 
 compile_tests: $(TEST_TARGETS)
 
-run: $(TARGETS) $(ERL_HOSTS)
+run: $(TARGETS)
 	$(MAKE) start_worker_nodes
 	mkdir -p $(LOG_DIR)
 	TH="$(TH)" erl $(ERL_OPTS)
@@ -92,6 +90,3 @@ $(TEST_TARGETS): $(TEST_DIR)
 .PHONY: $(TEST_DIR)
 $(TEST_DIR):
 	$(MAKE) -C $(TEST_DIR) compile
-
-$(ERL_HOSTS):
-	touch $@
