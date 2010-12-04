@@ -3,15 +3,15 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, attach_node/1, kill_node/1, kill_all_nodes/0, pspawn/3,
-         pspawn_link/3, get_nodes/0]).
+-export([start_link/0, attach_node/1, auto_attach_nodes/0, kill_node/1,
+         kill_all_nodes/0, pspawn/3, pspawn_link/3, get_nodes/0]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 -export([worker_init/3]).
 
 -record(state, {nodes = dict:new(),       %% Node -> #node{}
                 requests = queue:new(),
-                free_nodes = sets:new()}).
+                free_nodes = ordsets:new()}).
 
 -record(node, {node,
                task_pid = none}).
@@ -24,6 +24,18 @@
 
 attach_node(Node) ->
     gen_server:call(?NAME, {attach, Node}, infinity).
+
+auto_attach_nodes() ->
+    Workers = lists:map(fun (Worker) -> list_to_atom(
+                                            case lists:member($@, Worker) of
+                                                true  -> Worker;
+                                                false -> Worker ++ "@" ++
+                                                             net_adm:localhost()
+                                            end)
+                        end, string:tokens(os:getenv("SMR_WORKER_NODES"),
+                                           " \n\t")),
+    Result = lists:map(fun attach_node/1, Workers),
+    lists:zip(Workers, Result).
 
 kill_node(Node) ->
     gen_server:call(?NAME, {kill, Node}, infinity).
@@ -66,7 +78,7 @@ handle_call({attach, N}, From, State0 = #state{nodes = Ns,
                              gen_server:reply(From, attached),
                              monitor_node(N, true),
                              NewNs = dict:store(N, #node{node = N}, Ns),
-                             NewFNs = sets:add_element(N, FNs),
+                             NewFNs = ordsets:add_element(N, FNs),
                              State1 = maybe_serve(
                                           State0#state{nodes = NewNs,
                                                        free_nodes = NewFNs}),
@@ -91,8 +103,8 @@ handle_call(get_all, _From, State = #state{nodes = Ns}) ->
     {reply, dict:fetch_keys(Ns), State};
 handle_call({spawn, _MFA, _Link} = Spawn, From,
             State = #state{requests = Reqs, free_nodes = FNs}) ->
-    case sets:size(FNs) of
-        0 -> {noreply, State#state{requests = queue:in({Spawn, From}, Reqs)}};
+    case ordsets:to_list(FNs) of
+        [] -> {noreply, State#state{requests = queue:in({Spawn, From}, Reqs)}};
         _ -> {noreply, serve(Spawn, From, State)}
     end.
 
@@ -101,14 +113,14 @@ handle_cast({}, _State) ->
 
 handle_info({nodedown, N}, State = #state{nodes = Ns, free_nodes = FNs}) ->
     {noreply, State#state{nodes = dict:erase(N, Ns),
-                          free_nodes = sets:del_element(N, FNs)}};
+                          free_nodes = ordsets:del_element(N, FNs)}};
 handle_info({'DOWN', _, process, Pid, _Reason}, State = #state{free_nodes = FNs,
                                                                nodes = Ns}) ->
     N = node(Pid),
     case dict:find(N, Ns) of
         {ok, NEntry}  ->
             NewNs = dict:store(N, NEntry#node{task_pid = none}, Ns),
-            NewFNs = sets:add_element(N, FNs),
+            NewFNs = ordsets:add_element(N, FNs),
             State1 = maybe_serve(State#state{free_nodes = NewFNs,
                                              nodes = NewNs}),
             {noreply, State1};
@@ -145,7 +157,7 @@ serve({spawn, MFA, Link}, From, State = #state{nodes = Ns, free_nodes = FNs}) ->
             NewNs = dict:update(N, fun (NEntry) ->
                                            NEntry#node{task_pid = Pid}
                                    end, Ns),
-            NewFNs = sets:del_element(N, FNs),
+            NewFNs = ordsets:del_element(N, FNs),
             State#state{nodes = NewNs, free_nodes = NewFNs};
         {'DOWN', M, process, Pid, Reason} ->
             case Link of {true, Caller} -> exit(Caller, Reason);
@@ -154,7 +166,7 @@ serve({spawn, MFA, Link}, From, State = #state{nodes = Ns, free_nodes = FNs}) ->
     end.
 
 pick(#state{free_nodes = FNs}) ->
-    smr_statistics:pick_fastest_worker_of(sets:to_list(FNs)).
+    smr_statistics:pick_fastest_worker_of(ordsets:to_list(FNs)).
 
 worker_init({M, F, A}, Link, Pool) ->
     case Link of {true, Caller} -> link(Caller);
@@ -167,7 +179,7 @@ kill_node(N, State = #state{nodes = Ns, free_nodes = FNs}) ->
     rpc:call(N, init, stop, []),
     receive {nodedown, N} ->
                 {killed, State#state{nodes = dict:erase(N, Ns),
-                                     free_nodes = sets:del_element(N, FNs)}}
+                                     free_nodes = ordsets:del_element(N, FNs)}}
     after 60000 -> monitor_node(N, false),
                    {{error, timed_out_waiting_nodedown}, State}
     end.
@@ -176,4 +188,4 @@ quick_kill_node(N, State = #state{nodes = Ns, free_nodes = FNs}) ->
     monitor_node(N, false),
     rpc:cast(N, erlang, halt, []),
     State#state{nodes = dict:erase(N, Ns),
-                free_nodes = sets:del_element(N, FNs)}.
+                free_nodes = ordsets:del_element(N, FNs)}.

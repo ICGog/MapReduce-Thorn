@@ -3,7 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/3, add_input/2, start/1, result/3, task_started/3]).
+-export([start_link/5, add_input/2, start/1, result/3, task_started/3]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
@@ -14,16 +14,17 @@
                 reduce_fun,
                 ongoing = 0,
                 input = [],
-                result}).
-
--define(BATCH_SIZE, 10).
+                result,
+                map_batch_size,
+                reduce_batch_size}).
 
 %------------------------------------------------------------------------------
 % Internal API
 %------------------------------------------------------------------------------
 
-start_link(MapFun, ReduceFun, JobId) ->
-    gen_server:start_link(?MODULE, [self(), MapFun, ReduceFun, JobId], []).
+start_link(MapFun, ReduceFun, JobId, MapBatchSize, ReduceBatchSize) ->
+    gen_server:start_link(?MODULE, [self(), MapFun, ReduceFun, JobId,
+                                    MapBatchSize, ReduceBatchSize], []).
 
 add_input(Job, Input) ->
     gen_server:cast(Job, {add_input, Input}).
@@ -41,13 +42,15 @@ task_started(Job, Worker, Size) ->
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Sup, MapFun, ReduceFun, JobId]) ->
+init([Sup, MapFun, ReduceFun, JobId, MapBatchSize, ReduceBatchSize]) ->
     error_logger:info_msg("Job ~p created~n", [self()]),
     smr_statistics:job_started(JobId, MapFun, ReduceFun),
     {ok, #state{sup = Sup,
                 id = JobId,
                 map_fun = MapFun,
-                reduce_fun = ReduceFun}}.
+                reduce_fun = ReduceFun,
+                map_batch_size = MapBatchSize,
+                reduce_batch_size = ReduceBatchSize}}.
 
 handle_call({task_started, WorkerPid, Size}, _From,
             State = #state{phase = Phase, id = JobId}) ->
@@ -110,10 +113,8 @@ set_phase(reduce, State = #state{input = Input, id = JobId}) ->
 agregate_result(Result, State = #state{phase = map, result = Dict}) ->
     State#state{result =
         lists:foldl(fun ({K, V}, DictAcc) ->
-                            case dict:is_key(K, DictAcc) of
-                                true  -> dict:append(K, V, DictAcc);
-                                false -> dict:store(K, [V], DictAcc)
-                            end
+                            dict:update(K, fun (Old) -> [V | Old] end, [V],
+                                        DictAcc)
                     end, Dict, Result)};
 agregate_result(Result, State = #state{phase = reduce, result = List}) ->
     State#state{result = Result ++ List}.
@@ -124,17 +125,24 @@ send_tasks(Input, State = #state{sup = Sup,
                                  phase = Phase,
                                  map_fun = MapFun,
                                  reduce_fun = ReduceFun,
-                                 ongoing = Ongoing}) ->
-    {TaskInput, RestInput} = split_input(?BATCH_SIZE, Input),
+                                 ongoing = Ongoing,
+                                 map_batch_size = MBS,
+                                 reduce_batch_size = RBS}) ->
+    {TaskInput, RestInput} = split_input(case Phase of map    -> MBS;
+                                                       reduce -> RBS
+                                         end, Input),
     {TaskType, Fun} = case Phase of map    -> {map, MapFun};
                                     reduce -> {reduce, ReduceFun}
                       end,
     JobPid = self(),
     spawn_link(
         fun () ->
-                {ok, _} = smr_task_sup_sup:start_task(
-                              smr_job_sup:task_sup_sup(Sup),
-                              JobPid, TaskType, Fun, TaskInput)
+                case smr_task_sup_sup:start_task(
+                         smr_job_sup:task_sup_sup(Sup),
+                         JobPid, TaskType, Fun, TaskInput) of
+                     {ok, _}         -> ok;
+                     {error, Reason} -> exit(Reason)
+                end
         end),
     send_tasks(RestInput, State#state{ongoing = Ongoing + 1}).
 

@@ -3,6 +3,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-compile(export_all).
+
 %------------------------------------------------------------------------------
 
 whole_system_1_test() ->
@@ -28,6 +30,54 @@ whole_system_2_test() ->
          end,
          [{K, V} || K <- lists:seq(1, 50), V <- lists:seq(40, 1, -1)],
          [{keys, 40 * 50 * 51 div 2}, {values, 50 * 40 * 41 div 2}]}).
+
+whole_system_3_test() ->
+    smr:start(),
+    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+    sort_test(10000, 0, 1000000, 50),
+    smr_pool:kill_all_nodes(),
+    smr:stop().
+
+whole_system_4_test() ->
+    smr:start(),
+    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+    sort_test(10000, 0, 100, 5),
+    smr_pool:kill_all_nodes(),
+    smr:stop().
+
+sort_test(InputSize, LowerLimit, UpperLimit, NumBuckets) ->
+    BucketRange = (UpperLimit - LowerLimit) div NumBuckets,
+    SampleInput = [{none,
+                    random:uniform(UpperLimit - LowerLimit) + LowerLimit - 1} ||
+                   _ <- lists:seq(1, InputSize)],
+    MapFun = fun ({_K, V}) -> case V div BucketRange of
+                                  B when B >= NumBuckets ->
+                                      [{NumBuckets - 1, V}];
+                                  B ->
+                                      [{B, V}]
+                              end
+             end,
+    ReduceFun = fun ({_Bucket, V}) -> lists:sort(V) end,
+    {ok, Id} =
+        smr_master:new_job(MapFun, ReduceFun, InputSize div 5, 1),
+    smr_master:add_input(Id, SampleInput),
+    Start = now(),
+    {ok, UnsortedBuckets} = smr_master:do_job(Id),
+    End = now(),
+    Sorted = [V || {_B, V} <- lists:keysort(1, UnsortedBuckets)],
+    ?assertMatch(true, is_sorted(Sorted)),
+    timer:now_diff(End, Start).
+
+is_sorted([]) ->
+    true;
+is_sorted([_]) ->
+    true;
+is_sorted([V1, V2]) when V1 < V2 ->
+    true;
+is_sorted([V1, V2 | List]) when V1 < V2 ->
+    is_sorted([V2 | List]);
+is_sorted(_) ->
+    false.
 
 basic_whole_system(TestSuite) ->
     smr:start(),
@@ -76,11 +126,19 @@ whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
                   SortedExpected, SortedResult).
 
 start_test_slaves(Names) ->
-    lists:map(fun (Name) -> {ok, Node} = slave:start(
-                                net_adm:localhost(),
-                                Name,
-                                os:getenv("WORKER_ERL_OPTS")),
-                            Node
+    lists:map(fun ({Host, Name}) ->
+                      {ok, Node} = slave:start(
+                          Host,
+                          Name,
+                          " -env DISPLAY " ++ net_adm:localhost() ++ ":0 " ++
+                              os:getenv("WORKER_ERL_OPTS")),
+                      Node;
+                  (Name) ->
+                      {ok, Node} = slave:start(
+                          net_adm:localhost(),
+                          Name,
+                          os:getenv("WORKER_ERL_OPTS")),
+                      Node
               end, Names).
 
 start_and_add_test_slaves(Names) ->
