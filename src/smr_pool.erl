@@ -26,11 +26,11 @@ attach_node(Node) ->
     gen_server:call(?NAME, {attach, Node}, infinity).
 
 auto_attach_nodes() ->
+    [_, Host] = string:tokens(atom_to_list(node()), "@"),
     Workers = lists:map(fun (Worker) -> list_to_atom(
                                             case lists:member($@, Worker) of
                                                 true  -> Worker;
-                                                false -> Worker ++ "@" ++
-                                                             net_adm:localhost()
+                                                false -> Worker ++ "@" ++ Host
                                             end)
                         end, string:tokens(os:getenv("SMR_WORKER_NODES"),
                                            " \n\t")),
@@ -112,6 +112,7 @@ handle_cast({}, _State) ->
     not_implemented.
 
 handle_info({nodedown, N}, State = #state{nodes = Ns, free_nodes = FNs}) ->
+    error_logger:info_msg("Worker node ~p died~n", [N]),
     {noreply, State#state{nodes = dict:erase(N, Ns),
                           free_nodes = ordsets:del_element(N, FNs)}};
 handle_info({'DOWN', _, process, Pid, _Reason}, State = #state{free_nodes = FNs,
@@ -160,6 +161,7 @@ serve({spawn, MFA, Link}, From, State = #state{nodes = Ns, free_nodes = FNs}) ->
             NewFNs = ordsets:del_element(N, FNs),
             State#state{nodes = NewNs, free_nodes = NewFNs};
         {'DOWN', M, process, Pid, Reason} ->
+            gen_server:reply(From, Pid),
             case Link of {true, Caller} -> exit(Caller, Reason);
                          false          -> ok
             end

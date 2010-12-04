@@ -69,7 +69,7 @@ job_to_json_spec(Job = #smr_job{started_on = SO, ended_on = EO}) ->
     Json_EO = now_to_json_spec(EO),
     record_to_json_spec(Job#smr_job{started_on = Json_SO,
                                     ended_on = Json_EO},
-                       record_info(fields, smr_job)).
+                        record_info(fields, smr_job)).
 
 worker_to_json_spec(Worker = #smr_worker{last_task_started_on = LTSO}) ->
     record_to_json_spec(
