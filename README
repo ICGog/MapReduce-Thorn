@@ -25,6 +25,8 @@ ReduceFun = fun ({_Word, CountList}) -> lists:sum(CountList) end.
 
 {ok, Id} = smr_master:new_job(MapFun, ReduceFun),
 smr_master:add_input(Id, Input),
-{ok, Result} = smr_master:do_job(Id).
+ok = smr_master:do_job(Id),
+Result = smr_master:whole_result(Id).
+
 
 lists:foreach(fun ({Word, Count}) -> io:format("~s -> ~p~n", [Word, Count]) end, Result).

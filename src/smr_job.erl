@@ -3,13 +3,14 @@
 
 -behavior(gen_server).
 
--export([start_link/5, add_input/2, start/1, result/3, task_started/3]).
+-export([start_link/5, add_input/2, start/1, result/3, task_started/3,
+         next_result/1, kill/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
 -record(state, {sup,
                 id,
-                phase = input, % input | map | reduce
+                phase = input, % input | map | reduce | output
                 map_fun,
                 reduce_fun,
                 ongoing = 0,
@@ -31,6 +32,12 @@ add_input(Job, Input) ->
 
 start(Job) ->
     gen_server:cast(Job, start).
+
+next_result(Job) ->
+    gen_server:call(Job, next_result, infinity).
+
+kill(Job) ->
+    gen_server:call(Job, kill, infinity).
 
 result(Job, Worker, Result) ->
     gen_server:cast(Job, {result, Worker, Result}).
@@ -56,7 +63,15 @@ handle_call({task_started, WorkerPid, Size}, _From,
             State = #state{phase = Phase, id = JobId}) ->
     erlang:monitor(process, WorkerPid),
     smr_statistics:task_started(JobId, node(WorkerPid), Phase, Size),
-    {reply, ok, State}.
+    {reply, ok, State};
+handle_call(next_result, From, State = #state{input = [], result = []}) ->
+    gen_server:reply(From, end_of_result),
+    handle_phase_finished(State);
+handle_call(next_result, From, State = #state{result = OutputChunk}) ->
+    gen_server:reply(From, OutputChunk),
+    {noreply, prepare_output(State#state{result = []})};
+handle_call(kill, _From, State) ->
+    {stop, killed, ok, State}.
 
 handle_cast(start, State) ->
     {noreply, set_phase(map, State)};
@@ -94,7 +109,11 @@ handle_phase_finished(State = #state{phase = reduce,
                                      result = Result,
                                      id = JobId}) ->
     smr_statistics:job_finished(JobId),
-    smr_master:job_result(self(), Result),
+    smr_master:job_finished(self()),
+    {noreply, set_phase(output, State#state{input = Result})};
+handle_phase_finished(State = #state{phase = output,
+                                     input = [],
+                                     result = []}) ->
     {stop, normal, State}.
 
 set_phase(map, State = #state{input = Input, id = JobId}) ->
@@ -108,7 +127,10 @@ set_phase(reduce, State = #state{input = Input, id = JobId}) ->
     smr_statistics:job_next_phase(JobId, reduce, length(Input)),
     send_tasks(Input, State#state{phase = reduce,
                                   input = undefined, % free
-                                  result = []}).
+                                  result = []});
+set_phase(output, State = #state{id = JobId}) ->
+    error_logger:info_msg("Job ~p: output phase started~n", [JobId]),
+    prepare_output(State#state{phase = output, result = []}).
 
 agregate_result(Result, State = #state{phase = map, result = Dict}) ->
     State#state{result =
@@ -145,6 +167,12 @@ send_tasks(Input, State = #state{sup = Sup,
                 end
         end),
     send_tasks(RestInput, State#state{ongoing = Ongoing + 1}).
+
+prepare_output(State = #state{input = Output,
+                              map_batch_size = MBS,
+                              result = []}) ->
+    {OutputChunk, RestOutput} = split_input(MBS, Output),
+    State#state{input = RestOutput, result = OutputChunk}.
 
 split_input(N, Input) ->
     split_input(N, Input, []).

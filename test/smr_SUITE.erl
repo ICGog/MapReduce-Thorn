@@ -62,9 +62,10 @@ sort_test(InputSize, LowerLimit, UpperLimit, NumBuckets) ->
         smr_master:new_job(MapFun, ReduceFun, InputSize div 5, 1),
     smr_master:add_input(Id, SampleInput),
     Start = now(),
-    {ok, UnsortedBuckets} = smr_master:do_job(Id),
+    ok = smr_master:do_job(Id),
+    UnsortedBuckets = smr_master:whole_result(Id),
+    Sorted = lists:flatten([V || {_B, V} <- lists:keysort(1, UnsortedBuckets)]),
     End = now(),
-    Sorted = [V || {_B, V} <- lists:keysort(1, UnsortedBuckets)],
     ?assertMatch(true, is_sorted(Sorted)),
     timer:now_diff(End, Start).
 
@@ -72,9 +73,9 @@ is_sorted([]) ->
     true;
 is_sorted([_]) ->
     true;
-is_sorted([V1, V2]) when V1 < V2 ->
+is_sorted([V1, V2]) when V1 =< V2 ->
     true;
-is_sorted([V1, V2 | List]) when V1 < V2 ->
+is_sorted([V1, V2 | List]) when V1 =< V2 ->
     is_sorted([V2 | List]);
 is_sorted(_) ->
     false.
@@ -111,7 +112,8 @@ pool_get_all_workers_test() ->
 whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
     {ok, JobId} = smr_master:new_job(MapFun, ReduceFun),
     smr_master:add_input(JobId, Input),
-    {ok, Result} = smr_master:do_job(JobId),
+    ok = smr_master:do_job(JobId),
+    Result = smr_master:whole_result(JobId),
     
     ExpectedLength = length(ExpectedResult),
     ?assertMatch(ExpectedLength, length(Result)),
