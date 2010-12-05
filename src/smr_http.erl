@@ -38,16 +38,16 @@ rfc4627_header() ->
     "Content-Type: " ++ rfc4627:mime_type() ++ "\r\n\r\n".
 
 get_workers(SessionId, _Env, _Input) ->
-    AttachedWorkers =
-        lists:filter(fun ({_, #smr_worker{is_detached = Det}}) -> not Det end,
-                     smr_statistics:get_workers()),
-    WorkerSpecs = lists:map(fun ({_, Value}) -> worker_to_json_spec(Value) end,
-                            AttachedWorkers),
-    mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(WorkerSpecs)]).
+    Workers =
+        lists:map(
+            fun worker_to_json_spec/1,
+            lists:filter(fun (#smr_worker{is_detached = Det}) -> not Det end,
+                         snd(lists:unzip(smr_statistics:get_workers())))),
+    mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(Workers)]).
 
 get_jobs(SessionId, _Env, _Input) ->
-    Jobs = lists:map(fun ({_, Value}) -> job_to_json_spec(Value) end,
-                     smr_statistics:get_jobs()),
+    Jobs = lists:map(fun job_to_json_spec/1,
+                     snd(lists:unzip(smr_statistics:get_jobs()))),
     mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(Jobs)]).
 
 kill_worker(SessionId, Env, _Input) ->
@@ -94,3 +94,5 @@ record_to_json_spec(Record, Fields) ->
 record_to_map(Record, Fields) ->
     [_ | Values] = tuple_to_list(Record),
     lists:zip(Fields, Values).
+
+snd({_, Snd}) -> Snd.
