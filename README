@@ -30,3 +30,4 @@ Result = smr_master:whole_result(Id).
 
 
 lists:foreach(fun ({Word, Count}) -> io:format("~s -> ~p~n", [Word, Count]) end, Result).
+

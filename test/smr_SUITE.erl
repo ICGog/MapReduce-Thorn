@@ -32,18 +32,24 @@ whole_system_2_test() ->
          [{keys, 40 * 50 * 51 div 2}, {values, 50 * 40 * 41 div 2}]}).
 
 whole_system_3_test() ->
-    smr:start(),
-    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
-    sort_test(10000, 0, 1000000, 50),
-    smr_pool:kill_all_nodes(),
-    smr:stop().
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+             sort_test(10000, 0, 1000000, 50),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
 
 whole_system_4_test() ->
-    smr:start(),
-    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
-    sort_test(10000, 0, 100, 5),
-    smr_pool:kill_all_nodes(),
-    smr:stop().
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+             sort_test(10000, 0, 100, 5),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
 
 sort_test(InputSize, LowerLimit, UpperLimit, NumBuckets) ->
     BucketRange = (UpperLimit - LowerLimit) div NumBuckets,
@@ -81,11 +87,15 @@ is_sorted(_) ->
     false.
 
 basic_whole_system(TestSuite) ->
-    smr:start(),
-    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
-    whole_system(TestSuite),
-    smr_pool:kill_all_nodes(),
-    smr:stop().
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             whole_system(TestSuite),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
 
 pool_get_all_workers_test() ->
     smr:start(),
