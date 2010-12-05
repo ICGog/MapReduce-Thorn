@@ -3,34 +3,19 @@
 <head>
   <style>img{ height: 100px; float: left; }</style>
   <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="/js/jnodes.js"></script>
+
 </head>
 <body>
-
-<script type="text/javascript">
-
-$(document).ready(function() {
-
-$.get("http://localhost:8081/smr/smr_http:get_workers",
-    function(data){
-      var current;
-      for (current=0; current<data.length; current++) {
-        var temp = data[current];
-        $('#response').append("*<br>");    
-        $('#response').append("Node number # " + current + "<br>");
-        $('#response').append("name = " + temp.node + "<br>");
-        $('#response').append("num_exec = " + temp.num_exec + "<br>");
-        $('#response').append("num_failed = " + temp.num_failed + "<br>");
-        $('#response').append("num_succ = " + temp.num_succ + "<br>");
-        $('#response').append("busy_time = " + temp.busy_time + "<br>");
-        $('#response').append("num_map_jobs = " + temp.num_map_tasks + "<br>");
-        $('#response').append("num_reduce_jobs = " + temp.num_reduce_tasks + "<br>");
-      }
-    }
-    ,'json');
-});
-
-</script>
 <div id="response"> </div>
+<script type="text/javascript">
+var r = getNodes();
+var current = 0;
+for (current=0; current<r.length; current++) {
+$('#response').append("node = " + r[current].node + "<br>");
+}
+</script>
+
 </body>
 </html>
 

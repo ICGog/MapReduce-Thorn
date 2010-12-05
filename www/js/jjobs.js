@@ -3,12 +3,15 @@
 // url would be changed once know specific location
 
 function getJobs() {
-
-$.get("testjobs.js",
+var result = new Array();
+$.ajax({
+  url:"/js/testjobs.js",
+  dataType:'json',
+  async:false,
+  success:
   function(data){
     var number = data.length;
     var current;
-    var result = new Array();
     for(current = 0; current<number; current++) {
       var temp = data[current];
       var job = new Object();
@@ -20,6 +23,7 @@ $.get("testjobs.js",
       job.reduce_code = temp.reduce_code;
       result[current] = job;
     }
-    return result;
-});
+}});
+return result;
+};
 
