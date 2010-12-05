@@ -3,16 +3,19 @@
 
 -behaviour(supervisor).
 
--export([start_link/0, start_job_sup/4]).
+-export([start_link/0, start_job_sup/5]).
 -export([init/1]).
+
+-define(NAME, {global, ?MODULE}).
 
 %------------------------------------------------------------------------------
 
 start_link() ->
-    supervisor:start_link(?MODULE, []).
+    supervisor:start_link(?NAME, ?MODULE, []).
 
-start_job_sup(Sup, Master, MapFun, ReduceFun) ->
-    supervisor:start_child(Sup, [Master, MapFun, ReduceFun]).
+start_job_sup(MapFun, ReduceFun, JobId, MapBatchSize, ReduceBatchSize) ->
+    supervisor:start_child(?NAME, [MapFun, ReduceFun, JobId, MapBatchSize,
+                                   ReduceBatchSize]).
 
 %------------------------------------------------------------------------------
 

@@ -1,9 +1,11 @@
 
 -module(smr_http).
 
--export([start/0, get_all_workers/3, get_workers/3, kill_worker/3]).
+-export([start/0, get_workers/3, get_jobs/3, kill_worker/3]).
 
 -include("smr.hrl").
+
+-record(date_time, {year, month, day, hour, minute, second}).
 
 start() ->
     inets:start(),
@@ -35,22 +37,21 @@ start() ->
 rfc4627_header() ->
     "Content-Type: " ++ rfc4627:mime_type() ++ "\r\n\r\n".
 
-get_all_workers(SessionId, _Env, _Input) ->
-    Workers = lists:map(fun erlang:atom_to_list/1,
-                        smr_statistics:get_all_workers(smr:statistics())),
-    mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(Workers)]).
-
 get_workers(SessionId, _Env, _Input) ->
-    Workers = lists:map(fun({_, Value}) -> worker_to_json_spec(Value) end,
-                        smr_statistics:get_workers(smr:statistics())),
-    mod_esi:deliver(SessionId, 
-                    [rfc4627_header(), rfc4627:encode(Workers)]).
+    Workers = lists:map(fun ({_, Value}) -> worker_to_json_spec(Value) end,
+                        smr_statistics:get_workers()),
+    mod_esi:deliver(SessionId,  [rfc4627_header(), rfc4627:encode(Workers)]).
+
+get_jobs(SessionId, _Env, _Input) ->
+    Jobs = lists:map(fun ({_, Value}) -> job_to_json_spec(Value) end,
+                     smr_statistics:get_jobs()),
+    mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(Jobs)]).
 
 kill_worker(SessionId, Env, _Input) ->
     {query_string, Query} = lists:keyfind(query_string, 1, Env),
     [{"w", Node}] = lists:filter(fun({Key, _Value}) -> Key == "w" end, 
                                  httpd:parse_query(Query)),
-    case smr:kill_worker_node(list_to_atom(Node)) of
+    case smr_pool:kill_node(list_to_atom(Node)) of
         killed     -> mod_esi:deliver(SessionId, 
                         [rfc4627_header(),
                          rfc4627:encode({obj, [{result, <<"ok">>}]})]);
@@ -63,8 +64,26 @@ kill_worker(SessionId, Env, _Input) ->
 % Internal
 %------------------------------------------------------------------------------
 
-worker_to_json_spec(Worker) ->
-    record_to_json_spec(Worker, record_info(fields, worker)).
+job_to_json_spec(Job = #smr_job{started_on = SO, ended_on = EO}) ->
+    Json_SO = now_to_json_spec(SO),
+    Json_EO = now_to_json_spec(EO),
+    record_to_json_spec(Job#smr_job{started_on = Json_SO,
+                                    ended_on = Json_EO},
+                        record_info(fields, smr_job)).
+
+worker_to_json_spec(Worker = #smr_worker{last_task_started_on = LTSO}) ->
+    record_to_json_spec(
+        Worker#smr_worker{last_task_started_on = now_to_json_spec(LTSO)},
+        record_info(fields, smr_worker)).
+
+now_to_json_spec(undefined) ->
+    <<"undefined">>;
+now_to_json_spec(Now) ->
+    {{Year, Month, Day}, {Hour, Minute, Second}} =
+        calendar:now_to_local_time(Now),
+    DT = #date_time{year = Year, month = Month, day = Day, hour = Hour,
+                    minute = Minute, second = Second},
+    record_to_json_spec(DT, record_info(fields, date_time)).
 
 record_to_json_spec(Record, Fields) ->
      {obj, record_to_map(Record, Fields)}.

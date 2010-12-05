@@ -13,7 +13,7 @@ export LOG_DIR=log
 export WWW_DIR=www
 LIB_DIR=lib
 
-ERL_HOSTS=.hosts.erlang
+WWW_ERROR_LOG=$(WWW_DIR)/log/smr.log
 
 JINTERFACE_JAR=$(ERL_TOP)/lib/jinterface-?.?.?/priv/OtpErlang.jar
 
@@ -32,7 +32,8 @@ TEST_SOURCES=$(wildcard $(TEST_DIR)/*.erl)
 TEST_TARGETS=$(patsubst $(TEST_DIR)/%.erl, $(TEST_DIR)/%.beam, $(TEST_SOURCES))
 
 ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall -v +debug_info
-ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE)
+ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE) -eval "ok = error_logger:logfile({open, \"$(WWW_ERROR_LOG)\"})." -async_shell_start -s smr
+WORKER_ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR)
 
 all: compile
 
@@ -40,10 +41,10 @@ compile: $(TARGETS)
 
 compile_tests: $(TEST_TARGETS)
 
-run: $(TARGETS) $(ERL_HOSTS)
+run: $(TARGETS)
 	$(MAKE) start_worker_nodes
 	mkdir -p $(LOG_DIR)
-	TH="$(TH)" erl $(ERL_OPTS)
+	SMR_WORKER_NODES="$(SMR_WORKER_NODES)" WORKER_ERL_OPTS="$(WORKER_ERL_OPTS)" TH="$(TH)" erl $(ERL_OPTS)
 	$(MAKE) stop_worker_nodes
 
 run_th:
@@ -58,6 +59,7 @@ all_tests: $(TARGETS) $(TEST_TARGETS)
 	$(MAKE) SMR_WORKER_NODES="$(SMR_TEST_WORKER_NODES)" stop_worker_nodes
 
 clean:
+	rm -f $(WWW_ERROR_LOG)
 	rm -f $(TARGETS)
 	rm -rf $(LOG_DIR)
 	$(MAKE) -C $(TEST_DIR) clean
@@ -67,7 +69,7 @@ start_worker_nodes: $(TARGETS)
 	for node in $(SMR_WORKER_NODES) ; do \
 	    echo ; \
 	    echo "Starting node $$node" ; \
-	    echo 'code:add_pathsa(["$(EBIN_DIR)"]), code:add_pathsa(["$(TEST_DIR)"]).' | TH="$(TH)" erl_call -sname $$node -s -e ; \
+	    echo 'code:add_pathsa(["$(realpath $(EBIN_DIR))"]), code:add_pathsa(["$(realpath $(TEST_DIR))"]).' | TH="$(TH)" erl_call -sname $$node -s -e ; \
 	    done
 
 .PHONY: stop_worker_nodes
@@ -92,6 +94,3 @@ $(TEST_TARGETS): $(TEST_DIR)
 .PHONY: $(TEST_DIR)
 $(TEST_DIR):
 	$(MAKE) -C $(TEST_DIR) compile
-
-$(ERL_HOSTS):
-	touch $@
