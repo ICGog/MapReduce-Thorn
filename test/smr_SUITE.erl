@@ -7,7 +7,7 @@
 
 %------------------------------------------------------------------------------
 
-whole_system_1_test() ->
+whole_system_1_test_() ->
     basic_whole_system(
         {fun ({_Name, Document}) ->
                  dict:to_list(lists:foldl(
@@ -22,7 +22,7 @@ whole_system_1_test() ->
           {def, "A common performance measurement of a network file system is the amount of time needed to satisfy service requests. In conventional systems, this time consists of a disk-access time and a small amount of CPU-processing time. But in a network file system, a remote access has additional overhead due to the distributed structure. This includes the time to deliver the request to a server, the time to deliver the response to the client, and for each direction, a CPU overhead of running the communication protocol software. The performance of a network file system can be viewed as one dimension of its transparency; to be fully equivalent, it would need to be comparable to that of a local disk."}],
          [{"naming", 1}, {"there", 1}, {"framework", 1}, {"The", 1}, {"CPU", 1}, {"work", 2}, {"a", 15}, {"service", 1}, {"viewed", 1}, {"pairs", 1}, {"behavior", 1}, {"server,", 1}, {"System)", 1}, {"system,", 1}, {"map.", 1}, {"combination,", 1}, {"protocol", 1}, {"single", 1}, {"needed", 1}, {"network.", 1}, {"assigned", 1}, {"request", 1}, {"(similar", 1}, {"with", 1}, {"If", 1}, {"expected", 1}, {"combines", 1}, {"and", 6}, {"files", 1}, {"dead", 1}, {"periodically", 1}, {"different", 1}, {"When", 1}, {"use", 1}, {"values", 2}, {"programming", 1}, {"software.", 1}, {"Each", 1}, {"has", 1}, {"reliability", 1}, {"this", 1}, {"would", 1}, {"communication", 1}, {"name", 2}, {"number", 1}, {"longer", 1}, {"records", 1}, {"completed", 1}, {"node's", 1}, {"task", 1}, {"additional", 1}, {"list", 3}, {"systems,", 1}, {"response", 1}, {"access", 1}, {"value", 1}, {"system", 2}, {"File", 1}, {"client,", 1}, {"data", 1}, {"This", 2}, {"functional", 1}, {"values.", 1}, {"disk.", 1}, {"back", 1}, {"also", 1}, {"ensure", 1}, {"sends", 1}, {"arbitrary", 1}, {"local", 1}, {"each", 2}, {"is", 4}, {"remote", 1}, {"be", 3}, {"can", 1}, {"falls", 1}, {"direction,", 1}, {"file", 4}, {"accepts", 1}, {"threads", 1}, {"dimension", 1}, {"all", 1}, {"Individual", 1}, {"report", 1}, {"In", 1}, {"copy", 1}, {"comparable", 1}, {"node", 5}, {"another", 1}, {"status", 1}, {"in", 4}, {"operations", 3}, {"equivalent,", 1}, {"other", 1}, {"transparency;", 1}, {"conventional", 1}, {"returns", 1}, {"to", 17}, {"MapReduce", 2}, {"them", 1}, {"side-effects).", 1}, {"addition", 1}, {"structure.", 1}, {"it", 2}, {"possible", 1}, {"updates.", 1}, {"server", 1}, {"performance", 2}, {"Google", 1}, {"conflicting", 1}, {"satisfy", 1}, {"check", 1}, {"interval,", 1}, {"outputs", 1}, {"into", 1}, {"parallel", 1}, {"parceling", 1}, {"which", 1}, {"returned", 1}, {"common", 1}, {"disk-access", 1}, {"are", 2}, {"value)", 1}, {"the", 20}, {"A", 1}, {"atomic", 1}, {"amount", 2}, {"includes", 1}, {"CPU-processing", 1}, {"time.", 1}, {"renamed,", 1}, {"distributed", 1}, {"due", 1}, {"not", 1}, {"Thus", 1}, {"one", 2}, {"fully", 1}, {"set", 1}, {"silent", 1}, {"network", 3}, {"of", 14}, {"its", 1}, {"achieves", 1}, {"But", 1}, {"map", 1}, {"consists", 1}, {"running", 1}, {"as", 3}, {"for", 4}, {"nodes.", 1}, {"(allowing", 1}, {"on", 1}, {"by", 2}, {"measurement", 1}, {"small", 1}, {"need", 1}, {"master", 2}, {"time", 5}, {"requests.", 1}, {"(key,", 1}, {"reduce", 1}, {"out", 2}, {"deliver", 2}, {"than", 1}, {"overhead", 2}, {"that", 4}, {"from", 1}, {"transforms", 1}, {"running.", 1}]}).
 
-whole_system_2_test() ->
+whole_system_2_test_() ->
     basic_whole_system(
         {fun ({K, V}) -> [{keys, K}, {values, V}] end,
          fun ({keys, Ks}) -> lists:sum(Ks);
@@ -31,21 +31,23 @@ whole_system_2_test() ->
          [{K, V} || K <- lists:seq(1, 50), V <- lists:seq(40, 1, -1)],
          [{keys, 40 * 50 * 51 div 2}, {values, 50 * 40 * 41 div 2}]}).
 
-whole_system_3_test() ->
+whole_system_3_test_() ->
     {timeout, 60,
      fun () ->
              smr:start(),
-             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
              sort_test(10000, 0, 1000000, 50),
              smr_pool:kill_all_nodes(),
              smr:stop()
      end}.
 
-whole_system_4_test() ->
+whole_system_4_test_() ->
     {timeout, 60,
      fun () ->
              smr:start(),
-             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
              sort_test(10000, 0, 100, 5),
              smr_pool:kill_all_nodes(),
              smr:stop()
