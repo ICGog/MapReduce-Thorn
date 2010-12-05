@@ -1,6 +1,7 @@
 
 -record(smr_worker, {node,
                      is_dead = false,
+                     is_detached = false,
                      num_failed = 0,
                      num_succ = 0,
                      num_map_tasks = 0,

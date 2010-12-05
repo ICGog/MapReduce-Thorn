@@ -38,9 +38,12 @@ rfc4627_header() ->
     "Content-Type: " ++ rfc4627:mime_type() ++ "\r\n\r\n".
 
 get_workers(SessionId, _Env, _Input) ->
-    Workers = lists:map(fun ({_, Value}) -> worker_to_json_spec(Value) end,
-                        smr_statistics:get_workers()),
-    mod_esi:deliver(SessionId,  [rfc4627_header(), rfc4627:encode(Workers)]).
+    AttachedWorkers =
+        lists:filter(fun ({_, #smr_worker{is_detached = Det}}) -> not Det end,
+                     smr_statistics:get_workers()),
+    WorkerSpecs = lists:map(fun ({_, Value}) -> worker_to_json_spec(Value) end,
+                            AttachedWorkers),
+    mod_esi:deliver(SessionId, [rfc4627_header(), rfc4627:encode(WorkerSpecs)]).
 
 get_jobs(SessionId, _Env, _Input) ->
     Jobs = lists:map(fun ({_, Value}) -> job_to_json_spec(Value) end,

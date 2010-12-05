@@ -195,8 +195,8 @@ worker_init({M, F, A}, Link, Pool) ->
 detach_node(N, State = #state{nodes = Ns, free_nodes = FNs}) ->
     Reply =
         case dict:fetch(N, Ns) of
-             #node{task_pid = none} ->
-                 ok;
+            #node{task_pid = none} ->
+                ok;
             #node{task_pid = TaskPid} ->
                 error_logger:info_msg("Killing running task ~p before "
                                       "detaching node ~p~n", [TaskPid, N]),
@@ -205,6 +205,7 @@ detach_node(N, State = #state{nodes = Ns, free_nodes = FNs}) ->
                 after 10000 -> {error, timed_out_waiting_task_pid_down}
                 end
         end,
+    smr_statistics:unregister_worker(N),
     {Reply, State#state{nodes = dict:erase(N, Ns),
                         free_nodes = ordsets:del_element(N, FNs)}}.
 

@@ -3,9 +3,9 @@
 -behaviour(gen_server).
 
 -export([get_workers/0, get_jobs/0]).
--export([start_link/0, register_worker/1, task_started/4, task_finished/2,
-         task_failed/2, job_started/3, job_next_phase/3, job_finished/1,
-         job_failed/2, pick_fastest_worker_of/1]).
+-export([start_link/0, register_worker/1, unregister_worker/1, task_started/4,
+         task_finished/2, task_failed/2, job_started/3, job_next_phase/3,
+         job_finished/1, job_failed/2, pick_fastest_worker_of/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
         code_change/3]).
 
@@ -35,6 +35,9 @@ start_link() ->
 
 register_worker(Node) ->
     gen_server:cast(?NAME, {register_worker, Node}).
+
+unregister_worker(Node) ->
+    gen_server:cast(?NAME, {unregister_worker, Node}).
 
 task_started(JobId, Node, TaskType, TaskSize) ->
     gen_server:cast(?NAME, {task_started, JobId, Node, TaskType, TaskSize}).
@@ -85,6 +88,8 @@ handle_call({pick_fastest_of, Ws}, _From, State = #state{workers = Workers}) ->
 
 handle_cast({register_worker, W}, State) ->
     {noreply, internal_register_worker(W, State)};
+handle_cast({unregister_worker, W}, State) ->
+    {noreply, internal_unregister_worker(W, State)};
 handle_cast({task_started, J, W, TaskType, TaskSize}, State) ->
     handle_update(
         W, J,
@@ -208,6 +213,14 @@ internal_register_worker(W, State = #state{workers = Workers}) ->
     monitor_node(W, true),
     State#state{workers =
         dict:store(W, #smr_worker{node = atom_to_bin(W)}, Workers)}.
+
+internal_unregister_worker(W, State = #state{workers = Workers}) ->
+    monitor_node(W, false),
+    NewWorkers =
+        dict:update(W,
+                    fun (Worker) -> Worker#smr_worker{is_detached = true} end,
+                    Workers),
+    State#state{workers = NewWorkers}.
 
 internal_register_job(J, MapCode, ReduceCode,
                       State = #state{jobs = Jobs}) ->
