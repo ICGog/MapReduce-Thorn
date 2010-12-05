@@ -4,7 +4,9 @@
 
 function getNodes() {
 
-$.get("http://localhost:8081/smr/smr_http:get_workers",
+var url = "http://localhost:8081/smr/smr_http:get_workers";
+
+$.get(url,
   function(data){
     var number = data.length;
     var current;
@@ -12,7 +14,7 @@ $.get("http://localhost:8081/smr/smr_http:get_workers",
     for(current = 0; current<number; current++) {
       var temp = data[current];
       var worker = new Object();
-      worker.ndoe = temp.node;
+      worker.node = temp.node;
       worker.exec = temp.num_exec;
       worker.succ = temp.num_succ;
       worker.fail = temp.num_failed;
@@ -23,4 +25,6 @@ $.get("http://localhost:8081/smr/smr_http:get_workers",
     }
     return result;
 });
+
+}
 

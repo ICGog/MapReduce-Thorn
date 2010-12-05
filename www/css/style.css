@@ -85,7 +85,7 @@ body a {
 }
 
 .node .value {
-	width: 4em;
+	width: 60px;
 	float: left;
 	text-align: center;
 	border-right: 1px solid #666;
