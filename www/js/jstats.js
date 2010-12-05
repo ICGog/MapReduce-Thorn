@@ -2,13 +2,16 @@
 // test data in /js/teststats.js
 // url would be changed once know specific location
 
-function getJobs() {
-
-$.get("teststats.js",
+function getStats() {
+var result = new Array();
+$.ajax({
+  url:"/js/teststats.js",
+  dataType:'json',
+  async:false,
+  success:
   function(data){
     var number = data.length;
     var current;
-    var result = new Array();
     for(current = 0; current<number; current++) {
       var temp = data[current];
       var stat = new Object();
@@ -19,6 +22,7 @@ $.get("teststats.js",
       stat.average_busy_time = temp.average_busy_time;
       result[current] = stat;
     }
-    return result;
-});
+}});
+return result;
+};
 

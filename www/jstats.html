@@ -3,30 +3,16 @@
 <head>
   <style>img{ height: 100px; float: left; }</style>
   <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="/js/jstats.js"></script>
 </head>
 <body>
-
+<div id="response"> </div>
 <script type="text/javascript">
-
-$(document).ready(function() {
-
-$.get("/js/teststats.js",
-    function(data){
-      var current;
-      for (current=0; current<data.length; current++) {
-        var temp = data[current];
-        $('#response').append("*<br>");    
-        $('#response').append("Node number # " + current + "<br>");
-        $('#response').append("started_on = " + temp.started_on + "<br>");
-        $('#response').append("total_completed_jobs = " + temp.total_completed_jobs + "<br>");
-       $('#response').append("total_workers = " + temp.total_workers + "<br>");
-        $('#response').append("total_running_jobs = " + temp.total_running_jobs + "<br>");
-       $('#response').append("average_busy_time = " + temp.average_busy_time + "<br>");
-
-      }
-    }
-    ,'json');
-});
+var r = getStats();
+var current = 0;
+for(current=0; current<r.length; current++) {
+  $('#response').append("id = " + r[current].started_on + "<br>");
+}
 
 </script>
 <div id="response"> </div>
