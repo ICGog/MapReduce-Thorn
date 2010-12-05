@@ -3,8 +3,8 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, attach_node/1, auto_attach_nodes/0, kill_node/1,
-         kill_all_nodes/0, pspawn/3, pspawn_link/3, get_nodes/0]).
+-export([start_link/0, attach_node/1, detach_node/1, auto_attach_nodes/0,
+         kill_node/1, kill_all_nodes/0, pspawn/3, pspawn_link/3, get_nodes/0]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 -export([worker_init/3]).
@@ -25,17 +25,26 @@
 attach_node(Node) ->
     gen_server:call(?NAME, {attach, Node}, infinity).
 
+detach_node(Node) ->
+    gen_server:call(?NAME, {detach, Node}, infinity).
+
 auto_attach_nodes() ->
     [_, Host] = string:tokens(atom_to_list(node()), "@"),
-    Workers = lists:map(fun (Worker) -> list_to_atom(
-                                            case lists:member($@, Worker) of
-                                                true  -> Worker;
-                                                false -> Worker ++ "@" ++ Host
-                                            end)
-                        end, string:tokens(os:getenv("SMR_WORKER_NODES"),
-                                           " \n\t")),
-    Result = lists:map(fun attach_node/1, Workers),
-    lists:zip(Workers, Result).
+    case os:getenv("SMR_WORKER_NODES") of
+        false ->
+            [];
+        WorkersEnv ->
+            Workers = lists:map(
+                fun (Worker) ->
+                        list_to_atom(
+                            case lists:member($@, Worker) of
+                                 true  -> Worker;
+                                 false -> Worker ++ "@" ++ Host
+                            end)
+                end, string:tokens(WorkersEnv, " \n\t")),
+            Result = lists:map(fun attach_node/1, Workers),
+            lists:zip(Workers, Result)
+    end.
 
 kill_node(Node) ->
     gen_server:call(?NAME, {kill, Node}, infinity).
@@ -75,7 +84,7 @@ handle_call({attach, N}, From, State0 = #state{nodes = Ns,
         true  -> {reply, {error, already_attached}, State0};
         false -> case net_adm:ping(N) of
                      pong -> smr_statistics:register_worker(N),
-                             gen_server:reply(From, attached),
+                             gen_server:reply(From, ok),
                              monitor_node(N, true),
                              NewNs = dict:store(N, #node{node = N}, Ns),
                              NewFNs = ordsets:add_element(N, FNs),
@@ -85,6 +94,12 @@ handle_call({attach, N}, From, State0 = #state{nodes = Ns,
                              {noreply, State1};
                      _    -> {reply, {error, no_connection}, State0}
                  end
+    end;
+handle_call({detach, N}, _From, State = #state{nodes = Ns}) ->
+    case dict:is_key(N, Ns) of
+        true  -> {Reply, NewState} = detach_node(N, State),
+                 {reply, Reply, NewState};
+        false -> {reply, {error, node_not_in_pool}, State}
     end;
 handle_call({kill, N}, _From, State = #state{nodes = Ns}) ->
     case dict:is_key(N, Ns) of
@@ -177,11 +192,27 @@ worker_init({M, F, A}, Link, Pool) ->
     Pool ! {started, self()},
     apply(M, F, A).
 
+detach_node(N, State = #state{nodes = Ns, free_nodes = FNs}) ->
+    Reply =
+        case dict:fetch(N, Ns) of
+             #node{task_pid = none} ->
+                 ok;
+            #node{task_pid = TaskPid} ->
+                error_logger:info_msg("Killing running task ~p before "
+                                      "detaching node ~p~n", [TaskPid, N]),
+                exit(TaskPid, kill),
+                receive {'DOWN', _, process, TaskPid, _} -> ok
+                after 10000 -> {error, timed_out_waiting_task_pid_down}
+                end
+        end,
+    {Reply, State#state{nodes = dict:erase(N, Ns),
+                        free_nodes = ordsets:del_element(N, FNs)}}.
+
 kill_node(N, State = #state{nodes = Ns, free_nodes = FNs}) ->
     rpc:call(N, init, stop, []),
     receive {nodedown, N} ->
-                {killed, State#state{nodes = dict:erase(N, Ns),
-                                     free_nodes = ordsets:del_element(N, FNs)}}
+                {ok, State#state{nodes = dict:erase(N, Ns),
+                                 free_nodes = ordsets:del_element(N, FNs)}}
     after 60000 -> monitor_node(N, false),
                    {{error, timed_out_waiting_nodedown}, State}
     end.

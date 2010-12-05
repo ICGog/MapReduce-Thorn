@@ -21,6 +21,9 @@ start(_StartType, [EnableWebsite]) ->
     case EnableWebsite of true  -> smr_http:start();
                           false -> ok
     end,
+    AutoAttachOutcome = smr_pool:auto_attach_nodes(),
+    error_logger:info_msg("Auto attach nodes outcome: ~w~n",
+                          [AutoAttachOutcome]),
     {ok, Sup}.
 
 stop(_State) ->

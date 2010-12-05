@@ -87,9 +87,9 @@ handle_cast({add_input, JobId, Input}, State = #state{job_pids = JobPids}) ->
     smr_job:add_input(dict:fetch(JobId, JobPids), Input),
     {noreply, State};
 handle_cast({job_result, JobPid, Result}, State = #state{jobs = Jobs}) ->
-    error_logger:info_msg("MapReduce job ~p successfully completed~n",
-                          [JobPid]),
-    gen_server:reply((dict:fetch(JobPid, Jobs))#job.from, {ok, Result}),
+    #job{from = From, id = Id} = dict:fetch(JobPid, Jobs),
+    error_logger:info_msg("MapReduce job ~p successfully completed~n", [Id]),
+    gen_server:reply(From, {ok, Result}),
     {noreply, State}.
 
 handle_info({'DOWN', _, process, Pid, Reason}, State = #state{jobs = Jobs}) ->
@@ -110,7 +110,7 @@ handle_job_exit(Pid, #job{id = Id, from = From}, Reason,
     case Reason of
         normal -> ok;
         _      -> error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
-                                        [Pid, Reason]),
+                                        [Id, Reason]),
                   smr_statistics:job_failed(Id, Reason),
                   gen_server:reply(From, {error, Reason})
     end,

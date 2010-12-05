@@ -92,15 +92,15 @@ pool_get_all_workers_test() ->
 
     ?assertMatch([], smr_pool:get_nodes()),
 
-    attached = smr_pool:attach_node(Worker1),
+    ok = smr_pool:attach_node(Worker1),
     ?assertMatch([Worker1], smr_pool:get_nodes()),
 
-    attached = smr_pool:attach_node(Worker2),
+    ok = smr_pool:attach_node(Worker2),
     ExpectedW12 = lists:sort([Worker1, Worker2]),
     ResultW12 = lists:sort(smr_pool:get_nodes()),
     ?assertMatch(ExpectedW12, ResultW12),
 
-    killed = smr_pool:kill_node(Worker1),
+    ok = smr_pool:detach_node(Worker1),
     ?assertMatch([Worker2], smr_pool:get_nodes()),
 
     smr_pool:kill_all_nodes(),
@@ -143,6 +143,6 @@ start_test_slaves(Names) ->
 
 start_and_add_test_slaves(Names) ->
     Nodes = start_test_slaves(Names),
-    lists:foreach(fun (Node) -> attached = smr_pool:attach_node(Node) end,
+    lists:foreach(fun (Node) -> ok = smr_pool:attach_node(Node) end,
                   Nodes),
     Nodes.

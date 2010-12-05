@@ -30,7 +30,7 @@ TEST_SOURCES=$(wildcard $(TEST_DIR)/*.erl)
 TEST_TARGETS=$(patsubst $(TEST_DIR)/%.erl, $(TEST_DIR)/%.beam, $(TEST_SOURCES))
 
 ERLC_OPTS=-I $(INCLUDE_DIR) -o $(EBIN_DIR) -Wall -v +debug_info
-ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE)
+ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR) -sname $(SMR_NODE) -async_shell_start -s smr
 WORKER_ERL_OPTS=-pa $(EBIN_DIR) -pa $(TEST_DIR)
 
 all: compile

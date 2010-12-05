@@ -43,7 +43,7 @@ task_started(Job, Worker, Size) ->
 %------------------------------------------------------------------------------
 
 init([Sup, MapFun, ReduceFun, JobId, MapBatchSize, ReduceBatchSize]) ->
-    error_logger:info_msg("Job ~p created~n", [self()]),
+    error_logger:info_msg("Job ~p created~n", [JobId]),
     smr_statistics:job_started(JobId, MapFun, ReduceFun),
     {ok, #state{sup = Sup,
                 id = JobId,
@@ -98,13 +98,13 @@ handle_phase_finished(State = #state{phase = reduce,
     {stop, normal, State}.
 
 set_phase(map, State = #state{input = Input, id = JobId}) ->
-    error_logger:info_msg("Job ~p: map phase started~n", [self()]),
+    error_logger:info_msg("Job ~p: map phase started~n", [JobId]),
     smr_statistics:job_next_phase(JobId, map, length(Input)),
     send_tasks(Input, State#state{phase = map,
                                   input = undefined, % free
                                   result = dict:new()});
 set_phase(reduce, State = #state{input = Input, id = JobId}) ->
-    error_logger:info_msg("Job ~p: reduce phase started~n", [self()]),
+    error_logger:info_msg("Job ~p: reduce phase started~n", [JobId]),
     smr_statistics:job_next_phase(JobId, reduce, length(Input)),
     send_tasks(Input, State#state{phase = reduce,
                                   input = undefined, % free
