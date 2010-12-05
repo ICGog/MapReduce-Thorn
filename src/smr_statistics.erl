@@ -216,6 +216,9 @@ internal_register_worker(W, State = #state{workers = Workers}) ->
 
 internal_unregister_worker(W, State = #state{workers = Workers}) ->
     monitor_node(W, false),
+    receive {nodedown, W} -> ok
+    after 0 -> ok
+    end,
     NewWorkers =
         dict:update(W,
                     fun (Worker) -> Worker#smr_worker{is_detached = true} end,
