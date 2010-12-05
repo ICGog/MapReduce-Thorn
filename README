@@ -28,3 +28,4 @@ smr_master:add_input(Id, Input),
 {ok, Result} = smr_master:do_job(Id).
 
 lists:foreach(fun ({Word, Count}) -> io:format("~s -> ~p~n", [Word, Count]) end, Result).
+
