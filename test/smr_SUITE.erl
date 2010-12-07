@@ -3,6 +3,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-compile(export_all).
+
 %------------------------------------------------------------------------------
 
 whole_system_1_test() ->
@@ -29,40 +31,97 @@ whole_system_2_test() ->
          [{K, V} || K <- lists:seq(1, 50), V <- lists:seq(40, 1, -1)],
          [{keys, 40 * 50 * 51 div 2}, {values, 50 * 40 * 41 div 2}]}).
 
-basic_whole_system(TestSuite) ->
-    smr:start(),
-    start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
-    whole_system(TestSuite),
-    smr:stop().
+whole_system_3_test() ->
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+             sort_test(10000, 0, 1000000, 50),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
 
-statistics_get_all_workers_test() ->
+whole_system_4_test() ->
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4, test_w5]),
+             sort_test(10000, 0, 100, 5),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+sort_test(InputSize, LowerLimit, UpperLimit, NumBuckets) ->
+    BucketRange = (UpperLimit - LowerLimit) div NumBuckets,
+    SampleInput = [{none,
+                    random:uniform(UpperLimit - LowerLimit) + LowerLimit - 1} ||
+                   _ <- lists:seq(1, InputSize)],
+    MapFun = fun ({_K, V}) -> case V div BucketRange of
+                                  B when B >= NumBuckets ->
+                                      [{NumBuckets - 1, V}];
+                                  B ->
+                                      [{B, V}]
+                              end
+             end,
+    ReduceFun = fun ({_Bucket, V}) -> lists:sort(V) end,
+    {ok, Id} =
+        smr_master:new_job(MapFun, ReduceFun, InputSize div 5, 1),
+    smr_master:add_input(Id, SampleInput),
+    Start = now(),
+    {ok, UnsortedBuckets} = smr_master:do_job(Id),
+    End = now(),
+    Sorted = [V || {_B, V} <- lists:keysort(1, UnsortedBuckets)],
+    ?assertMatch(true, is_sorted(Sorted)),
+    timer:now_diff(End, Start).
+
+is_sorted([]) ->
+    true;
+is_sorted([_]) ->
+    true;
+is_sorted([V1, V2]) when V1 < V2 ->
+    true;
+is_sorted([V1, V2 | List]) when V1 < V2 ->
+    is_sorted([V2 | List]);
+is_sorted(_) ->
+    false.
+
+basic_whole_system(TestSuite) ->
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             whole_system(TestSuite),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+pool_get_all_workers_test() ->
     smr:start(),
     [Worker1, Worker2] = start_test_slaves([test_w1, test_w3]),
-    Statistics = smr:statistics(),
 
-    ?assertMatch([], smr_statistics:get_all_workers(Statistics)),
+    ?assertMatch([], smr_pool:get_nodes()),
 
-    attached = smr:attach_worker_node(Worker1),
-    timer:sleep(20), %% Wait to propagate to statistics
-    ?assertMatch([Worker1], smr_statistics:get_all_workers(Statistics)),
+    ok = smr_pool:attach_node(Worker1),
+    ?assertMatch([Worker1], smr_pool:get_nodes()),
 
-    attached = smr:attach_worker_node(Worker2),
-    timer:sleep(20), %% Wait to propagate to statistics
+    ok = smr_pool:attach_node(Worker2),
     ExpectedW12 = lists:sort([Worker1, Worker2]),
-    ResultW12 = lists:sort(smr_statistics:get_all_workers(Statistics)),
+    ResultW12 = lists:sort(smr_pool:get_nodes()),
     ?assertMatch(ExpectedW12, ResultW12),
 
-    killed = smr:kill_worker_node(Worker1),
-    timer:sleep(20), %% Wait to propagate to statistics
-    ?assertMatch([Worker2], smr_statistics:get_all_workers(Statistics)),
-    
+    ok = smr_pool:detach_node(Worker1),
+    ?assertMatch([Worker2], smr_pool:get_nodes()),
+
+    smr_pool:kill_all_nodes(),
+    ?assertMatch([], smr_pool:get_nodes()),
+
     smr:stop().
 
 whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
-    Master = smr:master(),
-    {ok, JobId} = smr_master:new_job(Master, MapFun, ReduceFun),
-    smr_master:add_input(Master, JobId, Input),
-    {ok, Result} = smr_master:do_job(Master, JobId),
+    {ok, JobId} = smr_master:new_job(MapFun, ReduceFun),
+    smr_master:add_input(JobId, Input),
+    {ok, Result} = smr_master:do_job(JobId),
     
     ExpectedLength = length(ExpectedResult),
     ?assertMatch(ExpectedLength, length(Result)),
@@ -77,15 +136,23 @@ whole_system({MapFun, ReduceFun, Input, ExpectedResult}) ->
                   SortedExpected, SortedResult).
 
 start_test_slaves(Names) ->
-    lists:map(fun (Name) -> {ok, Node} = slave:start(
-                                net_adm:localhost(),
-                                Name,
-                                os:getenv("WORKER_ERL_OPTS")),
-                            Node
+    lists:map(fun ({Host, Name}) ->
+                      {ok, Node} = slave:start(
+                          Host,
+                          Name,
+                          " -env DISPLAY " ++ net_adm:localhost() ++ ":0 " ++
+                              os:getenv("WORKER_ERL_OPTS")),
+                      Node;
+                  (Name) ->
+                      {ok, Node} = slave:start(
+                          net_adm:localhost(),
+                          Name,
+                          os:getenv("WORKER_ERL_OPTS")),
+                      Node
               end, Names).
 
 start_and_add_test_slaves(Names) ->
     Nodes = start_test_slaves(Names),
-    lists:foreach(fun (Node) -> attached = smr:attach_worker_node(Node) end,
+    lists:foreach(fun (Node) -> ok = smr_pool:attach_node(Node) end,
                   Nodes),
     Nodes.

@@ -3,14 +3,13 @@
 
 -behavior(gen_server).
 
--export([start_link/0, new_job/3, add_input/3, do_job/2]).
--export([job_result/3]).
+-export([start_link/0, new_job/2, new_job/4, add_input/2, do_job/1]).
+-export([job_result/2]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
 
--record(state, {sup,
-                jobs = dict:new(),    %% (JobPid -> #job{})
-                cur_job_id = 0,
+-record(state, {jobs = dict:new(),    %% (JobPid -> #job{})
+                cur_job_id = 1,
                 job_pids = dict:new()  %% (JobId -> JobPid)
                }).
 
@@ -20,43 +19,52 @@
               map_fun,
               reduce_fun}).
 
+-define(NAME, {global, ?MODULE}).
+-define(DEFAULT_BATCH_SIZE, 10).
+
 %------------------------------------------------------------------------------
 % API
 %------------------------------------------------------------------------------
 
 start_link() ->
-    gen_server:start_link({global, smr_master}, ?MODULE, [self()], []).
+    gen_server:start_link(?NAME, ?MODULE, [], []).
 
-new_job(Pid, Map, Reduce) ->
-    gen_server:call(Pid, {new_job, Map, Reduce}, infinity).
+new_job(Map, Reduce) ->
+    gen_server:call(?NAME, {new_job, Map, Reduce,
+                            ?DEFAULT_BATCH_SIZE, ?DEFAULT_BATCH_SIZE},
+                    infinity).
 
-add_input(Pid, JobId, Input) ->
-    gen_server:cast(Pid, {add_input, JobId, Input}).
+new_job(Map, Reduce, MapBatchSize, ReduceBatchSize) ->
+    gen_server:call(?NAME, {new_job, Map, Reduce,
+                            MapBatchSize, ReduceBatchSize},
+                    infinity).
 
-do_job(Pid, JobId) ->
-    gen_server:call(Pid, {do_job, JobId}, infinity).
+add_input(JobId, Input) ->
+    gen_server:cast(?NAME, {add_input, JobId, Input}).
+
+do_job(JobId) ->
+    gen_server:call(?NAME, {do_job, JobId}, infinity).
 
 %------------------------------------------------------------------------------
 % Internal API
 %------------------------------------------------------------------------------
 
-job_result(Pid, JobPid, Result) ->
-    gen_server:cast(Pid, {job_result, JobPid, Result}).
+job_result(JobPid, Result) ->
+    gen_server:cast(?NAME, {job_result, JobPid, Result}).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Sup]) ->
-    {ok, #state{sup = Sup}}.
+init([]) ->
+    {ok, #state{}}.
 
-handle_call({new_job, Map, Reduce}, _From,
-            State = #state{sup = Sup,
-                           jobs = Jobs,
+handle_call({new_job, Map, Reduce, MapBatchSize, ReduceBatchSize}, _From,
+            State = #state{jobs = Jobs,
                            cur_job_id = JobId,
                            job_pids = JobPids}) ->
-    {ok, JobSup} = smr_job_sup_sup:start_job_sup(smr_sup:job_sup_sup(Sup),
-                                                 self(), Map, Reduce),
+    {ok, JobSup} = smr_job_sup_sup:start_job_sup(Map, Reduce, JobId,
+                                                 MapBatchSize, ReduceBatchSize),
     JobPid = smr_job_sup:job(JobSup),
     erlang:monitor(process, JobPid),
     NewJobPids = dict:store(JobId, JobPid, JobPids),
@@ -79,9 +87,9 @@ handle_cast({add_input, JobId, Input}, State = #state{job_pids = JobPids}) ->
     smr_job:add_input(dict:fetch(JobId, JobPids), Input),
     {noreply, State};
 handle_cast({job_result, JobPid, Result}, State = #state{jobs = Jobs}) ->
-    error_logger:info_msg("MapReduce job ~p successfully completed~n",
-                          [JobPid]),
-    gen_server:reply((dict:fetch(JobPid, Jobs))#job.from, {ok, Result}),
+    #job{from = From, id = Id} = dict:fetch(JobPid, Jobs),
+    error_logger:info_msg("MapReduce job ~p successfully completed~n", [Id]),
+    gen_server:reply(From, {ok, Result}),
     {noreply, State}.
 
 handle_info({'DOWN', _, process, Pid, Reason}, State = #state{jobs = Jobs}) ->
@@ -102,7 +110,8 @@ handle_job_exit(Pid, #job{id = Id, from = From}, Reason,
     case Reason of
         normal -> ok;
         _      -> error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
-                                        [Pid, Reason]),
+                                        [Id, Reason]),
+                  smr_statistics:job_failed(Id, Reason),
                   gen_server:reply(From, {error, Reason})
     end,
     {noreply, State#state{jobs     = dict:erase(Pid, Jobs),
