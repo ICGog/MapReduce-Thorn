@@ -37,7 +37,7 @@ whole_system_3_test_() ->
              smr:start(),
              start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
                                         test_w5]),
-             sort_test(10000, 0, 1000000, 50),
+             sort_test(10000, 50, 1),
              smr_pool:kill_all_nodes(),
              smr:stop()
      end}.
@@ -48,12 +48,14 @@ whole_system_4_test_() ->
              smr:start(),
              start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
                                         test_w5]),
-             sort_test(10000, 0, 100, 5),
+             sort_test(10000, 5, 2),
              smr_pool:kill_all_nodes(),
              smr:stop()
      end}.
 
-sort_test(InputSize, LowerLimit, UpperLimit, NumBuckets) ->
+sort_test(InputSize, NumBuckets, Replicas) ->
+    LowerLimit = 1,
+    UpperLimit = InputSize,
     BucketRange = (UpperLimit - LowerLimit) div NumBuckets,
     SampleInput = [{none,
                     random:uniform(UpperLimit - LowerLimit) + LowerLimit - 1} ||
@@ -66,16 +68,33 @@ sort_test(InputSize, LowerLimit, UpperLimit, NumBuckets) ->
                               end
              end,
     ReduceFun = fun ({_Bucket, V}) -> lists:sort(V) end,
-    {ok, Id} =
-        smr_master:new_job(MapFun, ReduceFun, InputSize div 5, 1),
-    smr_master:add_input(Id, SampleInput),
+    {ok, Id} = smr_master:new_job(MapFun, ReduceFun, [{n_ram_copies, Replicas}]),
+    add_input_in_partitions(Id, InputSize div NumBuckets, SampleInput),
     Start = now(),
     ok = smr_master:do_job(Id),
     UnsortedBuckets = smr_master:whole_result(Id),
     Sorted = lists:flatten([V || {_B, V} <- lists:keysort(1, UnsortedBuckets)]),
     End = now(),
+    ?assertMatch(InputSize, length(Sorted)),
     ?assertMatch(true, is_sorted(Sorted)),
     timer:now_diff(End, Start).
+
+add_input_in_partitions(_Id, _PartLen, []) ->
+    ok;
+add_input_in_partitions(Id, PartLen, Input) ->
+    {Part, Rest} = split_input(PartLen, Input),
+    smr_master:add_input(Id, Part),
+    add_input_in_partitions(Id, PartLen, Rest).
+
+split_input(N, Input) ->
+    split_input(N, Input, []).
+
+split_input(0, Input, Before) ->
+    {Before, Input};
+split_input(_, [], Before) ->
+    {Before, []};
+split_input(N, [KV | RestInput], Before) ->
+    split_input(N - 1, RestInput, [KV | Before]).
 
 is_sorted([]) ->
     true;

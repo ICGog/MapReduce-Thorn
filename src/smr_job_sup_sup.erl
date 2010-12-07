@@ -13,9 +13,8 @@
 start_link() ->
     supervisor:start_link(?NAME, ?MODULE, []).
 
-start_job_sup(MapFun, ReduceFun, JobId, MapBatchSize, ReduceBatchSize) ->
-    supervisor:start_child(?NAME, [MapFun, ReduceFun, JobId, MapBatchSize,
-                                   ReduceBatchSize]).
+start_job_sup(MapFun, ReduceFun, JobId, Mode, MaxTasks) ->
+    supervisor:start_child(?NAME, [MapFun, ReduceFun, JobId, Mode, MaxTasks]).
 
 %------------------------------------------------------------------------------
 

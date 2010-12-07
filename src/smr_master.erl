@@ -3,7 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/0, new_job/2, new_job/4, add_input/2, do_job/1,
+-export([start_link/0, new_job/2, new_job/3, new_job/4, add_input/2, do_job/1,
          next_result/1, whole_result/1, kill_job/1]).
 -export([job_finished/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
@@ -21,7 +21,7 @@
               reduce_fun}).
 
 -define(NAME, {global, ?MODULE}).
--define(DEFAULT_BATCH_SIZE, 10).
+-define(DEFAULT_MODE, [{n_ram_copies, 3}]).
 
 %------------------------------------------------------------------------------
 % API
@@ -31,14 +31,14 @@ start_link() ->
     gen_server:start_link(?NAME, ?MODULE, [], []).
 
 new_job(Map, Reduce) ->
-    gen_server:call(?NAME, {new_job, Map, Reduce,
-                            ?DEFAULT_BATCH_SIZE, ?DEFAULT_BATCH_SIZE},
+    gen_server:call(?NAME, {new_job, Map, Reduce, ?DEFAULT_MODE, infinity},
                     infinity).
 
-new_job(Map, Reduce, MapBatchSize, ReduceBatchSize) ->
-    gen_server:call(?NAME, {new_job, Map, Reduce,
-                            MapBatchSize, ReduceBatchSize},
-                    infinity).
+new_job(Map, Reduce, Mode) ->
+    gen_server:call(?NAME, {new_job, Map, Reduce, Mode, infinity}, infinity).
+
+new_job(Map, Reduce, Mode, MaxTasks) ->
+    gen_server:call(?NAME, {new_job, Map, Reduce, Mode, MaxTasks}, infinity).
 
 add_input(JobId, Input) ->
     gen_server:cast(?NAME, {add_input, JobId, Input}).
@@ -72,12 +72,12 @@ job_finished(JobPid) ->
 init([]) ->
     {ok, #state{}}.
 
-handle_call({new_job, Map, Reduce, MapBatchSize, ReduceBatchSize}, _From,
+handle_call({new_job, Map, Reduce, Mode, MaxTasks}, _From,
             State = #state{jobs = Jobs,
                            cur_job_id = JobId,
                            job_pids = JobPids}) ->
-    {ok, JobSup} = smr_job_sup_sup:start_job_sup(Map, Reduce, JobId,
-                                                 MapBatchSize, ReduceBatchSize),
+    {ok, JobSup} = smr_job_sup_sup:start_job_sup(Map, Reduce, JobId, Mode,
+                                                 MaxTasks),
     JobPid = smr_job_sup:job(JobSup),
     erlang:monitor(process, JobPid),
     NewJobPids = dict:store(JobId, JobPid, JobPids),
@@ -133,6 +133,7 @@ handle_job_exit(Pid, #job{id = Id, from = From}, Reason,
         normal -> ok;
         _      -> error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
                                         [Id, Reason]),
+                  smr_mnesia:delete_job_tables(Id),
                   smr_statistics:job_failed(Id, Reason),
                   case From of none -> ok;
                                _    -> gen_server:reply(From, {error, Reason})

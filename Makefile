@@ -62,6 +62,7 @@ clean:
 	rm -f $(WWW_ERROR_LOG)
 	rm -f $(TARGETS)
 	rm -rf $(LOG_DIR)
+	rm -rf Mnesia.*
 	$(MAKE) -C $(TEST_DIR) clean
 
 .PHONY: start_worker_nodes

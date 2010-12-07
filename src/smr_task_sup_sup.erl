@@ -3,7 +3,7 @@
 
 -behaviour(supervisor).
 
--export([start_link/0, start_task/5]).
+-export([start_link/0, start_task/7]).
 -export([init/1]).
 
 %------------------------------------------------------------------------------
@@ -11,8 +11,9 @@
 start_link() ->
     supervisor:start_link(?MODULE, []).
 
-start_task(Sup, JobPid, TaskType, TaskFun, Input) ->
-    supervisor:start_child(Sup, [JobPid, TaskType, TaskFun, Input]).
+start_task(Sup, JobPid, TaskId, TaskType, TaskFun, FromTable, ToTable) ->
+    supervisor:start_child(Sup, [JobPid, TaskId, TaskType, TaskFun, FromTable,
+                                 ToTable]).
 
 %------------------------------------------------------------------------------
 

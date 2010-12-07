@@ -1,19 +1,26 @@
 
 -module(smr_task).
 
--export([map/4, reduce/4, run_thorn_job/2]).
+-export([map/6, reduce/6, run_thorn_job/2]).
 
 %------------------------------------------------------------------------------
 
-map(_Sup, Job, MapFun, Input) ->
-    smr_job:task_started(Job, self(), length(Input)),
-    smr_job:result(Job, self(), lists:flatmap(MapFun, Input)).
+map(_Sup, Job, TaskId, MapFun, FromTable, ToTable) ->
+    {Hashes, ResultSize} =
+        smr_mnesia:process_input(
+            TaskId,
+            fun (Input) ->
+                    %% TODO calling task_started too late !!!! :|
+                    smr_job:task_started(Job, self(), TaskId,
+                                         erts_debug:flat_size(Input)),
+                    lists:flatmap(MapFun, Input) end,
+            FromTable, ToTable),
+    smr_job:task_finished(Job, self(), TaskId, [Hashes, ResultSize]).
 
-reduce(_Sup, Job, ReduceFun, Input) ->
-    smr_job:task_started(Job, self(), length(Input)),
-    smr_job:result(Job, self(),
-                   lists:map(fun (KV = {K, _}) -> {K, ReduceFun(KV)} end,
-                             Input)).
+reduce(_Sup, Job, TaskId, ReduceFun, FromTable, ToTable) ->
+    smr_job:task_started(Job, self(), TaskId, 5000), %% TODO size
+    smr_mnesia:process_inter(TaskId, ReduceFun, FromTable, ToTable),
+    smr_job:task_finished(Job, self(), TaskId, []).
 
 run_thorn_job(Code, Input) ->
     Temp = os:cmd("mktemp /tmp/XXXXXXXXXX-tmp.th"),

@@ -84,6 +84,7 @@ handle_call({attach, N}, From, State0 = #state{nodes = Ns,
         true  -> {reply, {error, already_attached}, State0};
         false -> case net_adm:ping(N) of
                      pong -> smr_statistics:register_worker(N),
+                             smr_mnesia:start_on_node(N),
                              gen_server:reply(From, ok),
                              monitor_node(N, true),
                              NewNs = dict:store(N, #node{node = N}, Ns),
@@ -205,6 +206,7 @@ detach_node(N, State = #state{nodes = Ns, free_nodes = FNs}) ->
                 after 10000 -> {error, timed_out_waiting_task_pid_down}
                 end
         end,
+    smr_mnesia:stop_on_node(N),
     smr_statistics:unregister_worker(N),
     {Reply, State#state{nodes = dict:erase(N, Ns),
                         free_nodes = ordsets:del_element(N, FNs)}}.

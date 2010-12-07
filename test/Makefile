@@ -26,3 +26,4 @@ clean:
 	rm -rf $(WWW_DIR)
 	rm -rf $(LOG_DIR)
 	rm -f $(TEST_TARGETS)
+	rm -rf Mnesia.*

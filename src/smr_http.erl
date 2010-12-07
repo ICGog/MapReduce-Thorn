@@ -9,6 +9,9 @@
 
 start() ->
     inets:start(),
+    error_logger:info_msg("~nMonitoring URL: http://" ++ net_adm:localhost() ++
+                          ":" ++ integer_to_list(?WWW_PORT) ++
+                          "/index.html~n~n", []),
     inets:start(httpd, [
         {modules, [
            mod_alias,

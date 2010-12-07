@@ -185,7 +185,7 @@ handle_cast({job_finished, J}, State) ->
 handle_cast({job_failed, J, Reason}, State) ->
     handle_update(
         none, J,
-        fun (Job = #smr_job{}) ->
+        fun (none, Job = #smr_job{}) ->
                 Outcome = list_to_binary(io_lib:format("error: ~w", [Reason])),
                 {none, Job#smr_job{has_ended = true,
                                    ended_on = now(),
