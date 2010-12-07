@@ -6,7 +6,7 @@ function getStat() {
 	
 	   	var stat	= new Object();
 	   	stat.start_time = Math.round(Math.random() * 100) + ":" + Math.round(Math.random() * 100);
-	   	stat.completed_count = i;
+	   	stat.completed_count = 0;
 	   	stat.busy_time = Math.round(Math.random() * 100) + ":" + Math.round(Math.random() * 100);
 
 		return stat;

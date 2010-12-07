@@ -9,11 +9,13 @@
 
    <!-- Using jquery -->
 	<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script> 
-	<script type="text/javascript" src="js/jquery-ui-1.8.6.custom.min.js"></script> 
+	<script type="text/javascript" src="js/jquery-ui-1.8.6.custom.min.js"></script>
+	<script type="text/javascript" src="js/jquery.tooltip.js"></script>  
+	<script type="text/javascript" src="js/jquery.dimensions.js"></script>
    	
 	<script type="text/javascript" src="js/jjobs.js"></script>
 	<script type="text/javascript" src="js/jnodes.js"></script>		
-    <script type="text/javascript" src="js/stats.js"></script>	
+    <script type="text/javascript" src="js/jstats.js"></script>
 	<script type="text/javascript" src="js/ov_update.js"></script>
 </head>   
 <body onload="initialize()">
@@ -21,8 +23,10 @@
 	    <div id="logo"><img src="img/logo.png" width="220" height="120" alt=""/></div>
 	    <div class="selected" id="menu_overview">Overview</div>	    
 	    <div class="menuitem" id="menu_details"><a href="details.html">Details</a></div>
+	    <div class="button" id="menu_workers"><a href="workers.html">Workers</a></div>
 	    <br/>
-	    <div class="button" id="update_toggle">[Disable Updates]</div>
+	    <div class="button" id="update_toggle">[Disable Updates]</div>	   
+	    <div class="button" id="show_log">[Show Log]</div>
 	    <br/>
 	    <div class="footer">
 	        <div id="framework_name">Thorn mapReduce</div>	   
@@ -49,8 +53,8 @@
    		    </tr>
   		    <tr>
   		        <td>Total running jobs:</td>
-  		        <td><div id="jobs_count"></div></td> 
-  		    </tr>
+  		        <td><div id="jobs_running"></div></td> 
+  		    </tr> 		    
   		    <tr>
   		        <td>Average busy time:</td>
   		        <td><div id="busy_time"></div></td>

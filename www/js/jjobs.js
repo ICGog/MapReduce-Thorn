@@ -5,7 +5,8 @@
 function getJobs() {
 var result = new Array();
 $.ajax({
-  url:"/js/testjobs.js",
+  url: "smr/smr_http:get_jobs",
+  /*url: "js/testjobs.js",*/
   dataType:'json',
   async:false,
   success:
@@ -14,16 +15,36 @@ $.ajax({
     var current;
     for(current = 0; current<number; current++) {
       var temp = data[current];
-      var job = new Object();
+      var job = new Object();      
       job.id = temp.id;
-      job.is_completed = temp.is_completed;
-      job.progress = temp.progress;
-      job.started_on = temp.started_on;
-      job.map_code = temp.map_code;
+      job.has_ended = temp.has_ended;
+      job.phase_progress = Math.round(temp.phase_progress * 100);
+      job.progress = Math.round(temp.progress * 100);
+      job.started_on = convertDate(temp.started_on);
+      job.ended_on = convertDate(temp.ended_on);
+      job.phase_worker_time_used_on_successful = temp.phase_worker_time_used_on_successful;
+      job.total_worker_time_used = temp.total_worker_time_used;
+      job.phase = temp.phase;
+      job.map_code = temp.map_code;    
       job.reduce_code = temp.reduce_code;
+      job.map_input_size = temp.map_input_size;
+      job.reduce_input_size = temp.reduce_input_size;
+      job.using_workers = temp.using_workers;
+      job.outcome = temp.outcome;
       result[current] = job;
     }
 }});
 return result;
-};
+}
+
+function convertDate(json) {
+	
+	var date = eval(json);
+	
+	dateString = date.hour + ":" + date.minute + ":" + date.second;
+	dateString += " " + date.day + "/" + date.month + "/" + date.year; 
+	
+	return dateString;
+}
+
 

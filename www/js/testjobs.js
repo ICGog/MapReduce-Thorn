@@ -1,2 +1,2 @@
-[{"id":"idA","is_completed":"yes","progress":"50","started_on":"07:12","map_code":"java","reduce_code":"thorn"},{"id":"idB","is_completed":"no","progress":"50","started_on":"07:12","map_code":"java","reduce_code":"thorn"}]
+[{"id":"idA","has_ended":true,"progress":"0.50","started_on":{"year":2010,"month":12,"day":7,"hour":21,"minute":2,"second":29},"ended_on":{"year":2010,"month":12,"day":7,"hour":21,"minute":2,"second":29},"map_code":"java","reduce_code":"thorn"},{"id":"idB","has_ended":false,"progress":"0.70","started_on":{"year":2010,"month":12,"day":7,"hour":21,"minute":2,"second":29},"ended_on":{"year":2010,"month":12,"day":7,"hour":21,"minute":2,"second":29},"map_code":"#Fun<smr_SUITE.6.53525991>\n","reduce_code":"thorn"}]
 

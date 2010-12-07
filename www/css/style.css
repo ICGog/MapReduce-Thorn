@@ -62,6 +62,9 @@ body a {
 	padding: 5px;
 }
 
+.old {
+	background: #D9D9D9;
+}
 
 /* Node styles */
 
@@ -77,15 +80,15 @@ body a {
 	 float: left;
 }
 
-.node .name {
+.node .node_header {
 	 background: #333;
     color: white;
     padding-left: 5px;
     font-weight: bold;	
 }
 
-.node .value {
-	width: 60px;
+.val {
+	width: 70px;
 	float: left;
 	text-align: center;
 	border-right: 1px solid #666;
