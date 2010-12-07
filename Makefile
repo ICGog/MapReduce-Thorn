@@ -22,8 +22,8 @@ THORNJARS="$(THORNROOT)/classes/fisher.jar:$(THORNROOT)/classes/junit.jar:$(JINT
 TH=java -classpath $(THORNJARS) fisher.run.Thorn
 THREPL=java -classpath $(THORNJARS) fisher.run.REPL
 
-ADDITIONAL_ERL_SOURCES=$(LIB_DIR)/rfc4627/rfc4627.erl
-ADDITIONAL_ERL_TARGETS=$(EBIN_DIR)/rfc4627.beam
+ADDITIONAL_ERL_SOURCES=$(LIB_DIR)/rfc4627/rfc4627.erl $(LIB_DIR)/plists/plists.erl
+ADDITIONAL_ERL_TARGETS=$(EBIN_DIR)/rfc4627.beam $(EBIN_DIR)/plists.beam
 
 INCLUDES=$(wildcard $(INCLUDE_DIR)/*.hrl)
 SOURCES=$(wildcard $(SOURCE_DIR)/*.erl)
@@ -85,7 +85,9 @@ stop_worker_nodes:
 ##########################################################################
 
 $(ADDITIONAL_ERL_TARGETS): $(ADDITIONAL_ERL_SOURCES)
-	erlc $(ERLC_OPTS) $<
+	for src in $(ADDITIONAL_ERL_SOURCES) ; do \
+	    erlc $(ERLC_OPTS) $$src ; \
+	done
 
 $(EBIN_DIR)/%.beam: $(SOURCE_DIR)/%.erl $(INCLUDES)
 	erlc $(ERLC_OPTS) $<

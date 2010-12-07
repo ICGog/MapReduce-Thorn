@@ -6,24 +6,34 @@
 %------------------------------------------------------------------------------
 
 map(_Sup, Job, TaskId, MapFun, FromTable, ToTable) ->
+    Processes = 4,
+    ExpectedReduceKeys = infinity,
+    HashFun = case ExpectedReduceKeys of
+                  infinity -> fun erlang:phash2/1;
+                  _        -> MaxHash = ExpectedReduceKeys div Processes,
+                              fun (Key) -> erlang:phash2(Key, MaxHash) end
+              end,
     {Hashes, ResultSize} =
         smr_mnesia:process_input(
             TaskId,
             fun (Input) ->
                     smr_job:task_started(Job, self(), TaskId,
                                          erts_debug:flat_size(Input)),
-                    lists:flatmap(MapFun, Input) end,
-            FromTable, ToTable),
+                    lists:flatten(plists:map(MapFun, Input,
+                                             {processes, Processes}))
+            end,
+            HashFun, FromTable, ToTable),
     smr_job:task_finished(Job, self(), TaskId, [Hashes, ResultSize]).
 
 reduce(_Sup, Job, TaskId, ReduceFun, FromTable, ToTable) ->
+    Processes = 4,
     smr_mnesia:process_inter(
         TaskId,
         fun (KVsList) ->
                 smr_job:task_started(Job, self(), TaskId,
                                      erts_debug:flat_size(KVsList)),
-                lists:map(fun (KVs = {K, _}) -> {K, ReduceFun(KVs)} end,
-                          KVsList)
+                plists:map(fun (KVs = {K, _}) -> {K, ReduceFun(KVs)} end,
+                           KVsList, {processes, Processes})
         end,
         FromTable, ToTable),
     smr_job:task_finished(Job, self(), TaskId, []).

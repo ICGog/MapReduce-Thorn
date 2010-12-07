@@ -3,7 +3,7 @@
 
 -export([start/0, stop/0, start_on_node/1, stop_on_node/1]).
 -export([create_job_tables/3, delete_job_table/1, delete_job_tables/1]).
--export([put_input_chunk/3, process_input/4, process_inter/4,
+-export([put_input_chunk/3, process_input/5, process_inter/4,
          take_output_chunk/1]).
 
 -include("smr.hrl").
@@ -69,9 +69,10 @@ put_input_chunk(TaskId, Chunk, InputTable) ->
     mnesia:activity(sync_dirty, fun put_input_chunk_internal/3,
                     [TaskId, Chunk, InputTable], mnesia_frag).
 
-process_input(TaskId, Fun, InputTable, InterTable) ->
-    mnesia:activity(sync_dirty, fun process_input_internal/4,
-                    [TaskId, Fun, InputTable, InterTable], mnesia_frag).
+process_input(TaskId, Fun, HashFun, InputTable, InterTable) ->
+    mnesia:activity(sync_dirty, fun process_input_internal/5,
+                    [TaskId, Fun, HashFun, InputTable, InterTable],
+                    mnesia_frag).
 
 process_inter(HashKey, Fun, InterTable, OutputTable) ->
     mnesia:activity(sync_dirty, fun process_inter_internal/4,
@@ -90,12 +91,12 @@ put_input_chunk_internal(TaskId, Chunk, InputTable) ->
                  write),
     ok.
 
-process_input_internal(TaskId, Fun, InputTable, InterTable) ->
+process_input_internal(TaskId, Fun, HashFun, InputTable, InterTable) ->
     [#smr_input{chunk = Chunk}] = mnesia:read(InputTable, TaskId, read),
     {Hashes, ResultSize} =
         lists:foldl(
             fun ({Key, Values}, {HashesSet, TotalSize}) ->
-                    Hash = erlang:phash2(Key),
+                    Hash = HashFun(Key),
                     mnesia:write(InterTable,
                                  #smr_inter{k = #smr_inter_k{hash_key = Hash,
                                                              key = Key,
