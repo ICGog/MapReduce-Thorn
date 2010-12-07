@@ -93,18 +93,18 @@ put_input_chunk_internal(TaskId, Chunk, InputTable) ->
 process_input_internal(TaskId, Fun, InputTable, InterTable) ->
     [#smr_input{chunk = Chunk}] = mnesia:read(InputTable, TaskId, read),
     {Hashes, ResultSize} =
-        lists:foldl(
-            fun (KV = {Key, Value}, {HashesSet, TotalSize}) ->
+        orddict:fold(
+            fun (Key, Values, {HashesSet, TotalSize}) ->
                     Hash = erlang:phash2(Key),
                     mnesia:write(InterTable,
                                  #smr_inter{k = #smr_inter_k{hash_key = Hash,
                                                              key = Key,
                                                              uuid = uuid()},
-                                            value = Value},
+                                            value = Values},
                                 write),
                    {gb_sets:add_element(Hash, HashesSet),
-                    TotalSize + erts_debug:flat_size(KV)}
-            end, {gb_sets:new(), 0}, Fun(Chunk)),
+                    TotalSize + erts_debug:flat_size({Key, Values})}
+            end, {gb_sets:new(), 0}, kv_list_to_orddict(Fun(Chunk))),
     {Hashes, ResultSize}.
 
 process_inter_internal(HashKey, Fun, InterTable, OutputTable) ->
@@ -116,18 +116,25 @@ process_inter_internal(HashKey, Fun, InterTable, OutputTable) ->
                                         _='_'},
                             [], [{{'$1', '$2'}}]}],
                            read),
-    Dict =
-        lists:foldl(
-            fun ({K, V}, Dict) ->
-                    orddict:update(K, fun (VList) -> [V | VList] end, [V], Dict)
-            end, orddict:new(), KVList),
     orddict:fold(
          fun (Key, Values, _) ->
                  ReducedValue = Fun({Key, Values}),
                  mnesia:write(OutputTable, #smr_output{key = Key,
                                                        value = ReducedValue},
                               write)
-         end, none, Dict).
+         end, none, kvlist_list_to_orddict(KVList)).
+
+kvlist_list_to_orddict(KVList) ->
+    lists:foldl(
+            fun ({K, Vs}, Dict) ->
+                    orddict:update(K, fun (VList) -> Vs ++ VList end, Vs, Dict)
+            end, orddict:new(), KVList).
+
+kv_list_to_orddict(KVList) ->
+    lists:foldl(
+            fun ({K, V}, Dict) ->
+                    orddict:update(K, fun (VList) -> [V | VList] end, [V], Dict)
+            end, orddict:new(), KVList).
 
 take_output_chunk_internal(OutputTable) ->
     case select_until_size(mnesia:select(OutputTable,
