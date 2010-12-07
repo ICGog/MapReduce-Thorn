@@ -16,11 +16,21 @@ $.ajax({
       var temp = data[current];
       var job = new Object();
       job.id = temp.id;
+      job.has_ended = temp.has_ended;
+      job.phase_progress = temp.phase_progress;
       job.is_completed = temp.is_completed;
       job.progress = temp.progress;
       job.started_on = temp.started_on;
+      job.ended_on = temp.ended_on;
       job.map_code = temp.map_code;
       job.reduce_code = temp.reduce_code;
+      job.phase_worker_time_used_on_successful = temp.phase_worker_time_used_on_successful;
+      job.total_worker_time_used = temp.total_worker_time_used;
+      job.phase = temp.phase;
+      job.map_input_size = temp.map_input_size;
+      job.reduce_input_size = temp.reduce_input_size;
+      job.using_workers = temp.using_workers;
+      job.outcome = temp.outcome;
       result[current] = job;
     }
 }});
