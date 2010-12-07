@@ -41,7 +41,7 @@ new_job(Map, Reduce, Mode, MaxTasks) ->
     gen_server:call(?NAME, {new_job, Map, Reduce, Mode, MaxTasks}, infinity).
 
 add_input(JobId, Input) ->
-    gen_server:cast(?NAME, {add_input, JobId, Input}).
+    gen_server:call(?NAME, {add_input, JobId, Input}, infinity).
 
 do_job(JobId) ->
     gen_server:call(?NAME, {do_job, JobId}, infinity).
@@ -88,6 +88,10 @@ handle_call({new_job, Map, Reduce, Mode, MaxTasks}, _From,
     {reply, {ok, JobId}, State#state{jobs = NewJobs,
                                      job_pids = NewJobPids,
                                      cur_job_id = JobId + 1}};
+handle_call({add_input, JobId, Input}, _From,
+            State = #state{job_pids = JobPids}) ->
+    smr_job:add_input(dict:fetch(JobId, JobPids), Input),
+    {reply, ok, State};
 handle_call({do_job, JobId}, From, State = #state{job_pids = JobPids,
                                                   jobs = Jobs}) ->
     JobPid = dict:fetch(JobId, JobPids),
@@ -104,9 +108,6 @@ handle_call({kill_job, JobId}, _From, State = #state{job_pids = JobPids}) ->
         error        -> {reply, {error, not_found}}
     end.
 
-handle_cast({add_input, JobId, Input}, State = #state{job_pids = JobPids}) ->
-    smr_job:add_input(dict:fetch(JobId, JobPids), Input),
-    {noreply, State};
 handle_cast({job_finished, JobPid}, State = #state{jobs = Jobs}) ->
     Job = #job{from = From, id = Id} = dict:fetch(JobPid, Jobs),
     error_logger:info_msg("MapReduce job ~p successfully completed~n", [Id]),

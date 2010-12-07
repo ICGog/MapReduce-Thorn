@@ -56,10 +56,9 @@ whole_system_4_test_() ->
 sort_test(InputSize, NumBuckets, Replicas) ->
     LowerLimit = 1,
     UpperLimit = InputSize,
-    BucketRange = (UpperLimit - LowerLimit) div NumBuckets,
-    SampleInput = [{none,
-                    random:uniform(UpperLimit - LowerLimit) + LowerLimit - 1} ||
-                   _ <- lists:seq(1, InputSize)],
+    Range = UpperLimit - LowerLimit,
+    BucketRange = Range div NumBuckets,
+    InputPartLen = InputSize div NumBuckets,
     MapFun = fun ({_K, V}) -> case V div BucketRange of
                                   B when B >= NumBuckets ->
                                       [{NumBuckets - 1, V}];
@@ -68,14 +67,21 @@ sort_test(InputSize, NumBuckets, Replicas) ->
                               end
              end,
     ReduceFun = fun ({_Bucket, V}) -> lists:sort(V) end,
-    {ok, Id} = smr_master:new_job(MapFun, ReduceFun, [{n_ram_copies, Replicas}]),
-    add_input_in_partitions(Id, InputSize div NumBuckets, SampleInput),
     Start = now(),
+    {ok, Id} = smr_master:new_job(MapFun, ReduceFun, [{n_ram_copies, Replicas}]),
+    lists:foreach(
+        fun (_) ->
+                Input = [{none, random:uniform(Range) + LowerLimit - 1} ||
+                         _ <- lists:seq(1, InputPartLen)],
+                 smr_master:add_input(Id, Input)
+        end,
+        lists:seq(1, NumBuckets)),
     ok = smr_master:do_job(Id),
     UnsortedBuckets = smr_master:whole_result(Id),
     Sorted = lists:flatten([V || {_B, V} <- lists:keysort(1, UnsortedBuckets)]),
     End = now(),
-    ?assertMatch(InputSize, length(Sorted)),
+    TruncInputSize = NumBuckets * InputPartLen,
+    ?assertMatch(TruncInputSize, length(Sorted)),
     ?assertMatch(true, is_sorted(Sorted)),
     timer:now_diff(End, Start).
 

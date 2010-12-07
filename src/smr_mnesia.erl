@@ -142,13 +142,6 @@ take_output_chunk_internal(OutputTable) ->
                       end, Rs)
     end.
 
-select_one_while_empty('$end_of_table') ->
-    '$end_of_table';
-select_one_while_empty({[], Cont}) ->
-    select_one_while_empty(mnesia:select(Cont));
-select_one_while_empty({[Obj | _Rest], _Cont}) ->
-    Obj.
-
 select_until_size(Select) ->
     select_until_size2(Select, ?CHUNK_SIZE, []).
 

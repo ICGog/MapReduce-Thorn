@@ -34,7 +34,7 @@ start_link(MapFun, ReduceFun, JobId, Mode, MaxTasks) ->
                           []).
 
 add_input(Job, Input) ->
-    gen_server:cast(Job, {add_input, Input}).
+    gen_server:call(Job, {add_input, Input}, infinity).
 
 start(Job) ->
     gen_server:cast(Job, start).
@@ -75,6 +75,17 @@ init([Sup, MapFun, ReduceFun, JobId, Mode, MaxTasks]) ->
                 output_table = OutputTable,
                 available = Available}}.
 
+handle_call({add_input, Input}, _From,
+            State = #state{phase = input,
+                           input_table = InputTable,
+                           cur_task_id = TaskId,
+                           input_size = InputSize,
+                           awaiting = Awaiting}) ->
+    ok = smr_mnesia:put_input_chunk(TaskId, Input, InputTable),
+    {reply, ok,
+     State#state{cur_task_id = TaskId + 1,
+                 input_size = InputSize + erts_debug:flat_size(Input),
+                 awaiting = gb_sets:add_element(TaskId, Awaiting)}};
 handle_call({task_started, WorkerPid, _TaskId, Size}, _From,
             State = #state{phase = Phase, id = JobId}) ->
     erlang:monitor(process, WorkerPid),
@@ -92,16 +103,6 @@ handle_call(kill, _From, State) ->
 
 handle_cast(start, State) ->
     {noreply, set_phase(map, State)};
-handle_cast({add_input, Input}, State = #state{phase = input,
-                                               input_table = InputTable,
-                                               cur_task_id = TaskId,
-                                               input_size = InputSize,
-                                               awaiting = Awaiting}) ->
-    ok = smr_mnesia:put_input_chunk(TaskId, Input, InputTable),
-    {noreply,
-     State#state{cur_task_id = TaskId + 1,
-                 input_size = InputSize + erts_debug:flat_size(Input),
-                 awaiting = gb_sets:add_element(TaskId, Awaiting)}};
 handle_cast({task_finished, Worker, _TaskId, Args},
             State = #state{id = JobId,
                            available = Available,
