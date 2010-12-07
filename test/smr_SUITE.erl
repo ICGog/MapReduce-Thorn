@@ -67,23 +67,44 @@ sort_test(InputSize, NumBuckets, Replicas) ->
                               end
              end,
     ReduceFun = fun ({_Bucket, V}) -> lists:sort(V) end,
-    Start = now(),
     {ok, Id} = smr_master:new_job(MapFun, ReduceFun, [{n_ram_copies, Replicas}]),
     lists:foreach(
-        fun (_) ->
+        fun (N) ->
+                error_logger:info_msg("Generating and uploading chunk ~p/~p "
+                                      "...~n", [N, NumBuckets]),
                 Input = [{none, random:uniform(Range) + LowerLimit - 1} ||
                          _ <- lists:seq(1, InputPartLen)],
                  smr_master:add_input(Id, Input)
         end,
         lists:seq(1, NumBuckets)),
+    Start = now(),
     ok = smr_master:do_job(Id),
-    UnsortedBuckets = smr_master:whole_result(Id),
-    Sorted = lists:flatten([V || {_B, V} <- lists:keysort(1, UnsortedBuckets)]),
     End = now(),
-    TruncInputSize = NumBuckets * InputPartLen,
-    ?assertMatch(TruncInputSize, length(Sorted)),
-    ?assertMatch(true, is_sorted(Sorted)),
+    error_logger:info_msg("Verifying result ...~n", []),
+    verify_sorted(Id),
+    error_logger:info_msg("...passed~n", []),
     timer:now_diff(End, Start).
+
+verify_sorted(Id) -> verify_sorted(Id, []).
+verify_sorted(Id, BucketRangesAcc) ->
+    case smr_master:next_result(Id) of
+        end_of_result ->
+            verify_order_buckets(BucketRangesAcc);
+        Buckets ->
+            BucketRanges =
+                lists:map(fun ({B, Vs}) ->
+                                  ?assertMatch(true, is_sorted(Vs)),
+                                  {B, hd(Vs), lists:last(Vs)}
+                          end, Buckets),
+            verify_sorted(Id, BucketRanges ++ BucketRangesAcc)
+    end.
+
+verify_order_buckets(BucketRangesAcc) ->
+    Sorted = lists:usort(BucketRangesAcc),
+    LenSorted = length(Sorted),
+    ?assertMatch(LenSorted, length(BucketRangesAcc)),
+    MinMax = lists:flatmap(fun ({_, MinV, MaxV}) -> [MinV, MaxV] end, Sorted),
+    ?assertMatch(true, is_sorted(MinMax)).
 
 add_input_in_partitions(_Id, _PartLen, []) ->
     ok;

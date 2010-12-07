@@ -104,7 +104,7 @@ process_input_internal(TaskId, Fun, InputTable, InterTable) ->
                                 write),
                    {gb_sets:add_element(Hash, HashesSet),
                     TotalSize + erts_debug:flat_size({Key, Values})}
-            end, {gb_sets:new(), 0}, kv_list_to_orddict(Fun(Chunk))),
+            end, {gb_sets:new(), 0}, k_v_list_to_orddict(Fun(Chunk))),
     {Hashes, ResultSize}.
 
 process_inter_internal(HashKey, Fun, InterTable, OutputTable) ->
@@ -122,19 +122,7 @@ process_inter_internal(HashKey, Fun, InterTable, OutputTable) ->
                  mnesia:write(OutputTable, #smr_output{key = Key,
                                                        value = ReducedValue},
                               write)
-         end, none, kvlist_list_to_orddict(KVList)).
-
-kvlist_list_to_orddict(KVList) ->
-    lists:foldl(
-            fun ({K, Vs}, Dict) ->
-                    orddict:update(K, fun (VList) -> Vs ++ VList end, Vs, Dict)
-            end, orddict:new(), KVList).
-
-kv_list_to_orddict(KVList) ->
-    lists:foldl(
-            fun ({K, V}, Dict) ->
-                    orddict:update(K, fun (VList) -> [V | VList] end, [V], Dict)
-            end, orddict:new(), KVList).
+         end, none, k_vlist_list_to_orddict(KVList)).
 
 take_output_chunk_internal(OutputTable) ->
     case select_until_size(mnesia:select(OutputTable,
@@ -162,6 +150,18 @@ select_until_size2({List, Cont}, RemSize, Acc) ->
                                             List ++ Acc);
        true           -> List ++ Acc
     end.
+
+k_vlist_list_to_orddict(KVsList) ->
+    lists:foldl(
+            fun ({K, Vs}, Dict) ->
+                    orddict:update(K, fun (VList) -> Vs ++ VList end, Vs, Dict)
+            end, orddict:new(), KVsList).
+
+k_v_list_to_orddict(KVList) ->
+    lists:foldl(
+            fun ({K, V}, Dict) ->
+                    orddict:update(K, fun (VList) -> [V | VList] end, [V], Dict)
+            end, orddict:new(), KVList).
 
 table(input, JobId)  -> list_to_atom("smr_input_"  ++ integer_to_list(JobId));
 table(inter, JobId)  -> list_to_atom("smr_inter_"  ++ integer_to_list(JobId));
