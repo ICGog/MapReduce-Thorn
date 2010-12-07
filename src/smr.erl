@@ -14,7 +14,9 @@ start() ->
     application:start(smr).
 
 stop() ->
-    application:stop(smr).
+    lists:foreach(fun smr_pool:detach_node/1, smr_pool:get_nodes()),
+    ok = smr_mnesia:stop(),
+    ok = application:stop(smr).
 
 %%---------------------------------------------------------------------------
 
@@ -32,6 +34,4 @@ start(_StartType, [EnableWebsite]) ->
     {ok, Sup}.
 
 stop(_State) ->
-    lists:foreach(fun smr_mnesia:stop_on_node/1, smr_pool:get_nodes()),
-    smr_mnesia:stop(),
     ok.

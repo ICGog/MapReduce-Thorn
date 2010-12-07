@@ -80,10 +80,12 @@ sort_test(InputSize, NumBuckets, Replicas) ->
     Start = now(),
     ok = smr_master:do_job(Id),
     End = now(),
+    Res = timer:now_diff(End, Start),
+    error_logger:info_msg("Finished: ~p~n", [Res]),
     error_logger:info_msg("Verifying result ...~n", []),
     verify_sorted(Id),
     error_logger:info_msg("...passed~n", []),
-    timer:now_diff(End, Start).
+    Res.
 
 verify_sorted(Id) -> verify_sorted(Id, []).
 verify_sorted(Id, BucketRangesAcc) ->

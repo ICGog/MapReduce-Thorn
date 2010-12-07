@@ -10,7 +10,6 @@ map(_Sup, Job, TaskId, MapFun, FromTable, ToTable) ->
         smr_mnesia:process_input(
             TaskId,
             fun (Input) ->
-                    %% TODO calling task_started too late !!!! :|
                     smr_job:task_started(Job, self(), TaskId,
                                          erts_debug:flat_size(Input)),
                     lists:flatmap(MapFun, Input) end,
@@ -18,8 +17,15 @@ map(_Sup, Job, TaskId, MapFun, FromTable, ToTable) ->
     smr_job:task_finished(Job, self(), TaskId, [Hashes, ResultSize]).
 
 reduce(_Sup, Job, TaskId, ReduceFun, FromTable, ToTable) ->
-    smr_job:task_started(Job, self(), TaskId, 5000), %% TODO size
-    smr_mnesia:process_inter(TaskId, ReduceFun, FromTable, ToTable),
+    smr_mnesia:process_inter(
+        TaskId,
+        fun (KVsList) ->
+                smr_job:task_started(Job, self(), TaskId,
+                                     erts_debug:flat_size(KVsList)),
+                lists:map(fun (KVs = {K, _}) -> {K, ReduceFun(KVs)} end,
+                          KVsList)
+        end,
+        FromTable, ToTable),
     smr_job:task_finished(Job, self(), TaskId, []).
 
 run_thorn_job(Code, Input) ->

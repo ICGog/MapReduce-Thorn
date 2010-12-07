@@ -11,7 +11,7 @@
 -record(smr_input, {task_id, chunk}).
 
 -record(smr_inter_k, {hash_key, key, uuid}).
--record(smr_inter, {k, value}).
+-record(smr_inter, {k, values}).
 
 -record(smr_output, {key, value}).
 
@@ -25,8 +25,8 @@ start() ->
     ok = mnesia:start().
 
 stop() ->
-    ok = mnesia:delete_schema([node()]),
-    stopped = mnesia:stop().
+    stopped = mnesia:stop(),
+    ok = mnesia:delete_schema([node()]).
 
 start_on_node(Node) ->
     ok = rpc:call(Node, mnesia, delete_schema, [[Node]]),
@@ -93,36 +93,35 @@ put_input_chunk_internal(TaskId, Chunk, InputTable) ->
 process_input_internal(TaskId, Fun, InputTable, InterTable) ->
     [#smr_input{chunk = Chunk}] = mnesia:read(InputTable, TaskId, read),
     {Hashes, ResultSize} =
-        orddict:fold(
-            fun (Key, Values, {HashesSet, TotalSize}) ->
+        lists:foldl(
+            fun ({Key, Values}, {HashesSet, TotalSize}) ->
                     Hash = erlang:phash2(Key),
                     mnesia:write(InterTable,
                                  #smr_inter{k = #smr_inter_k{hash_key = Hash,
                                                              key = Key,
                                                              uuid = uuid()},
-                                            value = Values},
+                                            values = Values},
                                 write),
                    {gb_sets:add_element(Hash, HashesSet),
-                    TotalSize + erts_debug:flat_size({Key, Values})}
-            end, {gb_sets:new(), 0}, k_v_list_to_orddict(Fun(Chunk))),
+                    TotalSize + erts_debug:flat_size(Key) +
+                        erts_debug:flat_size(Values)}
+            end, {gb_sets:new(), 0}, aggregate(Fun(Chunk))),
     {Hashes, ResultSize}.
 
 process_inter_internal(HashKey, Fun, InterTable, OutputTable) ->
-    KVList = mnesia:select(InterTable,
-                           [{#smr_inter{k = #smr_inter_k{hash_key = HashKey,
-                                                         key = '$1',
-                                                         _='_'},
-                                        value = '$2',
-                                        _='_'},
-                            [], [{{'$1', '$2'}}]}],
-                           read),
-    orddict:fold(
-         fun (Key, Values, _) ->
-                 ReducedValue = Fun({Key, Values}),
-                 mnesia:write(OutputTable, #smr_output{key = Key,
-                                                       value = ReducedValue},
-                              write)
-         end, none, k_vlist_list_to_orddict(KVList)).
+    KVsList = mnesia:select(InterTable,
+                            [{#smr_inter{k = #smr_inter_k{hash_key = HashKey,
+                                                          key = '$1',
+                                                          _='_'},
+                                         values = '$2',
+                                         _='_'},
+                             [], [{{'$1', '$2'}}]}],
+                            read),
+    lists:foreach(
+        fun ({K, V}) ->
+                mnesia:write(OutputTable, #smr_output{key = K, value = V},
+                             write)
+        end, Fun(reaggregate(KVsList))).
 
 take_output_chunk_internal(OutputTable) ->
     case select_until_size(mnesia:select(OutputTable,
@@ -151,17 +150,19 @@ select_until_size2({List, Cont}, RemSize, Acc) ->
        true           -> List ++ Acc
     end.
 
-k_vlist_list_to_orddict(KVsList) ->
-    lists:foldl(
-            fun ({K, Vs}, Dict) ->
-                    orddict:update(K, fun (VList) -> Vs ++ VList end, Vs, Dict)
-            end, orddict:new(), KVsList).
-
-k_v_list_to_orddict(KVList) ->
-    lists:foldl(
+aggregate(KVList) ->
+    orddict:to_list(
+        lists:foldl(
             fun ({K, V}, Dict) ->
                     orddict:update(K, fun (VList) -> [V | VList] end, [V], Dict)
-            end, orddict:new(), KVList).
+            end, orddict:new(), KVList)).
+
+reaggregate(KVsList) ->
+    orddict:to_list(
+        lists:foldl(
+            fun ({K, Vs}, Dict) ->
+                    orddict:update(K, fun (VList) -> Vs ++ VList end, Vs, Dict)
+            end, orddict:new(), KVsList)).
 
 table(input, JobId)  -> list_to_atom("smr_input_"  ++ integer_to_list(JobId));
 table(inter, JobId)  -> list_to_atom("smr_inter_"  ++ integer_to_list(JobId));
