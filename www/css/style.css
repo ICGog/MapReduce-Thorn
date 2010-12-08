@@ -62,8 +62,12 @@ body a {
 	padding: 5px;
 }
 
-.old {
+.succeeded {
 	background: #DBF2C2;
+}
+
+.failed {
+	background: #F2C2C2;
 }
 
 /* Node styles */

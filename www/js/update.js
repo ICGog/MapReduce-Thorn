@@ -5,7 +5,7 @@ var updateTimeout;
 
 function initialize()
 {	
-	$("#framework_name").append(" 0.1");			  
+	$("#framework_name").append(" 0.1\nPowered by Chicken Cottage");			  
 	
 	$("#expand_jobs").click(function() 
 	{	
@@ -113,7 +113,7 @@ function updateJobs() {
 			innerHTML += "</div>";
 			
 			$(".old_joblist").append(
-					$("<div/>").addClass("job old").attr("id", "acc").append(
+					$("<div/>").addClass("job failed").attr("id", "acc").append(
 							$("<div/>").html(innerHTML)));
 			
 		} else {
@@ -200,7 +200,7 @@ function updateWorkers() {
 		
 		var innerHTML = "<div class=\"node_header\">" + ns[n].node + "</div>";
 		innerHTML +=	"<div><div class=\"val\">" + ns[n].num_succ + "</div>";
-		innerHTML +=	"<div class=\"val\">" + ns[n].num_failed + "</div>";
+		innerHTML +=	"<div class='val'>" + ns[n].num_failed + "</div>";
 		innerHTML +=	"<div class=\"val\">" + ns[n].num_map_tasks + "</div>";
 		innerHTML +=	"<div class=\"val\">" + ns[n].num_reduce_tasks + "</div>"; 
 		innerHTML +=	"<div class=\"val\">" + ns[n].busy_time + "</div>";

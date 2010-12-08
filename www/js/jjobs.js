@@ -6,7 +6,7 @@ function getJobs() {
 var result = new Array();
 $.ajax({
   url: "smr/smr_http:get_jobs",
-  /*url: "js/testjobs.js",*/
+  //url: "js/testjobs.js",
   dataType:'json',
   async:false,
   success:
