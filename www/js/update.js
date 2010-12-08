@@ -113,7 +113,7 @@ function updateJobs() {
 			innerHTML += "</div>";
 			
 			$(".old_joblist").append(
-					$("<div/>").addClass("job failed").attr("id", "acc").append(
+					$("<div/>").addClass("job succeeded").attr("id", "acc").append(
 							$("<div/>").html(innerHTML)));
 			
 		} else {
