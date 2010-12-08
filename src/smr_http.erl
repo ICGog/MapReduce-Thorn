@@ -35,7 +35,8 @@ start() ->
         {mime_types, [{"html", "text/html"},
                       {"css", "text/css"},
                       {"js", "application/x-javascript"},
-                      {"png", "image/png"}]}]).
+                      {"png", "image/png"},
+                      {"log", "text/plain"}]}]).
 
 rfc4627_header() ->
     "Content-Type: " ++ rfc4627:mime_type() ++ "\r\n\r\n".
