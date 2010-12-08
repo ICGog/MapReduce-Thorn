@@ -104,7 +104,7 @@ function updateJobs() {
 		id = jobname;
 		
 		
-		innerHTML = "<div class=\"foldable\"><b>" + jobname + "</b> : " + job.progress + "% complete";
+		innerHTML = "<div class=\"foldable\"><b>Job ID: " + jobname + "</b> : " + job.progress + "% complete";
 		innerHTML += "<div class=\"progressbar\">" + job.progress + "</div></div>";
 		
 		if (job.has_ended) {
