@@ -68,7 +68,7 @@ function update()
 	{
 		$(this).next().toggle('fast');
 		return false;
-	}).next().hide();
+	});
 	
 	$('.node_header').click(function() 
 			{
@@ -81,7 +81,7 @@ function update()
 	
 	if(doUpdate)
 	{
-	  updateTimeout = setTimeout("update()", 20000);
+	  updateTimeout = setTimeout("update()", 2000);
 	}	
 }
 
@@ -120,9 +120,9 @@ function updateJobs() {
 
 			innerHTML += "<div>";
 			innerHTML += "<div>Phase: <b>" + job.phase + "</b></div>";
-			innerHTML += "<div>Used workers: <b>" + eval('(' + job.using_workers +')') + "</b></div>";
-			innerHTML += "<div class=\"button\" id=\"M" + id+ "\">[View map code]</div>";
-			innerHTML += "<div class=\"button\" id=\"R" + id+ "\">[View reduce code]</div>";
+			//innerHTML += "<div>Used workers: <b>" + eval('(' + job.using_workers +')') + "</b></div>";
+			innerHTML += "<div class=\"button\" id=\"MapCode" + id+ "\">[View map code]</div>";
+			innerHTML += "<div class=\"button\" id=\"RedCode" + id+ "\">[View reduce code]</div>";
 			innerHTML += "<div class=\"button\" id=\"" + id+ "\">[Kill job]</div>";
 			innerHTML += "</div>";
 
@@ -130,7 +130,7 @@ function updateJobs() {
 					$("<div/>").addClass("job").attr("id", "acc").append(
 							$("<div/>").html(innerHTML)));
 
-			$('#M' + id)
+			$('#MapCode' + id)
 					.click(
 							function() {
 								codeWindow = window
@@ -143,7 +143,7 @@ function updateJobs() {
 								return false;
 							});
 
-			$('#R' + id)
+			$('#RedCode' + id)
 					.click(
 							function() {
 								codeWindow = window
@@ -224,7 +224,7 @@ function updateWorkers() {
 						$("<div/>").html(innerHTML)));
 	} 		
 
-}
+}	
 
 function killJob(jobname) {
 	$( "#dialog-confirm" ).text("Are you sure you want to kill " + jobname + "?");
