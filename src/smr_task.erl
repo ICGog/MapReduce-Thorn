@@ -1,50 +1,38 @@
 
 -module(smr_task).
 
--export([input/6, map/6, reduce/6, run_thorn_job/2]).
+-export([map/6, reduce/6, run_thorn_job/2]).
+
+-include("smr.hrl").
 
 %------------------------------------------------------------------------------
 
-input(_Sup, Job, TaskId, _Fun, FromTable, ToTable) ->
-    Args =
-        case smr_mnesia:migrate_output_to_input(TaskId, FromTable, ToTable) of
-            end_of_result -> end_of_result;
-            Size          -> [TaskId, Size]
-        end,
-    smr_job:task_finished(Job, self(), TaskId, Args).
-
-map(_Sup, Job, TaskId, MapFun, FromTable, ToTable) ->
-    Processes = 4,
-    ExpectedReduceKeys = infinity,
-    HashFun = case ExpectedReduceKeys of
-                  infinity -> fun erlang:phash2/1;
-                  _        -> MaxHash = ExpectedReduceKeys div Processes,
-                              fun (Key) -> erlang:phash2(Key, MaxHash) end
-              end,
+map(_Sup, Job, LookupHash, MapFun, FromTable, ToTable) ->
     {Hashes, ResultSize} =
         smr_mnesia:process_input(
-            TaskId,
+            LookupHash,
             fun (Input) ->
-                    smr_job:task_started(Job, self(), TaskId,
+                    smr_job:task_started(Job, self(), LookupHash,
                                          erts_debug:flat_size(Input)),
-                    lists:flatten(plists:map(MapFun, Input,
-                                             {processes, Processes}))
+                    lists:flatten(
+                        plists:map(MapFun, Input,
+                                   {processes, ?WORKER_SUB_PROCESSES}))
             end,
-            HashFun, FromTable, ToTable),
-    smr_job:task_finished(Job, self(), TaskId, [Hashes, ResultSize]).
+            FromTable, ToTable),
+    smr_job:task_finished(Job, self(), LookupHash, Hashes, ResultSize).
 
-reduce(_Sup, Job, TaskId, ReduceFun, FromTable, ToTable) ->
-    Processes = 4,
-    smr_mnesia:process_inter(
-        TaskId,
-        fun (KVsList) ->
-                smr_job:task_started(Job, self(), TaskId,
-                                     erts_debug:flat_size(KVsList)),
-                plists:map(fun (KVs = {K, _}) -> {K, ReduceFun(KVs)} end,
-                           KVsList, {processes, Processes})
-        end,
-        FromTable, ToTable),
-    smr_job:task_finished(Job, self(), TaskId, []).
+reduce(_Sup, Job, LookupHash, ReduceFun, FromTable, ToTable) ->
+    {Hashes, ResultSize} =
+        smr_mnesia:process_inter(
+            LookupHash,
+            fun (KVsList) ->
+                    smr_job:task_started(Job, self(), LookupHash,
+                                         erts_debug:flat_size(KVsList)),
+                    plists:map(fun (KVs = {K, _}) -> {K, ReduceFun(KVs)} end,
+                               KVsList, {processes, ?WORKER_SUB_PROCESSES})
+            end,
+            FromTable, ToTable),
+    smr_job:task_finished(Job, self(), LookupHash, Hashes, ResultSize).
 
 run_thorn_job(Code, Input) ->
     Temp = os:cmd("mktemp /tmp/XXXXXXXXXX-tmp.th"),

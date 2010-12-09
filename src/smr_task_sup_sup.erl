@@ -11,9 +11,9 @@
 start_link() ->
     supervisor:start_link(?MODULE, []).
 
-start_task(Sup, JobPid, TaskId, TaskType, TaskFun, FromTable, ToTable) ->
-    supervisor:start_child(Sup, [JobPid, TaskId, TaskType, TaskFun, FromTable,
-                                 ToTable]).
+start_task(Sup, JobPid, LookupHash, TaskType, TaskFun, FromTable, ToTable) ->
+    supervisor:start_child(Sup, [JobPid, LookupHash, TaskType, TaskFun,
+                                 FromTable, ToTable]).
 
 %------------------------------------------------------------------------------
 

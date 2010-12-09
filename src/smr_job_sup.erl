@@ -3,13 +3,14 @@
 
 -behaviour(supervisor).
 
--export([start_link/5, job/1, task_sup_sup/1]).
+-export([start_link/6, job/1, task_sup_sup/1]).
 -export([init/1]).
 
 %------------------------------------------------------------------------------
 
-start_link(MapFun, ReduceFun, JobId, Mode, MaxTasks) ->
-    supervisor:start_link(?MODULE, [MapFun, ReduceFun, JobId, Mode, MaxTasks]).
+start_link(InputMode, MapFun, ReduceFun, JobId, Mode, MaxTasks) ->
+    supervisor:start_link(?MODULE, [InputMode, MapFun, ReduceFun, JobId, Mode,
+                                    MaxTasks]).
 
 job(Sup) ->
     child_pid(Sup, job).
@@ -19,10 +20,10 @@ task_sup_sup(Sup) ->
 
 %------------------------------------------------------------------------------
 
-init([MapFun, ReduceFun, JobId, Mode, MaxTasks]) ->
+init([InputMode, MapFun, ReduceFun, JobId, Mode, MaxTasks]) ->
     {ok, {{one_for_all, 0, 1},
-          [{job, {smr_job, start_link, [MapFun, ReduceFun, JobId, Mode,
-                                        MaxTasks]},
+          [{job, {smr_job, start_link, [InputMode, MapFun, ReduceFun, JobId,
+                                        Mode, MaxTasks]},
             permanent, 60, worker, [smr_job]},
            {task_sup_sup, {smr_task_sup_sup, start_link, []},
             permanent, infinity, supervisor, [smr_task_sup_sup]}]}}.

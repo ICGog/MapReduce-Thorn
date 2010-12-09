@@ -69,8 +69,10 @@ generate_random_numbers(Size, NumBuckets, RandFun, Replicas) ->
 
 sort_test(InputSize, NumBuckets, Replicas) ->
     InputPartLen = InputSize div NumBuckets,
-    GetInputFun =
-        fun (JobId, RandFun) ->
+    NewJobFun =
+        fun (MapFun, ReduceFun, RandFun) ->
+            {ok, Id} = smr_master:new_job(MapFun, ReduceFun,
+                                  [{n_ram_copies, Replicas}]),
             lists:foreach(
                 fun (N) ->
                         error_logger:info_msg("Generating and uploading chunk "
@@ -78,23 +80,28 @@ sort_test(InputSize, NumBuckets, Replicas) ->
                         StartK = N * InputPartLen,
                         Input = [{StartK + DeltaK, RandFun()} ||
                                  DeltaK <- lists:seq(0, InputPartLen-1)],
-                        smr_master:add_input(JobId, Input)
+                        smr_master:add_input(Id, Input)
                 end,
-                lists:seq(0, NumBuckets-1))
+                lists:seq(0, NumBuckets-1)),
+            Id
         end,
-    abstract_sort_test(InputSize, NumBuckets, Replicas, GetInputFun).
+    abstract_sort_test(InputSize, NumBuckets, NewJobFun).
 
 big_sort_test(InputSize, NumBuckets, Replicas) ->
-    GetInputFun =
-        fun (JobId, RandFun) ->
+    NewJobFun =
+        fun (MapFun, ReduceFun, RandFun) ->
             RandNumsId = generate_random_numbers(InputSize, NumBuckets, RandFun,
                                                  Replicas),
-            ok = smr_master:import_from_output(JobId, RandNumsId)
+            {ok, Id} = smr_master:new_job_from_another(
+                           RandNumsId, MapFun, ReduceFun,
+                           [{n_ram_copies, Replicas}]),
+            ok = smr_master:import_from_output(Id, RandNumsId),
+            Id
         end,
-    abstract_sort_test(InputSize, NumBuckets, Replicas, GetInputFun).
+    abstract_sort_test(InputSize, NumBuckets, NewJobFun).
     
 
-abstract_sort_test(InputSize, NumBuckets, Replicas, GetInputFun) ->
+abstract_sort_test(InputSize, NumBuckets, NewJobFun) ->
     LowerLimit = 1,
     UpperLimit = InputSize,
     Range = UpperLimit - LowerLimit,
@@ -108,9 +115,7 @@ abstract_sort_test(InputSize, NumBuckets, Replicas, GetInputFun) ->
                               end
              end,
     ReduceFun = fun ({_Bucket, V}) -> lists:sort(V) end,
-    {ok, Id} = smr_master:new_job(MapFun, ReduceFun,
-                                  [{n_ram_copies, Replicas}]),
-    GetInputFun(Id, RandFun),
+    Id = NewJobFun(MapFun, ReduceFun, RandFun),
     Start = now(),
     ok = smr_master:do_job(Id),
     End = now(),
