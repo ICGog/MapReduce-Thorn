@@ -90,6 +90,8 @@ handle_cast({register_worker, W}, State) ->
     {noreply, internal_register_worker(W, State)};
 handle_cast({unregister_worker, W}, State) ->
     {noreply, internal_unregister_worker(W, State)};
+handle_cast({task_started, _J, _W, input, _}, State) ->
+    {noreply, State};
 handle_cast({task_started, J, W, TaskType, TaskSize}, State) ->
     handle_update(
         W, J,
@@ -114,7 +116,9 @@ handle_cast({task_started, J, W, TaskType, TaskSize}, State) ->
 handle_cast({task_finished, J, W}, State) ->
     handle_update(
         W, J,
-        fun (Worker = #smr_worker{num_succ = Succ,
+        fun (Worker, Job = #smr_job{phase = <<"input">>}) ->
+                {Worker, Job};
+            (Worker = #smr_worker{num_succ = Succ,
                                   last_task_size = TSize,
                                   last_task_started_on = LTSO,
                                   latest_performances = Perfs},

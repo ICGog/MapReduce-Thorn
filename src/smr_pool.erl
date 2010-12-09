@@ -85,8 +85,8 @@ handle_call({attach, N}, From, State0 = #state{nodes = Ns,
         false -> case net_adm:ping(N) of
                      pong -> smr_statistics:register_worker(N),
                              smr_mnesia:start_on_node(N),
-                             gen_server:reply(From, ok),
                              monitor_node(N, true),
+                             gen_server:reply(From, ok),
                              NewNs = dict:store(N, #node{node = N}, Ns),
                              NewFNs = ordsets:add_element(N, FNs),
                              State1 = maybe_serve(

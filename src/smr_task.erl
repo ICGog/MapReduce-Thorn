@@ -1,9 +1,17 @@
 
 -module(smr_task).
 
--export([map/6, reduce/6, run_thorn_job/2]).
+-export([input/6, map/6, reduce/6, run_thorn_job/2]).
 
 %------------------------------------------------------------------------------
+
+input(_Sup, Job, TaskId, _Fun, FromTable, ToTable) ->
+    Args =
+        case smr_mnesia:migrate_output_to_input(TaskId, FromTable, ToTable) of
+            end_of_result -> end_of_result;
+            Size          -> [TaskId, Size]
+        end,
+    smr_job:task_finished(Job, self(), TaskId, Args).
 
 map(_Sup, Job, TaskId, MapFun, FromTable, ToTable) ->
     Processes = 4,

@@ -53,12 +53,53 @@ whole_system_4_test_() ->
              smr:stop()
      end}.
 
+generate_random_numbers(Size, NumBuckets, RandFun, Replicas) ->
+    PartLen = Size div NumBuckets,
+    MapFun =
+        fun ({N, _V}) ->
+            StartK = N * PartLen,
+            [{StartK + DeltaK, none} || DeltaK <- lists:seq(0, PartLen-1)]
+        end,
+    ReduceFun = fun ({_K, _V}) -> RandFun() end,
+    {ok, Id} = smr_master:new_job(MapFun, ReduceFun,
+                                  [{n_ram_copies, Replicas}]),
+    [smr_master:add_input(Id, [{N, none}]) || N <- lists:seq(0, NumBuckets-1)],
+    ok = smr_master:do_job(Id),
+    Id.
+
 sort_test(InputSize, NumBuckets, Replicas) ->
+    InputPartLen = InputSize div NumBuckets,
+    GetInputFun =
+        fun (JobId, RandFun) ->
+            lists:foreach(
+                fun (N) ->
+                        error_logger:info_msg("Generating and uploading chunk "
+                                              "~p/~p ...~n", [N, NumBuckets]),
+                        StartK = N * InputPartLen,
+                        Input = [{StartK + DeltaK, RandFun()} ||
+                                 DeltaK <- lists:seq(0, InputPartLen-1)],
+                        smr_master:add_input(JobId, Input)
+                end,
+                lists:seq(0, NumBuckets-1))
+        end,
+    abstract_sort_test(InputSize, NumBuckets, Replicas, GetInputFun).
+
+big_sort_test(InputSize, NumBuckets, Replicas) ->
+    GetInputFun =
+        fun (JobId, RandFun) ->
+            RandNumsId = generate_random_numbers(InputSize, NumBuckets, RandFun,
+                                                 Replicas),
+            ok = smr_master:import_from_output(JobId, RandNumsId)
+        end,
+    abstract_sort_test(InputSize, NumBuckets, Replicas, GetInputFun).
+    
+
+abstract_sort_test(InputSize, NumBuckets, Replicas, GetInputFun) ->
     LowerLimit = 1,
     UpperLimit = InputSize,
     Range = UpperLimit - LowerLimit,
     BucketRange = Range div NumBuckets,
-    InputPartLen = InputSize div NumBuckets,
+    RandFun = fun () -> random:uniform(Range) + LowerLimit - 1 end,
     MapFun = fun ({_K, V}) -> case V div BucketRange of
                                   B when B >= NumBuckets ->
                                       [{NumBuckets - 1, V}];
@@ -67,38 +108,34 @@ sort_test(InputSize, NumBuckets, Replicas) ->
                               end
              end,
     ReduceFun = fun ({_Bucket, V}) -> lists:sort(V) end,
-    {ok, Id} = smr_master:new_job(MapFun, ReduceFun, [{n_ram_copies, Replicas}]),
-    lists:foreach(
-        fun (N) ->
-                error_logger:info_msg("Generating and uploading chunk ~p/~p "
-                                      "...~n", [N, NumBuckets]),
-                Input = [{none, random:uniform(Range) + LowerLimit - 1} ||
-                         _ <- lists:seq(1, InputPartLen)],
-                 smr_master:add_input(Id, Input)
-        end,
-        lists:seq(1, NumBuckets)),
+    {ok, Id} = smr_master:new_job(MapFun, ReduceFun,
+                                  [{n_ram_copies, Replicas}]),
+    GetInputFun(Id, RandFun),
     Start = now(),
     ok = smr_master:do_job(Id),
     End = now(),
     Res = timer:now_diff(End, Start),
     error_logger:info_msg("Finished: ~p~n", [Res]),
     error_logger:info_msg("Verifying result ...~n", []),
-    verify_sorted(Id),
+    ResultSize = verify_sorted(Id),
+    ?assertMatch(InputSize, ResultSize),
     error_logger:info_msg("...passed~n", []),
     Res.
 
-verify_sorted(Id) -> verify_sorted(Id, []).
-verify_sorted(Id, BucketRangesAcc) ->
+verify_sorted(Id) -> verify_sorted(Id, {[], 0}).
+verify_sorted(Id, {BucketRangesAcc, SizeAcc}) ->
     case smr_master:next_result(Id) of
         end_of_result ->
-            verify_order_buckets(BucketRangesAcc);
+            verify_order_buckets(BucketRangesAcc),
+            SizeAcc;
         Buckets ->
-            BucketRanges =
-                lists:map(fun ({B, Vs}) ->
+            {BucketRanges, Size} =
+                lists:mapfoldl(fun ({B, Vs}, Acc) ->
                                   ?assertMatch(true, is_sorted(Vs)),
-                                  {B, hd(Vs), lists:last(Vs)}
-                          end, Buckets),
-            verify_sorted(Id, BucketRanges ++ BucketRangesAcc)
+                                  {{B, hd(Vs), lists:last(Vs)},
+                                   Acc + length(Vs)}
+                          end, 0, Buckets),
+            verify_sorted(Id, {BucketRanges ++ BucketRangesAcc, SizeAcc + Size})
     end.
 
 verify_order_buckets(BucketRangesAcc) ->

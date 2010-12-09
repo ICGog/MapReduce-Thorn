@@ -3,8 +3,9 @@
 
 -behavior(gen_server).
 
--export([start_link/0, new_job/2, new_job/3, new_job/4, add_input/2, do_job/1,
-         next_result/1, whole_result/1, kill_job/1]).
+-export([start_link/0, new_job/2, new_job/3, new_job/4, add_input/2,
+         import_from_output/2, do_job/1, next_result/1, whole_result/1,
+         kill_job/1]).
 -export([job_finished/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, 
         code_change/3]).
@@ -16,12 +17,10 @@
 
 -record(job, {pid,
               id,
-              from,
-              map_fun,
-              reduce_fun}).
+              from}).
 
 -define(NAME, {global, ?MODULE}).
--define(DEFAULT_MODE, [{n_ram_copies, 3}]).
+-define(DEFAULT_MODE, [{n_ram_copies, 2}]).
 
 %------------------------------------------------------------------------------
 % API
@@ -42,6 +41,9 @@ new_job(Map, Reduce, Mode, MaxTasks) ->
 
 add_input(JobId, Input) ->
     gen_server:call(?NAME, {add_input, JobId, Input}, infinity).
+
+import_from_output(JobId, PrevJobId) ->
+    gen_server:call(?NAME, {import_from_output, JobId, PrevJobId}, infinity).
 
 do_job(JobId) ->
     gen_server:call(?NAME, {do_job, JobId}, infinity).
@@ -82,9 +84,7 @@ handle_call({new_job, Map, Reduce, Mode, MaxTasks}, _From,
     erlang:monitor(process, JobPid),
     NewJobPids = dict:store(JobId, JobPid, JobPids),
     NewJobs = dict:store(JobPid, #job{pid = JobPid,
-                                      id = JobId,
-                                      map_fun = Map,
-                                      reduce_fun = Reduce}, Jobs),
+                                      id = JobId}, Jobs),
     {reply, {ok, JobId}, State#state{jobs = NewJobs,
                                      job_pids = NewJobPids,
                                      cur_job_id = JobId + 1}};
@@ -92,6 +92,12 @@ handle_call({add_input, JobId, Input}, _From,
             State = #state{job_pids = JobPids}) ->
     smr_job:add_input(dict:fetch(JobId, JobPids), Input),
     {reply, ok, State};
+handle_call({import_from_output, JobId, PrevJobId}, _From,
+            State = #state{job_pids = JobPids}) ->
+    PrevJobPid = dict:fetch(PrevJobId, JobPids),
+    JobPid = dict:fetch(JobId, JobPids),
+    OutputTable = smr_job:handover_output(PrevJobPid),
+    {reply, smr_job:import_from_output(JobPid, PrevJobId, OutputTable), State};
 handle_call({do_job, JobId}, From, State = #state{job_pids = JobPids,
                                                   jobs = Jobs}) ->
     JobPid = dict:fetch(JobId, JobPids),

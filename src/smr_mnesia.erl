@@ -3,8 +3,8 @@
 
 -export([start/0, stop/0, start_on_node/1, stop_on_node/1]).
 -export([create_job_tables/3, delete_job_table/1, delete_job_tables/1]).
--export([put_input_chunk/3, process_input/5, process_inter/4,
-         take_output_chunk/1]).
+-export([put_input_chunk/3, migrate_output_to_input/3, process_input/5,
+         process_inter/4, take_output_chunk/1]).
 
 -include("smr.hrl").
 
@@ -66,8 +66,12 @@ delete_job_tables(JobId) ->
                   [input, inter, output]).
 
 put_input_chunk(TaskId, Chunk, InputTable) ->
-    mnesia:activity(sync_dirty, fun put_input_chunk_internal/3,
+    mnesia:activity(sync_dirty, fun put_input_chunk_internal_size/3,
                     [TaskId, Chunk, InputTable], mnesia_frag).
+
+migrate_output_to_input(TaskId, OutputTable, InputTable) ->
+    mnesia:activity(sync_transaction, fun migrate_output_to_input_internal/3,
+                    [TaskId, OutputTable, InputTable], mnesia_frag).
 
 process_input(TaskId, Fun, HashFun, InputTable, InterTable) ->
     mnesia:activity(sync_dirty, fun process_input_internal/5,
@@ -91,23 +95,33 @@ put_input_chunk_internal(TaskId, Chunk, InputTable) ->
                  write),
     ok.
 
+put_input_chunk_internal_size(TaskId, Chunk, InputTable) ->
+    mnesia:write(InputTable, #smr_input{task_id = TaskId, chunk = Chunk},
+                 write),
+    erts_debug:flat_size(Chunk).
+
+migrate_output_to_input_internal(TaskId, OutputTable, InputTable) ->
+    case take_output_chunk_internal(OutputTable) of
+        end_of_result -> end_of_result;
+        {Chunk, Size} -> put_input_chunk_internal(TaskId, Chunk, InputTable),
+                         Size
+    end.
+
 process_input_internal(TaskId, Fun, HashFun, InputTable, InterTable) ->
     [#smr_input{chunk = Chunk}] = mnesia:read(InputTable, TaskId, read),
-    {Hashes, ResultSize} =
-        lists:foldl(
-            fun ({Key, Values}, {HashesSet, TotalSize}) ->
-                    Hash = HashFun(Key),
-                    mnesia:write(InterTable,
-                                 #smr_inter{k = #smr_inter_k{hash_key = Hash,
-                                                             key = Key,
-                                                             uuid = uuid()},
-                                            values = Values},
-                                write),
-                   {gb_sets:add_element(Hash, HashesSet),
-                    TotalSize + erts_debug:flat_size(Key) +
-                        erts_debug:flat_size(Values)}
-            end, {gb_sets:new(), 0}, aggregate(Fun(Chunk))),
-    {Hashes, ResultSize}.
+    lists:foldl(
+        fun ({Key, Values}, {HashesSet, TotalSize}) ->
+                Hash = HashFun(Key),
+                mnesia:write(InterTable,
+                             #smr_inter{k = #smr_inter_k{hash_key = Hash,
+                                                         key = Key,
+                                                         uuid = uuid()},
+                                        values = Values},
+                            write),
+               {gb_sets:add_element(Hash, HashesSet),
+                TotalSize + erts_debug:flat_size(Key) +
+                    erts_debug:flat_size(Values)}
+        end, {gb_sets:new(), 0}, aggregate(Fun(Chunk))).
 
 process_inter_internal(HashKey, Fun, InterTable, OutputTable) ->
     KVsList = mnesia:select(InterTable,
@@ -127,28 +141,32 @@ process_inter_internal(HashKey, Fun, InterTable, OutputTable) ->
 take_output_chunk_internal(OutputTable) ->
     case select_until_size(mnesia:select(OutputTable,
                                          [{#smr_output{_='_'}, [], ['$_']}],
-                                         10, read)) of
+                                         10, write)) of
         '$end_of_table' ->
             end_of_result;
-        Rs ->
-            lists:map(fun (R = #smr_output{key = K, value = V}) ->
-                              mnesia:delete_object(OutputTable, R, write),
-                              {K, V}
-                      end, Rs)
+        {Rs, Size} ->
+            {lists:map(fun (R = #smr_output{key = K, value = V}) ->
+                               mnesia:delete_object(OutputTable, R, write),
+                               {K, V}
+                       end, Rs),
+             Size}
     end.
 
 select_until_size(Select) ->
-    select_until_size2(Select, ?CHUNK_SIZE, []).
+    case select_until_size2(Select, ?CHUNK_SIZE, []) of
+        {Chunk, RemSize} -> {Chunk, ?CHUNK_SIZE - RemSize};
+        '$end_of_table'  -> '$end_of_table'
+    end.
 
 select_until_size2('$end_of_table', _RemSize, []) ->
     '$end_of_table';
-select_until_size2('$end_of_table', _RemSize, Acc) ->
-    Acc;
+select_until_size2('$end_of_table', RemSize, Acc) ->
+    {Acc, RemSize};
 select_until_size2({List, Cont}, RemSize, Acc) ->
     NewRemSize = RemSize - erts_debug:flat_size(List),
     if NewRemSize > 0 -> select_until_size2(mnesia:select(Cont), NewRemSize,
                                             List ++ Acc);
-       true           -> List ++ Acc
+       true           -> {List ++ Acc, NewRemSize}
     end.
 
 aggregate(KVList) ->
