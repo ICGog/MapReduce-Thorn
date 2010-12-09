@@ -1,6 +1,7 @@
 var selected;
 var previous;
 var doUpdate = true;
+var doExpand = true;
 var updateTimeout;
 var updateInterval = 5000;
 
@@ -14,7 +15,18 @@ function init_menu(){
         cache: false,
     });
 	
-	$("#interval").text(updateInterval);
+	$("#interval").text(updateInterval);	
+	
+	$( "#slider" ).slider({
+		min: 1000,
+		max: 10000,
+		step: 1000,
+		value: 5000,
+   		change: function(event, ui) {
+			$( "#interval" ).text(ui.value);
+			updateInterval = ui.value;		
+		}
+	});
     
     init_buttons();
 			
@@ -42,6 +54,8 @@ function init_menu(){
 }
 
 function init_buttons() {
+	$('.action').button();
+	
 	$('.display').click(function(){
         $('.selected').removeClass('selected');
         $(this).addClass('selected');
@@ -53,11 +67,11 @@ function init_buttons() {
     $('#update_btn').click(function(){
         doUpdate = !doUpdate;
         if (doUpdate) {
-            $("#update_btn").text("[Disable Updates]");
+            $("#update_btn").button( "option", "label", "Disable Updates" );
             update();
         }
         else {
-            $("#update_btn").text("[Enable Updates]");
+            $("#update_btn").button( "option", "label", "Enable Updates" );
             clearTimeout(updateTimeout);
         }
     });
@@ -82,7 +96,15 @@ function init_buttons() {
 	
 	$("#expand_btn").click(function() 
 	{	
-		$('.foldable').next().toggle('fast');				
+		if(doExpand) {
+			$("#expand_btn").button( "option", "label", "Collapse all" );			
+			$('.foldable').next().show('fast');
+		} 								
+		 else  {
+		 	$("#expand_btn").button( "option", "label", "Expand all" );
+		 	$('.foldable').next().hide('fast');
+		 }						
+		doExpand = !doExpand;							
 	});
 	
     $("#log_btn").click(function(){
@@ -133,18 +155,17 @@ function update(){
 function updateJobs(js){
     
     
-    $('.job').each(function(index, value){
-        var id = parseInt(value.id); // no other way to do it, grr
-        var j = js.get(id);
+    $('.job').each(function(index, value){        
+        var j = js.get(value.id);
         
         if (j == null) {
-            $(this).parent().remove();
+            $(this).remove();
         }
         else {
             updateJobData(j);
         }
         
-        js.remove(id);
+        js.remove(value.id);
     });
     
     js.each(function(key, value){
@@ -178,8 +199,7 @@ function updateJobData(job){
 }
 
 function drawJob(job){
-    var innerHTML = "<div class='job' id='" + job.id + "'>";
-    innerHTML += "<div class='foldable'><b>Job ID: " + job.id;
+    var innerHTML = "<div class='foldable'><b>Job ID: " + job.id;
     innerHTML += " :</b><span id='progress'></span>% complete";
     innerHTML += "<div class='progressbar'></div>";
     innerHTML += "<div >Phase: <b><span id='phase'/></b></div></div>";
@@ -189,7 +209,7 @@ function drawJob(job){
 	innerHTML += "<div class='button' id='MapCode'" + job.id + "'>[View map code]</div>";
     innerHTML += "<div class='button' id='RedCode'" + job.id + "'>[View reduce code]</div>";
     innerHTML += "<div class='button' id='KillBtn" + job.id + "'>[Kill job]</div>";
-    innerHTML += "</div></div>";
+    innerHTML += "</div>";
 	
 	if(job.has_ended) {
 		var goal = "#old_joblist";			
@@ -198,7 +218,7 @@ function drawJob(job){
 		var goal = "#joblist";
 	}
 	
-	$(goal).append($('<div/>').html(innerHTML));
+	$(goal).append($("<div/>").addClass("job").attr("id", job.id).append($("<div/>").html(innerHTML)));
 	    
     updateJobData(job);
     

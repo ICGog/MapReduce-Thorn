@@ -7,11 +7,12 @@ function getJobs(){
 	var running = 0;
 	
     var xhr = $.ajax({
-        url: "smr/smr_http:get_jobs",
+        //url: "smr/smr_http:get_jobs",
+		url: "js/testjobs.js",
         dataType: 'json',
         async: false,
         cache: false,
-        success: function(data){
+		success: function(data){
             if (data == null) 
                 return;
             
