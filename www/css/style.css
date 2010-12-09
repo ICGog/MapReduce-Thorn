@@ -52,14 +52,42 @@ body a {
 	background: #F2C2C2;
 }
 
+/* Worker styles */
+
+.workers {
+	margin-left: 5px;	
+}	
+	
+.worker {	 	 
+	 width: 80%;
+	 border: 1px solid #666;
+	 margin: 10px;  
+	 padding: 5px;
+	 float: left;
+}
+
+.worker_header {
+	 background: #333;
+    color: white;
+    padding-left: 5px;
+    font-weight: bold;	
+}
+
+.val {
+	width: 70px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #666;
+}
+
 /* Element styles */
 .button {
     cursor: pointer;
     cursor: hand;
 }
 
-.num {
-	
+#interval {
+	width: 6em;
 }
 
 .selected {
@@ -72,6 +100,10 @@ body a {
 
 .margin-top {
     margin-top: 2em;
+}
+
+.center {
+    text-align: center;
 }
 
 .header {

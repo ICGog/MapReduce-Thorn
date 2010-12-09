@@ -44,10 +44,19 @@
                 </div>
             </div>
             <div class='margin-top' id='options'>
+            	<div>
+                    Update interval:
+					<span class='button' id='minus'>[-]</span>
+					<span id='interval'></span>
+					<span class='button' id='plus'>[+]</span>
+                </div>
                 <div class='button' id='update_btn'>
                     [Disable updates]
                 </div>
-                <div class='button' id='log_btn'>
+				 <div class='margin-top button' id='expand_btn'>
+                    [Expand/Fold all]
+                </div>
+                <div class='margin-top button' id='log_btn'>
                     [Show log]
                 </div>
             </div>
@@ -60,5 +69,8 @@
         </div>
         <div class='main'>
         </div>
+		<div id="dialog-confirm" title="Kill the job?">
+		<div id="dialog-text"></div>
+		</div>
     </body>
 </html>
