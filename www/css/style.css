@@ -1,52 +1,34 @@
+@CHARSET "UTF-8";
 body {
-	background: #FDFFDB;
-	color: #000000;
-	font-family: sans-serif;
-	margin-left: 15px;
-	margin-top: 1%;
+    background: #FDFFDB;
+    color: #000000;
+    font-family: sans-serif;
+    margin-left: 15px;
+    margin-top: 1%;
 }
 
 body h1 {
-	font-size: 120%;
-	font-style: normal;
+    font-size: 120%;
+    font-style: normal;
 }
 
 body a {
-	color: #000000;
-	text-decoration: none;
-
+    color: #000000;
+    text-decoration: none;
 }
+
 
 
 /* Column styles */
-
 .main {
-	float:	left;
-	width:	75%;
+    float: left;
+    width: 570px;
 }
 
 .menu {
-	width: 25%;
-	float:	right;	
-}
-
-
-/* Header styles */
-
-.header {
-	font-size: 150%;
-	width: 100%;
-}
-
-.header #page_title {	
-	width: 60%;
-}
-
-.header #logo {
-	float: right;
-	text-align: right;	
-	width: 40%;
-	z-index: -10;
+    width: 230px;
+    float: left;
+	margin-right: 1.5em;
 }
 
 /* Job styles */
@@ -62,80 +44,42 @@ body a {
 	padding: 5px;
 }
 
-
-/* Node styles */
-
-.nodes {
-	margin-left: 5px;	
-}	
-	
-.node {	 	 
-	 width: 80%; 
-	 border: 1px solid #666;
-	 margin: 10px;  
-	 padding: 5px;
-	 float: left;
+.succeeded {
+	background: #DBF2C2;
 }
 
-.node .name {
-	 background: #333;
-    color: white;
-    padding-left: 5px;
-    font-weight: bold;	
+.failed {
+	background: #F2C2C2;
 }
 
-.node .value {
-	width: 19%;
-	float: left;
-	text-align: center;
-	border-right: 1px solid #666;
-}
-
-.node .succ {
-	
-}
-
-.node .fail {
-	
-}
-
-.node .busy {
-	
-}
-
-.node .map {
-	
-}
-
-.node .red {
-	
-}
-
-/* Footer styles */ 
-
-.footer {	
-	color: #AAAAAA;
-	font-size: 75%;		
-}
-
-.footer #framework_name {
-	
-}
-
-.footer #framework_version {
-	margin-left: 1em;	
-}
-
-/* Other style */
-.invisible {
-	display: none;
-}
-
+/* Element styles */
 .button {
-	cursor:pointer;cursor:hand;
+    cursor: pointer;
+    cursor: hand;
 }
 
-.expander {
-	cursor:pointer;cursor:hand;
+.num {
+	
 }
 
+.selected {
+    color: #FDFFDB;
+    background: #942436;
+    padding: 3px;
+    font-weight: bold;
+    cursor: default;
+}
+
+.margin-top {
+    margin-top: 2em;
+}
+
+.header {
+    font-size: 150%;
+    width: 100%;
+}
+
+.footer {
+    color: #AAAAAA;
+    font-size: 75%;
+}
