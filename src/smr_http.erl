@@ -24,7 +24,7 @@ start() ->
            mod_head,
            mod_log,
            mod_disk_log]},
-        {port, 55513},
+        {port, ?WWW_PORT},
         {server_name, "smr"},
         {server_root, "log"},
         {document_root, "www"},

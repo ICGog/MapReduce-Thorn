@@ -3,7 +3,7 @@
 % General
 %------------------------------------------------------------------------------
 
--define(WWW_PORT, 8081).
+-define(WWW_PORT, 55156).
 
 -define(CHUNK_SIZE, 8388608). %% 64 MiB / 32 MiB in words on a
                               %% 64bit / 32bit machine
