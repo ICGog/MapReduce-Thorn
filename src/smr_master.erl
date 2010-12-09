@@ -3,7 +3,8 @@
 
 -behavior(gen_server).
 
--export([start_link/0, new_job/2, new_job/3, new_job/4, add_input/2,
+-export([start_link/0, new_job/2, new_job/3, new_job/4, new_job_from_another/3,
+         new_job_from_another/4, new_job_from_another/5, add_input/2,
          import_from_output/2, do_job/1, next_result/1, whole_result/1,
          kill_job/1]).
 -export([job_finished/1]).
@@ -30,14 +31,23 @@ start_link() ->
     gen_server:start_link(?NAME, ?MODULE, [], []).
 
 new_job(Map, Reduce) ->
-    gen_server:call(?NAME, {new_job, Map, Reduce, ?DEFAULT_MODE, infinity},
-                    infinity).
+    new_job(Map, Reduce, ?DEFAULT_MODE).
 
 new_job(Map, Reduce, Mode) ->
-    gen_server:call(?NAME, {new_job, Map, Reduce, Mode, infinity}, infinity).
+    new_job(Map, Reduce, Mode, infinity).
 
 new_job(Map, Reduce, Mode, MaxTasks) ->
     gen_server:call(?NAME, {new_job, Map, Reduce, Mode, MaxTasks}, infinity).
+
+new_job_from_another(OtherJobId, Map, Reduce) ->
+    new_job_from_another(OtherJobId, Map, Reduce, ?DEFAULT_MODE).
+
+new_job_from_another(OtherJobId, Map, Reduce, Mode) ->
+    new_job_from_another(OtherJobId, Map, Reduce, Mode, infinity).
+
+new_job_from_another(OtherJobId, Map, Reduce, Mode, MaxTasks) ->
+    gen_server:call(?NAME, {new_job_from_another, OtherJobId, Map, Reduce,
+                            Mode, MaxTasks}, infinity).
 
 add_input(JobId, Input) ->
     gen_server:call(?NAME, {add_input, JobId, Input}, infinity).
@@ -74,20 +84,14 @@ job_finished(JobPid) ->
 init([]) ->
     {ok, #state{}}.
 
-handle_call({new_job, Map, Reduce, Mode, MaxTasks}, _From,
-            State = #state{jobs = Jobs,
-                           cur_job_id = JobId,
-                           job_pids = JobPids}) ->
-    {ok, JobSup} = smr_job_sup_sup:start_job_sup(Map, Reduce, JobId, Mode,
-                                                 MaxTasks),
-    JobPid = smr_job_sup:job(JobSup),
-    erlang:monitor(process, JobPid),
-    NewJobPids = dict:store(JobId, JobPid, JobPids),
-    NewJobs = dict:store(JobPid, #job{pid = JobPid,
-                                      id = JobId}, Jobs),
-    {reply, {ok, JobId}, State#state{jobs = NewJobs,
-                                     job_pids = NewJobPids,
-                                     cur_job_id = JobId + 1}};
+handle_call({new_job, Map, Reduce, Mode, MaxTasks}, _From, State) ->
+    handle_new_job(direct, Map, Reduce, Mode, MaxTasks, State);
+handle_call({new_job_from_another, OtherJobId, Map, Reduce, Mode, MaxTasks},
+            _From, State = #state{job_pids = JobPids}) ->
+    OtherJobPid = dict:fetch(OtherJobId, JobPids),
+    OutputTable = smr_job:handover_output(OtherJobPid),
+    handle_new_job({other_job, OutputTable}, Map, Reduce, Mode, MaxTasks,
+                   State);
 handle_call({add_input, JobId, Input}, _From,
             State = #state{job_pids = JobPids}) ->
     smr_job:add_input(dict:fetch(JobId, JobPids), Input),
@@ -134,13 +138,27 @@ terminate(_Reason, _State) ->
 % Internal
 %------------------------------------------------------------------------------
 
+handle_new_job(InputMode, Map, Reduce, Mode, MaxTasks,
+               State = #state{jobs = Jobs,
+                              cur_job_id = JobId,
+                              job_pids = JobPids}) ->
+    {ok, JobSup} = smr_job_sup_sup:start_job_sup(
+                       InputMode,Map, Reduce, JobId, Mode, MaxTasks),
+    JobPid = smr_job_sup:job(JobSup),
+    erlang:monitor(process, JobPid),
+    NewJobPids = dict:store(JobId, JobPid, JobPids),
+    NewJobs = dict:store(JobPid, #job{pid = JobPid,
+                                      id = JobId}, Jobs),
+    {reply, {ok, JobId}, State#state{jobs = NewJobs,
+                                     job_pids = NewJobPids,
+                                     cur_job_id = JobId + 1}}.
+
 handle_job_exit(Pid, #job{id = Id, from = From}, Reason,
                 State = #state{jobs = Jobs, job_pids = JobPids}) ->
     case Reason of
         normal -> ok;
         _      -> error_logger:info_msg("MapReduce job ~p failed. Reason: ~p~n",
                                         [Id, Reason]),
-                  smr_mnesia:delete_job_tables(Id),
                   smr_statistics:job_failed(Id, Reason),
                   case From of none -> ok;
                                _    -> gen_server:reply(From, {error, Reason})

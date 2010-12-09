@@ -90,8 +90,6 @@ handle_cast({register_worker, W}, State) ->
     {noreply, internal_register_worker(W, State)};
 handle_cast({unregister_worker, W}, State) ->
     {noreply, internal_unregister_worker(W, State)};
-handle_cast({task_started, _J, _W, input, _}, State) ->
-    {noreply, State};
 handle_cast({task_started, J, W, TaskType, TaskSize}, State) ->
     handle_update(
         W, J,
@@ -116,9 +114,7 @@ handle_cast({task_started, J, W, TaskType, TaskSize}, State) ->
 handle_cast({task_finished, J, W}, State) ->
     handle_update(
         W, J,
-        fun (Worker, Job = #smr_job{phase = <<"input">>}) ->
-                {Worker, Job};
-            (Worker = #smr_worker{num_succ = Succ,
+        fun (Worker = #smr_worker{num_succ = Succ,
                                   last_task_size = TSize,
                                   last_task_started_on = LTSO,
                                   latest_performances = Perfs},
@@ -132,8 +128,11 @@ handle_cast({task_finished, J, W}, State) ->
                                           <<"reduce">> -> RIS
                             end,
                 DeltaPhaseP = TSize / WholeSize,
-                NewP = P + 0.45 * DeltaPhaseP,
-                NewPhaseP = PhaseP + DeltaPhaseP,
+                {NewPhaseP, NewP} =
+                    case PhaseP + DeltaPhaseP of
+                        NPP when NPP > 1.0 -> {1.0, P};
+                        NPP                -> {NPP, P + 0.5 * DeltaPhaseP}
+                    end,
                 DeltaT = timer:now_diff(now(), LTSO),
                 NewPWTUSON = PWTUSON + DeltaT,
                 WorkerEPIU = float(DeltaT) / DeltaPhaseP,
@@ -169,9 +168,9 @@ handle_cast({job_next_phase, J, Phase, InputSize}, State) ->
                 {none,
                  case Phase of
                      map    -> Job1#smr_job{map_input_size = InputSize,
-                                            progress = 0.1};
+                                            progress = 0.0};
                      reduce -> Job1#smr_job{reduce_input_size = InputSize,
-                                           progress = 0.55}
+                                            progress = 0.5}
                  end}
         end,
         State);

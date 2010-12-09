@@ -8,15 +8,15 @@
 
 %------------------------------------------------------------------------------
 
-start_link(JobPid, TaskId, TaskType, TaskFun, FromTable, ToTable) ->
-    supervisor_bridge:start_link(?MODULE, [JobPid, TaskId, TaskType, TaskFun,
-                                           FromTable, ToTable]).
+start_link(JobPid, LookupHash, TaskType, TaskFun, FromTable, ToTable) ->
+    supervisor_bridge:start_link(?MODULE, [JobPid, LookupHash, TaskType,
+                                           TaskFun, FromTable, ToTable]).
 
 %------------------------------------------------------------------------------
 
-init([JobPid, TaskId, TaskType, TaskFun, FromTable, ToTable]) ->
+init([JobPid, LookupHash, TaskType, TaskFun, FromTable, ToTable]) ->
     Pid = smr_pool:pspawn_link(smr_task, TaskType,
-                               [self(), JobPid, TaskId, TaskFun, FromTable,
+                               [self(), JobPid, LookupHash, TaskFun, FromTable,
                                 ToTable]),
     {ok, Pid, Pid}.
 
