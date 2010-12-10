@@ -3,8 +3,7 @@
 
 -behavior(gen_server).
 
--export([start_link/0, new_job/2, new_job/3, new_job/4, new_job_from_another/3,
-         new_job_from_another/4, new_job_from_another/5, add_input/2,
+-export([start_link/0, new_job/3, new_job_from_another/4, add_input/2,
          import_from_output/2, do_job/1, next_result/1, whole_result/1,
          kill_job/1]).
 -export([job_finished/1]).
@@ -21,7 +20,6 @@
               from}).
 
 -define(NAME, {global, ?MODULE}).
--define(DEFAULT_MODE, [{n_ram_copies, 2}]).
 
 %------------------------------------------------------------------------------
 % API
@@ -30,24 +28,12 @@
 start_link() ->
     gen_server:start_link(?NAME, ?MODULE, [], []).
 
-new_job(Map, Reduce) ->
-    new_job(Map, Reduce, ?DEFAULT_MODE).
+new_job(Map, Reduce, Props) ->
+    gen_server:call(?NAME, {new_job, Map, Reduce, Props}, infinity).
 
-new_job(Map, Reduce, Mode) ->
-    new_job(Map, Reduce, Mode, infinity).
-
-new_job(Map, Reduce, Mode, MaxTasks) ->
-    gen_server:call(?NAME, {new_job, Map, Reduce, Mode, MaxTasks}, infinity).
-
-new_job_from_another(OtherJobId, Map, Reduce) ->
-    new_job_from_another(OtherJobId, Map, Reduce, ?DEFAULT_MODE).
-
-new_job_from_another(OtherJobId, Map, Reduce, Mode) ->
-    new_job_from_another(OtherJobId, Map, Reduce, Mode, infinity).
-
-new_job_from_another(OtherJobId, Map, Reduce, Mode, MaxTasks) ->
+new_job_from_another(OtherJobId, Map, Reduce, Props) ->
     gen_server:call(?NAME, {new_job_from_another, OtherJobId, Map, Reduce,
-                            Mode, MaxTasks}, infinity).
+                            Props}, infinity).
 
 add_input(JobId, Input) ->
     gen_server:call(?NAME, {add_input, JobId, Input}, infinity).
@@ -84,24 +70,17 @@ job_finished(JobPid) ->
 init([]) ->
     {ok, #state{}}.
 
-handle_call({new_job, Map, Reduce, Mode, MaxTasks}, _From, State) ->
-    handle_new_job(direct, Map, Reduce, Mode, MaxTasks, State);
-handle_call({new_job_from_another, OtherJobId, Map, Reduce, Mode, MaxTasks},
+handle_call({new_job, Map, Reduce, Props}, _From, State) ->
+    handle_new_job(direct, Map, Reduce, Props, State);
+handle_call({new_job_from_another, OtherJobId, Map, Reduce, Props},
             _From, State = #state{job_pids = JobPids}) ->
     OtherJobPid = dict:fetch(OtherJobId, JobPids),
-    OutputTable = smr_job:handover_output(OtherJobPid),
-    handle_new_job({other_job, OutputTable}, Map, Reduce, Mode, MaxTasks,
-                   State);
+    Details = smr_job:handover_output(OtherJobPid),
+    handle_new_job({other_job, Details}, Map, Reduce, Props, State);
 handle_call({add_input, JobId, Input}, _From,
             State = #state{job_pids = JobPids}) ->
     smr_job:add_input(dict:fetch(JobId, JobPids), Input),
     {reply, ok, State};
-handle_call({import_from_output, JobId, PrevJobId}, _From,
-            State = #state{job_pids = JobPids}) ->
-    PrevJobPid = dict:fetch(PrevJobId, JobPids),
-    JobPid = dict:fetch(JobId, JobPids),
-    OutputTable = smr_job:handover_output(PrevJobPid),
-    {reply, smr_job:import_from_output(JobPid, PrevJobId, OutputTable), State};
 handle_call({do_job, JobId}, From, State = #state{job_pids = JobPids,
                                                   jobs = Jobs}) ->
     JobPid = dict:fetch(JobId, JobPids),
@@ -138,12 +117,12 @@ terminate(_Reason, _State) ->
 % Internal
 %------------------------------------------------------------------------------
 
-handle_new_job(InputMode, Map, Reduce, Mode, MaxTasks,
+handle_new_job(InputMode, Map, Reduce, Props,
                State = #state{jobs = Jobs,
                               cur_job_id = JobId,
                               job_pids = JobPids}) ->
-    {ok, JobSup} = smr_job_sup_sup:start_job_sup(
-                       InputMode,Map, Reduce, JobId, Mode, MaxTasks),
+    {ok, JobSup} = smr_job_sup_sup:start_job_sup(InputMode,Map, Reduce, JobId,
+                                                 Props),
     JobPid = smr_job_sup:job(JobSup),
     erlang:monitor(process, JobPid),
     NewJobPids = dict:store(JobId, JobPid, JobPids),

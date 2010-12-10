@@ -3,21 +3,21 @@
 
 -behaviour(supervisor_bridge).
 
--export([start_link/6]).
+-export([start_link/7]).
 -export([init/1, terminate/2]).
 
 %------------------------------------------------------------------------------
 
-start_link(JobPid, LookupHash, TaskType, TaskFun, FromTable, ToTable) ->
-    supervisor_bridge:start_link(?MODULE, [JobPid, LookupHash, TaskType,
-                                           TaskFun, FromTable, ToTable]).
+start_link(TaskType, JobPid, LookupHash, TaskFun, FromTable, ToTable, Props) ->
+    supervisor_bridge:start_link(?MODULE, [TaskType, JobPid, LookupHash,
+                                           TaskFun, FromTable, ToTable, Props]).
 
 %------------------------------------------------------------------------------
 
-init([JobPid, LookupHash, TaskType, TaskFun, FromTable, ToTable]) ->
-    Pid = smr_pool:pspawn_link(smr_task, TaskType,
-                               [self(), JobPid, LookupHash, TaskFun, FromTable,
-                                ToTable]),
+init([TaskType, JobPid, LookupHash, TaskFun, FromTable, ToTable, Props]) ->
+    Pid = smr_pool:pspawn_link(smr_task, do, [TaskType, JobPid, LookupHash,
+                                              TaskFun, FromTable, ToTable,
+                                              Props]),
     {ok, Pid, Pid}.
 
 terminate(_Reason, Pid) ->

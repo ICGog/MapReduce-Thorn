@@ -8,7 +8,9 @@
 -define(CHUNK_SIZE, 8388608). %% 64 MiB / 32 MiB in words on a
                               %% 64bit / 32bit machine
 
--define(WORKER_SUB_PROCESSES, 4).
+-define(WORKER_SUB_PROCESSES, 2).
+
+-define(REPLICATION_MODE, [{n_ram_copies, 1}]).
 
 %------------------------------------------------------------------------------
 % Statistics and HTTP API

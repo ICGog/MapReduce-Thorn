@@ -1,37 +1,37 @@
 
 -module(smr_task).
 
--export([map/6, reduce/6, run_thorn_job/2]).
+-export([do/7, run_thorn_job/2]).
 
 -include("smr.hrl").
 
 %------------------------------------------------------------------------------
 
-map(_Sup, Job, LookupHash, MapFun, FromTable, ToTable) ->
+do(Type, Job, LookupHash, Fun, FromTable, ToTable, Props) ->
+    SubProcs = proplists:get_value(worker_sub_processes, Props,
+                                   ?WORKER_SUB_PROCESSES),
+    What = case Type of map           -> input;
+                        map_no_reduce -> input_no_reduce;
+                        reduce        -> inter
+           end,
     {Hashes, ResultSize} =
-        smr_mnesia:process_input(
-            LookupHash,
-            fun (Input) ->
-                    smr_job:task_started(Job, self(), LookupHash,
-                                         erts_debug:flat_size(Input)),
-                    lists:flatten(
-                        plists:map(MapFun, Input,
-                                   {processes, ?WORKER_SUB_PROCESSES}))
-            end,
-            FromTable, ToTable),
-    smr_job:task_finished(Job, self(), LookupHash, Hashes, ResultSize).
-
-reduce(_Sup, Job, LookupHash, ReduceFun, FromTable, ToTable) ->
-    {Hashes, ResultSize} =
-        smr_mnesia:process_inter(
-            LookupHash,
-            fun (KVsList) ->
-                    smr_job:task_started(Job, self(), LookupHash,
-                                         erts_debug:flat_size(KVsList)),
-                    plists:map(fun (KVs = {K, _}) -> {K, ReduceFun(KVs)} end,
-                               KVsList, {processes, ?WORKER_SUB_PROCESSES})
-            end,
-            FromTable, ToTable),
+        smr_mnesia:process(
+            What,
+            [LookupHash,
+             fun (Input) ->
+                     smr_job:task_started(Job, self(), LookupHash,
+                                          erts_debug:flat_size(Input)),
+                     case Type of
+                         reduce ->
+                             plists:map(fun (KVs = {K, _}) ->
+                                                {K, Fun(KVs)}
+                                        end, Input, {processes, SubProcs});
+                         _Map ->
+                             lists:flatten(plists:map(Fun, Input,
+                                                      {processes, SubProcs}))
+                     end
+             end,
+             FromTable, ToTable, Props]),
     smr_job:task_finished(Job, self(), LookupHash, Hashes, ResultSize).
 
 run_thorn_job(Code, Input) ->

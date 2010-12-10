@@ -3,8 +3,7 @@
 
 -export([start/0, stop/0, start_on_node/1, stop_on_node/1]).
 -export([create_job_table/2, delete_job_table/1, tables_monitor/1]).
--export([put_input_chunk/2, process_input/4, process_inter/4,
-         get_output_chunk/2]).
+-export([put_input_chunk/3, process/2, get_output_chunk/3]).
 
 -include("smr.hrl").
 
@@ -63,37 +62,40 @@ tables_monitor(Tables) ->
                 end
         end).
 
-put_input_chunk(Chunk, InputTable) ->
-    mnesia:activity(sync_dirty, fun put_input_chunk_internal/2,
-                    [Chunk, InputTable], mnesia_frag).
+put_input_chunk(Chunk, InputTable, Props) ->
+    mnesia:activity(sync_dirty, fun put_input_chunk_internal/3,
+                    [Chunk, InputTable, Props], mnesia_frag).
 
-process_input(LookupHash, Fun, InputTable, InterTable) ->
-    mnesia:activity(sync_dirty, fun process_input_internal/4,
-                    [LookupHash, Fun, InputTable, InterTable], mnesia_frag).
+process(What, Props) ->
+    ProcessFun = case What of
+                     input           -> fun process_input_internal/5;
+                     input_no_reduce -> fun process_input_no_reduce_internal/5;
+                     inter           -> fun process_inter_internal/5
+                 end,
+    mnesia:activity(sync_dirty, ProcessFun, Props, mnesia_frag).
 
-process_inter(LookupHash, Fun, InterTable, OutputTable) ->
-    mnesia:activity(sync_dirty, fun process_inter_internal/4,
-                    [LookupHash, Fun, InterTable, OutputTable], mnesia_frag).
-
-get_output_chunk(LookupHash, OutputTable) ->
-    mnesia:activity(sync_dirty, fun get_output_chunk_internal/2,
-                    [LookupHash, OutputTable], mnesia_frag).
+get_output_chunk(LookupHash, OutputTable, Props) ->
+    mnesia:activity(sync_dirty, fun get_output_chunk_internal/3,
+                    [LookupHash, OutputTable, Props], mnesia_frag).
 
 %------------------------------------------------------------------------------
 % Internal
 %------------------------------------------------------------------------------
 
-put_input_chunk_internal(Chunk, InputTable) ->
-    {Hash, K} = new_k(),
+put_input_chunk_internal(Chunk, InputTable, Props) ->
+    Size = erts_debug:flat_size(Chunk),
+    {Hash, K} =
+        case proplists:get_bool(no_rechunk, Props) of
+            true  -> new_k();
+            false -> new_k(chunk_collide_hash_fun(Size))
+        end,
     write_chunk(K, Chunk, InputTable),
-    {[Hash], erts_debug:flat_size(Chunk)}.
+    {[Hash], Size}.
 
-process_input_internal(LookupHash, Fun, InputTable, InterTable) ->
+process_input_internal(LookupHash, Fun, InputTable, InterTable, Props) ->
     Chunks = lists:flatten(select_chunks(LookupHash, InputTable)),
     NewChunks = aggregate(Fun(Chunks)),
-    Size = erts_debug:flat_size(NewChunks),
-    %HashFun = chunk_collide_hash_fun(Size),
-    HashFun = fun erlang:phash2/1,
+    HashFun = hash_fun(proplists:get_value(max_hash, Props, infinity)),
     HashesSet =
         lists:foldl(
             fun (Chunk = {Key, _Values}, HashesSet) ->
@@ -101,9 +103,18 @@ process_input_internal(LookupHash, Fun, InputTable, InterTable) ->
                     write_chunk(K, Chunk, InterTable),
                     ordsets:add_element(Hash, HashesSet)
             end, ordsets:new(), NewChunks),
-    {ordsets:to_list(HashesSet), Size}.
+    {ordsets:to_list(HashesSet), erts_debug:flat_size(NewChunks)}.
 
-process_inter_internal(LookupHash, Fun, InterTable, OutputTable) ->
+process_input_no_reduce_internal(LookupHash, Fun, InputTable, OutputTable,
+                                 _Props) ->
+    Chunk = lists:flatten(select_chunks(LookupHash, InputTable)),
+    NewChunk = Fun(Chunk),
+    Size = erts_debug:flat_size(NewChunk),
+    {Hash, K} = new_k(chunk_collide_hash_fun(Size)),
+    write_chunk(K, NewChunk, OutputTable),
+    {[Hash], erts_debug:flat_size(NewChunk)}.
+
+process_inter_internal(LookupHash, Fun, InterTable, OutputTable, _Props) ->
     Chunk = reaggregate(select_chunks(LookupHash, InterTable)),
     NewChunk = Fun(Chunk),
     Size = erts_debug:flat_size(NewChunk),
@@ -111,7 +122,7 @@ process_inter_internal(LookupHash, Fun, InterTable, OutputTable) ->
     write_chunk(K, NewChunk, OutputTable),
     {[Hash], Size}.
 
-get_output_chunk_internal(LookupHash, OutputTable) ->
+get_output_chunk_internal(LookupHash, OutputTable, _Props) ->
     lists:flatten(select_chunks(LookupHash, OutputTable)).
 
 write_chunk(K, Chunk, Table) ->
@@ -160,7 +171,12 @@ new_k(HashFun, HashFunArg) ->
     Hash = HashFun(HashFunArg),
     {Hash, {Hash, ID}}.
 
+hash_fun(infinity) ->
+    fun erlang:phash2/1;
+hash_fun(MaxHash) ->
+    fun (Arg) -> erlang:phash2(Arg, MaxHash) end.
+
 chunk_collide_hash_fun(Size) when ?CHUNK_SIZE > Size ->
-    fun (Arg) -> erlang:phash2(Arg, ?CHUNK_SIZE div Size) end;
+    fun (Arg) -> erlang:phash2(Arg, 1 + (Size div (?CHUNK_SIZE - Size))) end;
 chunk_collide_hash_fun(_) ->
     fun erlang:phash2/1.
