@@ -14,22 +14,22 @@ function init_menu(){
         async: false,
         cache: false,
     });
-	
-	$("#interval").text(updateInterval);	
-	
-	$( "#slider" ).slider({
-		min: 1000,
-		max: 10000,
-		step: 1000,
-		value: 5000,
-   		change: function(event, ui) {
-			$( "#interval" ).text(ui.value);
-			updateInterval = ui.value;		
-		}
-	});
+    
+    $("#interval").text(updateInterval / 1000 + " s");
+    
+    $("#slider").slider({
+        min: 1000,
+        max: 10000,
+        step: 1000,
+        value: 5000,
+        change: function(event, ui){
+            $("#interval").text(ui.value / 1000 + " s");
+            updateInterval = ui.value;
+        }
+    });
     
     init_buttons();
-			
+    
     // Load content
     $('#pages').children().each(function(index, value){
         $.get('blocks/' + value.id + '.html', function(data){
@@ -43,20 +43,19 @@ function init_menu(){
     selected = $('.display:first').get(0).id;
     
     $('.main').html(content[selected]);
-	
-	$('.foldable').click(function() 
-	{
-		$(this).next().toggle('fast');
-		return false;
-	}).next().hide();	
+    
+    $('.foldable').click(function(){
+        $(this).next().toggle('fast');
+        return false;
+    }).next().hide();
     
     update();
 }
 
-function init_buttons() {
-	$('.action').button();
-	
-	$('.display').click(function(){
+function init_buttons(){
+    $('.action').button();
+    
+    $('.display').click(function(){
         $('.selected').removeClass('selected');
         $(this).addClass('selected');
         previous = selected;
@@ -67,15 +66,15 @@ function init_buttons() {
     $('#update_btn').click(function(){
         doUpdate = !doUpdate;
         if (doUpdate) {
-            $("#update_btn").button( "option", "label", "Disable Updates" );
+            $("#update_btn").button("option", "label", "Disable Updates");
             update();
         }
         else {
-            $("#update_btn").button( "option", "label", "Enable Updates" );
+            $("#update_btn").button("option", "label", "Enable Updates");
             clearTimeout(updateTimeout);
         }
     });
-	
+    
     $('#plus').click(function(){
         if (updateInterval <= 0) 
             $('#minus').addClass('button');
@@ -93,20 +92,19 @@ function init_buttons() {
             }
         }
     });
-	
-	$("#expand_btn").click(function() 
-	{	
-		if(doExpand) {
-			$("#expand_btn").button( "option", "label", "Collapse all" );			
-			$('.foldable').next().show('fast');
-		} 								
-		 else  {
-		 	$("#expand_btn").button( "option", "label", "Expand all" );
-		 	$('.foldable').next().hide('fast');
-		 }						
-		doExpand = !doExpand;							
-	});
-	
+    
+    $("#expand_btn").click(function(){
+        if (doExpand) {
+            $("#expand_btn").button("option", "label", "Collapse all");
+            $('.foldable').next().show('fast');
+        }
+        else {
+            $("#expand_btn").button("option", "label", "Expand all");
+            $('.foldable').next().hide('fast');
+        }
+        doExpand = !doExpand;
+    });
+    
     $("#log_btn").click(function(){
         codeWindow = window.open('log/smr.log', 'Log', 'width=600,height=400,location=no,resizeable=no');
         codeWindow.focus();
@@ -116,19 +114,19 @@ function init_buttons() {
 function reloadContents(){
     content[previous] = $('.main').html();
     $('.main').html(content[selected]);
-	update();
+    update();
 }
 
 function update(){
-	var js = getJobs();
-	var ws = getWorkers();
-   
-	updateJobs(js);
-	updateWorkers(ws);
-	
-	$('#worker_count').text(ws.size());
-	$('#completed_count').text(js.size() - js.running);
-	$('#jobs_running').text(js.running);	
+    var js = getJobs();
+    var ws = getWorkers();
+    
+    updateJobs(js);
+    updateWorkers(ws);
+    
+    $('#worker_count').text(ws.size());
+    $('#completed_count').text(js.size() - js.running);
+    $('#jobs_running').text(js.running);
     
     //START Foreign code. source: jQueryUI
     $('.progressbar').each(function(){
@@ -139,24 +137,23 @@ function update(){
     });
     //END Foreign code
     
-	
-	$('.foldable').unbind().click(function() 
-	{
-		$(this).next().toggle('fast');
-		return false;
-	});
-	
-	
+    
+    $('.foldable').unbind().click(function(){
+        $(this).next().toggle('fast');
+        return false;
+    });
+    
     if (doUpdate) 
         updateTimeout = setTimeout('update()', 5000);
 }
 
 
 function updateJobs(js){
-    
-    
-    $('.job').each(function(index, value){        
-        var j = js.get(value.id);
+
+
+    $('.job').each(function(index, value){
+        var id = parseInt(value.id);
+        var j = js.get(id);
         
         if (j == null) {
             $(this).remove();
@@ -165,7 +162,7 @@ function updateJobs(js){
             updateJobData(j);
         }
         
-        js.remove(value.id);
+        js.remove(id);
     });
     
     js.each(function(key, value){
@@ -177,25 +174,25 @@ function updateJobData(job){
     var loc = $('#' + job.id);
     $('#phase', loc).html(job.phase);
     $('.progressbar', loc).replaceWith("<div class='progressbar'>" + job.progress + "</div>");
-    $('#progress', loc).html(job.progress);   
-	  
-	 
-    if (!loc.hasClass('ended') && job.has_ended) {	
-		$('#ended_on', loc).text(job.ended_on).parent().show(); 
-	
-		var tree = loc.get(0);
-		loc.remove();
-		$("#old_joblist").prepend(tree);
-		
-		
+    $('#progress', loc).html(job.progress);
+    
+    
+    if (!loc.hasClass('ended') && job.has_ended) {
+        $('#ended_on', loc).text(job.ended_on).parent().show();
+        
+        var tree = loc.get(0);
+        loc.remove();
+        $("#old_joblist").prepend(tree);
+        
+        
         if (job.outcome == 'succeded') {
-			loc.addClass('ended succeeded');    
+            loc.addClass('ended succeeded');
         }
         else {
-        	loc.addClass('ended failed');
+            loc.addClass('ended failed');
         }
     }
-		
+    
 }
 
 function drawJob(job){
@@ -204,70 +201,78 @@ function drawJob(job){
     innerHTML += "<div class='progressbar'></div>";
     innerHTML += "<div >Phase: <b><span id='phase'/></b></div></div>";
     innerHTML += "<div style='display:none;'>";
-	innerHTML += "<div>Started: <span id='started_on'>" + job.started_on + "</span></div>";
-	innerHTML += "<div style='display:none;'>Ended: <span id='ended_on'></span></div>";
-	innerHTML += "<div class='button' id='MapCode'" + job.id + "'>[View map code]</div>";
+    innerHTML += "<div>Started: <span id='started_on'>" + job.started_on + "</span></div>";
+    innerHTML += "<div style='display:none;'>Ended: <span id='ended_on'></span></div>";
+    innerHTML += "<div class='button' id='MapCode'" + job.id + "'>[View map code]</div>";
     innerHTML += "<div class='button' id='RedCode'" + job.id + "'>[View reduce code]</div>";
     innerHTML += "<div class='button' id='KillBtn" + job.id + "'>[Kill job]</div>";
     innerHTML += "</div>";
-	
-	if(job.has_ended) {
-		var goal = "#old_joblist";			
-	}		
-	else    {
-		var goal = "#joblist";
-	}
-	
-	$(goal).append($("<div/>").addClass("job").attr("id", job.id).append($("<div/>").html(innerHTML)));
-	    
+    
+    if (job.has_ended) {
+        var goal = "#old_joblist";
+    }
+    else {
+        var goal = "#joblist";
+    }
+    
+    $(goal).append($("<div/>").addClass("job").attr("id", job.id).append($("<div/>").html(innerHTML)));
+    
     updateJobData(job);
     
     delete innerHTML;
 }
 
-function updateWorkers(ws) {
-	
-	$('.worker').each(function(index, value){
+function updateWorkers(ws){
+
+    $('.worker').each(function(index, value){
         var w = ws.get(value.id);
         
         if (w == null) {
             $(this).remove();
         }
         else {
-            //updateJobData(j);
+            updateWorkerData(w);
         }
         
         ws.remove(value.id);
     });
-	
-	
-	ws.each(function(key, value){
+    
+    
+    ws.each(function(key, value){
         drawWorker(value);
     });
-}   
+}
 
 function drawWorker(worker){
     var innerHTML = "<div class='worker_header'>" + worker.node + "</div>";
-    innerHTML += "<div><div class='val' id='vvv'>" + worker.num_succ + "</div>";
-    innerHTML += "<div class='val'>" + worker.num_failed + "</div>";
-    innerHTML += "<div class='val'>" + worker.num_map_tasks + "</div>";
-    innerHTML += "<div class='val'>" + worker.num_reduce_tasks + "</div>";
-    innerHTML += "<div class='val'>" + worker.busy_time + "</div>";
-    innerHTML += "<div class='val foldable'>" + worker.exec_job_id + "</div>";
-    //innerHTML +=	"<div class='val '>" + worker.last_task_started_on + "</div></div>";
-    
-    //innerHTML += "<div class='node_header'>" + worker.node + "</div>";
+    innerHTML += "<div><div class='val' id='num_succ'>" + worker.num_succ + "</div>";
+    innerHTML += "<div class='val' id='num_failed'>" + worker.num_failed + "</div>";
+    innerHTML += "<div class='val' id='num_map_tasks'>" + worker.num_map_tasks + "</div>";
+    innerHTML += "<div class='val' id='num_reduce_tasks'>" + worker.num_reduce_tasks + "</div>";
+    innerHTML += "<div class='val' id='busy_time'>" + worker.busy_time + "</div>";
+    innerHTML += "<div class='val foldable' id='exec_job_id'>" + worker.exec_job_id + "</div>";
     innerHTML += "<div style='display:none;'><table border='0'>";
-    innerHTML += "<tr width=300em><td>Tasks succeeded:</td><td>" + worker.num_succ + "</td></tr>";
-    innerHTML += "<tr><td>Tasks failed:</td><td>" + worker.num_failed + "</td></tr>";
-    innerHTML += "<tr><td>Map tasks:</td><td>" + worker.num_map_tasks + "</td></tr>";
-    innerHTML += "<tr><td>Reduce tasks:</td><td>" + worker.num_reduce_tasks + "</td></tr>";
-    innerHTML += "<tr><td>Busy time:</td><td>" + worker.busy_time + "</td></tr>";
-    innerHTML += "<tr><td>Running job:</td><td>" + worker.exec_job_id + "</td></tr>";
-    innerHTML += "<tr><td>Last task:</td><td>" + worker.last_task_started_on + "</td></tr></table></div></div>";
-    
-    
+    innerHTML += "<tr width=300em><td>Tasks succeeded:</td><td><span id='num_succ'>" + worker.num_succ + "</span></td></tr>";
+    innerHTML += "<tr><td>Tasks failed:</td><td><span id='num_failed'>" + worker.num_failed + "</span></td></tr>";
+    innerHTML += "<tr><td>Map tasks:</td><td><span id='num_map_tasks'>" + worker.num_map_tasks + "</span></td></tr>";
+    innerHTML += "<tr><td>Reduce tasks:</td><td><span id='num_reduce_tasks'>" + worker.num_reduce_tasks + "</span></td></tr>";
+    innerHTML += "<tr><td>Busy time:</td><td><span id='busy_time'>" + worker.busy_time + "</span></td></tr>";
+    innerHTML += "<tr><td>Running job:</td><td><span id='exec_job_id'>" + worker.exec_job_id + "</span></td></tr>";
+    innerHTML += "<tr><td>Last task:</td><td><span id='last_task_started_on'>" + worker.last_task_started_on + "</span></td></tr></table></div></div>";
     
     $("#worker_list").append($("<div/>").addClass("worker").attr("id", worker.node).append($("<div/>").html(innerHTML)));
+}
+
+function updateWorkerData(worker){
+    var queryStr = worker.node;
+    queryStr = "#" + queryStr.replace('@', '\\\\@') + " ";
     
+    //var loc = $('#' + queryStr).toggle();
+    $(queryStr + '#num_succ').html(worker.num_succ);
+    $(queryStr + '#num_failed').html(worker.num_failed);
+    $(queryStr + '#num_map_tasks').html(worker.num_map_tasks);
+    $(queryStr + '#num_reduce_tasks').html(worker.num_reduce_tasks);
+    $(queryStr + '#busy_time').html(worker.busy_time);
+    $(queryStr + '#exec_job_id').html(worker.exec_job_id);
+    $(queryStr + '#last_task_started_on').html(worker.last_task_started_on);
 }
