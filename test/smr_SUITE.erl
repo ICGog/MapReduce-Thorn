@@ -89,8 +89,12 @@ sort_test(InputSize, NumBuckets, Replicas) ->
     abstract_sort_test(InputSize, NumBuckets, NewJobFun).
 
 big_sort_test(InputSize, NumBuckets, Replicas) ->
+    big_sort_test(InputSize, NumBuckets, Replicas, 1024 * 1024 div 8).
+
+big_sort_test(InputSize, NumBuckets, Replicas, ChunkSize) ->
     Props = [{replication_mode, [{n_ram_copies, Replicas}]},
-             {max_hash, NumBuckets div 2}],
+             {max_hash, NumBuckets div 2},
+             {chunk_size, ChunkSize}],
     NewJobFun =
         fun (MapFun, ReduceFun, RandFun) ->
             RandNumsId = generate_random_numbers(InputSize, NumBuckets, RandFun,
