@@ -101,7 +101,6 @@ big_sort_test(InputSize, NumBuckets, Replicas) ->
         end,
     abstract_sort_test(InputSize, NumBuckets, NewJobFun).
     
-
 abstract_sort_test(InputSize, NumBuckets, NewJobFun) ->
     LowerLimit = 1,
     UpperLimit = InputSize,

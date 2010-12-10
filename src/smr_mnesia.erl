@@ -87,7 +87,9 @@ put_input_chunk_internal(Chunk, InputTable, Props) ->
     {Hash, K} =
         case proplists:get_bool(no_rechunk, Props) of
             true  -> new_k();
-            false -> new_k(chunk_collide_hash_fun(Size))
+            false -> ChunkSize =
+                         proplists:get_value(chunk_size, Props, ?CHUNK_SIZE),
+                     new_k(chunk_collide_hash_fun(Size, ChunkSize))
         end,
     write_chunk(K, Chunk, InputTable),
     {[Hash], Size}.
@@ -106,19 +108,21 @@ process_input_internal(LookupHash, Fun, InputTable, InterTable, Props) ->
     {ordsets:to_list(HashesSet), erts_debug:flat_size(NewChunks)}.
 
 process_input_no_reduce_internal(LookupHash, Fun, InputTable, OutputTable,
-                                 _Props) ->
+                                 Props) ->
     Chunk = lists:flatten(select_chunks(LookupHash, InputTable)),
     NewChunk = Fun(Chunk),
     Size = erts_debug:flat_size(NewChunk),
-    {Hash, K} = new_k(chunk_collide_hash_fun(Size)),
+    ChunkSize = proplists:get_value(chunk_size, Props, ?CHUNK_SIZE),
+    {Hash, K} = new_k(chunk_collide_hash_fun(Size, ChunkSize)),
     write_chunk(K, NewChunk, OutputTable),
     {[Hash], erts_debug:flat_size(NewChunk)}.
 
-process_inter_internal(LookupHash, Fun, InterTable, OutputTable, _Props) ->
+process_inter_internal(LookupHash, Fun, InterTable, OutputTable, Props) ->
     Chunk = reaggregate(select_chunks(LookupHash, InterTable)),
     NewChunk = Fun(Chunk),
     Size = erts_debug:flat_size(NewChunk),
-    {Hash, K} = new_k(chunk_collide_hash_fun(Size)),
+    ChunkSize = proplists:get_value(chunk_size, Props, ?CHUNK_SIZE),
+    {Hash, K} = new_k(chunk_collide_hash_fun(Size, ChunkSize)),
     write_chunk(K, NewChunk, OutputTable),
     {[Hash], Size}.
 
@@ -176,7 +180,7 @@ hash_fun(infinity) ->
 hash_fun(MaxHash) ->
     fun (Arg) -> erlang:phash2(Arg, MaxHash) end.
 
-chunk_collide_hash_fun(Size) when ?CHUNK_SIZE > Size ->
-    fun (Arg) -> erlang:phash2(Arg, 1 + (Size div (?CHUNK_SIZE - Size))) end;
-chunk_collide_hash_fun(_) ->
+chunk_collide_hash_fun(Size, ChunkSize) when ChunkSize > Size ->
+    fun (Arg) -> erlang:phash2(Arg, 1 + (Size div (ChunkSize - Size))) end;
+chunk_collide_hash_fun(_, _) ->
     fun erlang:phash2/1.

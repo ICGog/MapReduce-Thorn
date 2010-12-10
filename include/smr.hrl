@@ -33,7 +33,7 @@
 -record(smr_job, {id,
                   has_ended = false,
                   phase_progress = 0.0,
-                  progress = 0.0, %% 0.0 - 0.1 input, 0.1 - 0.55 map, 0.55 - 1.0 reduce
+                  progress = 0.0, %% 0.1 - 0.5 map, 0.5 - 1.0 reduce
                   started_on, %% now()
                   ended_on, %% now()
                   phase_worker_time_used_on_successful = 0,
