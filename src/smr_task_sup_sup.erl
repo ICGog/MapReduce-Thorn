@@ -19,6 +19,6 @@ start_task(Sup, TaskType, JobPid, LookupHash, TaskFun, FromTable, ToTable,
 %------------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{simple_one_for_one, 10, 60 * 60},
+    {ok, {{simple_one_for_one, 0, 1},
           [{task_sup, {smr_task_sup, start_link, []}, transient,
             60, supervisor, [smr_task_sup]}]}}.

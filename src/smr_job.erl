@@ -135,23 +135,13 @@ handle_call(handover_output, _From,
 
 handle_cast(start, State) ->
     {noreply, new_phase(State#state{phase = map})};
-handle_cast({task_finished, Worker, _TaskId, NewHashes, TaskResultSize},
-            State = #state{id = JobId,
-                           available = Available,
-                           ongoing = Ongoing,
-                           awaiting = Awaiting}) ->
-    smr_statistics:task_finished(JobId, node(Worker)),
-    NewOngoing = Ongoing - 1,
-    State1 = add_task_operation_outcome({NewHashes, TaskResultSize}, State),
-    State2 = State1#state{available = Available + 1, ongoing = NewOngoing},
-    case {gb_sets:size(Awaiting), NewOngoing} of
-        {0, 0} -> handle_phase_finished(State2);
-        _      -> {noreply, send_tasks(State2)}
-    end.
+handle_cast(Cast = {task_finished, _, _, _, _}, State) ->
+    handle_task_finished(none, Cast, State).
 
-handle_info({'DOWN', _, process, Pid, Reason}, State = #state{id = JobId}) ->
+handle_info(Down = {'DOWN', _, process, Pid, Reason},
+            State = #state{id = JobId}) ->
     case Reason of
-        normal -> {noreply, State};
+        normal -> handle_task_finished(Down, none, State);
         _      -> smr_statistics:task_failed(JobId, node(Pid)),
                   {noreply, State}
     end.
@@ -192,6 +182,36 @@ handle_phase_finished(State = #state{phase = reduce,
     smr_statistics:job_finished(JobId),
     smr_master:job_finished(self()),
     {noreply, new_phase(State#state{phase = output})}.
+
+handle_task_finished(none, Cast = {task_finished, Pid, _, _, _},
+                     State = #state{id = JobId}) ->
+    receive Down = {'DOWN', _, process, Pid, normal} ->
+                handle_task_finished(Down, Cast, State);
+            {'DOWN', _, process, Pid, Reason} ->
+                smr_statistics:task_failed(JobId, node(Pid)),
+                {noreply, State}
+    after 60000 -> exit(did_not_receive_normal_down_after_task_finished)
+    end;
+handle_task_finished(Down = {'DOWN', _, process, Pid, normal}, none, State) ->
+    receive {'$gen_cast', Cast = {task_finished, Pid, _, _, _}} ->
+                handle_task_finished(Down, Cast, State)
+    after 60000 -> exit(did_not_receive_task_finished_from_task)
+    end;
+handle_task_finished(
+        {'DOWN', _, process, Pid, normal},
+        {task_finished, Pid, _TaskId, NewHashes, TaskResultSize},
+        State = #state{id = JobId,
+                       available = Available,
+                       ongoing = Ongoing,
+                       awaiting = Awaiting}) ->
+    smr_statistics:task_finished(JobId, node(Pid)),
+    NewOngoing = Ongoing - 1,
+    State1 = add_task_operation_outcome({NewHashes, TaskResultSize}, State),
+    State2 = State1#state{available = Available + 1, ongoing = NewOngoing},
+    case {gb_sets:size(Awaiting), NewOngoing} of
+        {0, 0} -> handle_phase_finished(State2);
+        _      -> {noreply, send_tasks(State2)}
+    end.
 
 new_phase(State = #state{phase = NewPhase,
                          next_size = Size,

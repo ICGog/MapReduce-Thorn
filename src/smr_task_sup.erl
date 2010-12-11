@@ -15,9 +15,8 @@ start_link(TaskType, JobPid, LookupHash, TaskFun, FromTable, ToTable, Props) ->
 %------------------------------------------------------------------------------
 
 init([TaskType, JobPid, LookupHash, TaskFun, FromTable, ToTable, Props]) ->
-    Pid = smr_pool:pspawn_link(smr_task, do, [TaskType, JobPid, LookupHash,
-                                              TaskFun, FromTable, ToTable,
-                                              Props]),
+    Pid = smr_task:start_link(TaskType, JobPid, LookupHash, TaskFun, FromTable,
+                              ToTable, Props),
     {ok, Pid, Pid}.
 
 terminate(_Reason, Pid) ->

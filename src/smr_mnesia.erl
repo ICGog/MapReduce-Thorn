@@ -3,11 +3,13 @@
 
 -export([start/0, stop/0, start_on_node/1, stop_on_node/1]).
 -export([create_job_table/2, delete_job_table/1, tables_monitor/1]).
--export([put_input_chunk/3, process/2, get_output_chunk/3]).
+-export([purge_chunks_with_prev_hash/2, put_input_chunk/3, process/2,
+         get_output_chunk/3]).
 
 -include("smr.hrl").
 
 -record(smr_data, {k, % {hash, uuid}
+                   prev_hash,
                    chunk}).
 
 %------------------------------------------------------------------------------
@@ -38,13 +40,15 @@ stop_on_node(Node) ->
 %%          NumberOfReplicas}]
 create_job_table(Ns, Mode) ->
     TableName = uuid_table_name(),
-    mnesia:create_table(
-        TableName,
-        [{record_name, smr_data},
-         {attributes, record_info(fields, smr_data)},
-         {type, ordered_set},
-         {frag_properties, [{node_pool, Ns}, {n_fragments, length(Ns)}] ++
-                            Mode}]),
+    {atomic, ok} =
+        mnesia:create_table(
+            TableName,
+            [{record_name, smr_data},
+             {attributes, record_info(fields, smr_data)},
+             {type, ordered_set},
+             {frag_properties, [{node_pool, Ns}, {n_fragments, length(Ns)}] ++
+                                Mode}]),
+    {atomic, ok} = mnesia:add_table_index(TableName, prev_hash),
     TableName.
 
 delete_job_table(Table) ->
@@ -61,6 +65,10 @@ tables_monitor(Tables) ->
                         lists:foreach(fun delete_job_table/1, Tables)
                 end
         end).
+
+purge_chunks_with_prev_hash(PrevHash, Table) ->
+    mnesia:activity(sync_dirty, fun purge_chunks_with_prev_hash_internal/2,
+                    [PrevHash, Table], mnesia_frag).
 
 put_input_chunk(Chunk, InputTable, Props) ->
     mnesia:activity(sync_dirty, fun put_input_chunk_internal/3,
@@ -82,6 +90,12 @@ get_output_chunk(LookupHash, OutputTable, Props) ->
 % Internal
 %------------------------------------------------------------------------------
 
+purge_chunks_with_prev_hash_internal(PrevHash, Table) ->
+    lists:foreach(fun (R) -> mnesia:delete_object(R, Table, write) end,
+                  mnesia:match_object(Table,
+                                      #smr_data{prev_hash = PrevHash, _='_'},
+                                      write)).
+
 put_input_chunk_internal(Chunk, InputTable, Props) ->
     Size = erts_debug:flat_size(Chunk),
     {Hash, K} =
@@ -91,7 +105,7 @@ put_input_chunk_internal(Chunk, InputTable, Props) ->
                          proplists:get_value(chunk_size, Props, ?CHUNK_SIZE),
                      new_k(chunk_collide_hash_fun(Size, ChunkSize))
         end,
-    write_chunk(K, Chunk, InputTable),
+    write_chunk(K, undefined, Chunk, InputTable),
     {[Hash], Size}.
 
 process_input_internal(LookupHash, Fun, InputTable, InterTable, Props) ->
@@ -102,7 +116,7 @@ process_input_internal(LookupHash, Fun, InputTable, InterTable, Props) ->
         lists:foldl(
             fun (Chunk = {Key, _Values}, HashesSet) ->
                     {Hash, K} = new_k(HashFun, Key),
-                    write_chunk(K, Chunk, InterTable),
+                    write_chunk(K, LookupHash, Chunk, InterTable),
                     ordsets:add_element(Hash, HashesSet)
             end, ordsets:new(), NewChunks),
     {ordsets:to_list(HashesSet), erts_debug:flat_size(NewChunks)}.
@@ -114,7 +128,7 @@ process_input_no_reduce_internal(LookupHash, Fun, InputTable, OutputTable,
     Size = erts_debug:flat_size(NewChunk),
     ChunkSize = proplists:get_value(chunk_size, Props, ?CHUNK_SIZE),
     {Hash, K} = new_k(chunk_collide_hash_fun(Size, ChunkSize)),
-    write_chunk(K, NewChunk, OutputTable),
+    write_chunk(K, LookupHash, NewChunk, OutputTable),
     {[Hash], erts_debug:flat_size(NewChunk)}.
 
 process_inter_internal(LookupHash, Fun, InterTable, OutputTable, Props) ->
@@ -123,21 +137,21 @@ process_inter_internal(LookupHash, Fun, InterTable, OutputTable, Props) ->
     Size = erts_debug:flat_size(NewChunk),
     ChunkSize = proplists:get_value(chunk_size, Props, ?CHUNK_SIZE),
     {Hash, K} = new_k(chunk_collide_hash_fun(Size, ChunkSize)),
-    write_chunk(K, NewChunk, OutputTable),
+    write_chunk(K, LookupHash, NewChunk, OutputTable),
     {[Hash], Size}.
 
 get_output_chunk_internal(LookupHash, OutputTable, _Props) ->
     lists:flatten(select_chunks(LookupHash, OutputTable)).
 
-write_chunk(K, Chunk, Table) ->
-    mnesia:write(Table, #smr_data{k = K, chunk = Chunk}, write).
+write_chunk(K, PrevHash, Chunk, Table) ->
+    mnesia:write(Table, #smr_data{k = K, prev_hash = PrevHash, chunk = Chunk},
+                 write).
 
 select_chunks(LookupHash, Table) ->
-    mnesia:select(Table, [{#smr_data{k = {LookupHash, '_'},
-                                     chunk = '$1',
-                                     _='_'},
-                           [], ['$1']}],
-                  read).
+    lists:map(
+        fun (#smr_data{chunk = C}) -> C end,
+        mnesia:match_object(Table, #smr_data{k = {LookupHash, '_'}, _='_'},
+                            read)).
 
 aggregate(KVList) ->
     orddict:to_list(

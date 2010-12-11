@@ -127,7 +127,13 @@ handle_cast({task_finished, J, W}, State) ->
                 WholeSize = case Phase of <<"map">>    -> MIS;
                                           <<"reduce">> -> RIS
                             end,
-                DeltaPhaseP = TSize / WholeSize,
+                WholeSize1 = case WholeSize of 0 -> 1;
+                                               _ -> WholeSize
+                             end,
+                TSize1 = case TSize of 0 -> 1;
+                                       _ -> TSize
+                         end,
+                DeltaPhaseP = TSize1 / WholeSize1,
                 {NewPhaseP, NewP} =
                     case PhaseP + DeltaPhaseP of
                         NPP when NPP > 1.0 -> {1.0, P};
