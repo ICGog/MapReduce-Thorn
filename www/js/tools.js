@@ -29,8 +29,8 @@ function convertDate(json) {
 }
 
 function prepareCode(code) {
-	code = code.replace('<', '&lt');
-	code = code.replace('>', '&gt');
+	code = code.replace('<', '&lt;');
+	code = code.replace('>', '&gt;');
 	return code;
 }
 
