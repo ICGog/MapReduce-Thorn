@@ -17,7 +17,15 @@ body a {
     text-decoration: none;
 }
 
+.good {
+	font-weight: bold;
+	color: #3A7532;
+}
 
+.bad {
+	font-weight: bold;
+	color: #CD0A0A;
+}
 
 /* Column styles */
 .main {
@@ -74,7 +82,7 @@ body a {
 }
 
 .working {
-	 background: #43997A;
+	 background: #3A7532;
 }
 
 .val {

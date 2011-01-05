@@ -75,10 +75,10 @@ function init_buttons(){
     $('.action').button();
     
     $('.display').click(function(){
-		if($(this).hasClass('selected'))
-			return;
-					
-        $('.selected').removeClass('selected');		
+        if ($(this).hasClass('selected')) 
+            return;
+        
+        $('.selected').removeClass('selected');
         $(this).addClass('selected');
         previous = selected;
         selected = $(this).get(0).id;
@@ -88,7 +88,7 @@ function init_buttons(){
     $('#update_btn').click(function(){
         doUpdate = !doUpdate;
         if (doUpdate) {
-			clearTimeout(updateTimeout);
+            clearTimeout(updateTimeout);
             $("#update_btn").button("option", "label", "Disable Updates");
             update();
         }
@@ -97,7 +97,7 @@ function init_buttons(){
             clearTimeout(updateTimeout);
         }
     });
-	
+    
     $("#expand_btn").click(function(){
         if (doExpand) {
             $("#expand_btn").button("option", "label", "Collapse all");
@@ -115,7 +115,7 @@ function init_buttons(){
     
     $("#log_btn").click(function(){
         var codeWindow = window.open('log/smr.log', 'Log', 'width=600,height=400,location=0');
-		codeWindow.document.title = "SMR Log";
+        codeWindow.document.title = "SMR Log";
         codeWindow.focus();
     });
 }
@@ -124,27 +124,27 @@ function reloadContents(){
     content[previous] = $('.main').html();
     $('.main').html(content[selected]);
     update();
-	updateListeners();
+    updateListeners();
 }
 
 function update(){
     var js = getJobs();
     var ws = getWorkers();
     
-    if($('.jobs').length > 0)
-		updateJobs(js);
-	if($('#worker_list').length > 0)
-    	updateWorkers(ws);
+    if ($('.jobs').length > 0) 
+        updateJobs(js);
+    if ($('#worker_list').length > 0) 
+        updateWorkers(ws);
     
     $('#worker_count').text(ws.size());
     $('#completed_count').text(js.size() - js.running);
     $('#jobs_running').text(js.running);
     $('#av_busy_time').text(ws.avBusyTime);
-	$('#busiest_worker').text(ws.busiest);
-	$('#max_busy').text(ws.maxBusyTime);
-	$('#idlest_worker').text(ws.idlest);
-	$('#min_busy').text(ws.minBusyTime);
-	$('#failing_worker').text(ws.mostFailing);
+    $('#busiest_worker').text(ws.busiest);
+    $('#max_busy').text(ws.maxBusyTime);
+    $('#idlest_worker').text(ws.idlest);
+    $('#min_busy').text(ws.minBusyTime);
+    $('#failing_worker').text(ws.mostFailing);
     
     //START Foreign code. source: jQueryUI
     $('.progressbar').each(function(){
@@ -155,14 +155,14 @@ function update(){
     });
     //END Foreign code    
     
-   
+    
     
     if (doUpdate) 
         updateTimeout = setTimeout('update()', 5000);
 }
 
-function updateListeners() {
-	 $('.foldable').unbind().click(function(){
+function updateListeners(){
+    $('.foldable').unbind().click(function(){
         $(this).next().toggle('fast');
         return false;
     });
@@ -175,7 +175,7 @@ function updateListeners() {
         
         
         
-        $(this).next().toggle('fast');        
+        $(this).next().toggle('fast');
     });
 }
 
@@ -204,7 +204,7 @@ function updateJobData(job){
     var loc = $('#' + job.id);
     $('#phase', loc).html(job.phase);
     $('.progressbar', loc).replaceWith("<div class='progressbar'>" + job.progress + "</div>");
-    $('#progress', loc).html(job.progress);    
+    $('#progress', loc).html(job.progress);
     
     if (!loc.hasClass('ended') && job.has_ended) {
         $('#ended_on', loc).text(job.ended_on).parent().show();
@@ -221,26 +221,26 @@ function updateJobData(job){
             loc.addClass('ended failed');
         }
     }
-	
-	updateJobButtons(job);
+    
+    updateJobButtons(job);
 }
 
-function updateJobButtons(job) {
-	var loc = $('#' + job.id);
-	$("#mapBtn", loc).button().unbind().click(function(){
-		var mapCodeWindow = window.open('about:blank', '', 'width=600,height=400,location=0');
-		mapCodeWindow.document.write(job.map_code);
-		mapCodeWindow.document.title = 'Map code for job ' + job.id;
+function updateJobButtons(job){
+    var loc = $('#' + job.id);
+    $("#mapBtn", loc).button().unbind('click').click(function(){
+        var mapCodeWindow = window.open('about:blank', '', 'width=600,height=400,location=0');
+        mapCodeWindow.document.write(job.map_code);
+        mapCodeWindow.document.title = 'Map code for job ' + job.id;
         mapCodeWindow.focus();
-    
+        
     });
-    $("#redBtn", loc).button().unbind().click(function(){
-		var reduceCodeWindow = window.open('about:blank', '', 'width=600,height=400,location=0');
+    $("#redBtn", loc).button().unbind('click').click(function(){
+        var reduceCodeWindow = window.open('about:blank', '', 'width=600,height=400,location=0');
         reduceCodeWindow.document.write(job.reduce_code);
-		reduceCodeWindow.document.title = 'Reduce code for job ' + job.id;
-		reduceCodeWindow.focus();    
+        reduceCodeWindow.document.title = 'Reduce code for job ' + job.id;
+        reduceCodeWindow.focus();
     });
-    $("#killBtn", loc).button().unbind().click(function(){
+    $("#killBtn", loc).button().unbind('click').click(function(){
         displayKillDialog(job);
     });
 }
@@ -261,11 +261,16 @@ function updateWorkers(ws){
         ws.remove(idToName(value.id));
     });
     
-    
     ws.each(function(key, value){
         drawWorker(value);
     });
-
+    
+    $('.bad').removeClass('bad');
+    $('.good').removeClass('good');
+    $("#busy_time", ("#" + nameToID(ws.idlest))).addClass('bad');
+    $("#num_failed", ("#" + nameToID(ws.mostFailing))).addClass('bad');
+    $("#busy_time", ("#" + nameToID(ws.busiest))).addClass('good');
+    
 }
 
 function updateWorkerData(worker){

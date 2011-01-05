@@ -45,10 +45,13 @@ function idToName(id){
 // (c) linkibol.com - http://blog.linkibol.com/2010/05/07/
 //	did-you-know-that-jquery-leaks-memory-like-a-fountain/
 
+
+
 var xhr = new XMLHttpRequest();
 var url = 'index.php';
 
-function openXHR(){
+function openXHR(locator){
+	url = locator;
 	xhr.open('POST',url, false);
 	xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
 	xhr.setRequestHeader('Accept', 'text/javascript, text/html, application/xml, text/xml, */*');
