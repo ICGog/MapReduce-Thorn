@@ -4,6 +4,21 @@ function convertDate(json) {
 	
 	var date = eval(json);
 	
+	if(date.hour < 10)
+		date.hour = '0' + date.hour;
+		
+	if(date.minute < 10)
+		date.minute = '0' + date.minute;
+	
+	if(date.second < 10)
+		date.second = '0' + date.second;
+	
+	if(date.day < 10)
+		date.day = '0' + date.day;
+		
+	if(date.month < 10)
+		date.month = '0' + date.month;
+	
 	dateString = date.hour + ":" + date.minute + ":" + date.second;
 	dateString += " " + date.day + "/" + date.month + "/" + date.year; 
 	
@@ -11,6 +26,20 @@ function convertDate(json) {
 	delete json;
 	
 	return dateString;
+}
+
+function prepareCode(code) {
+	code = code.replace('<', '&lt');
+	code = code.replace('>', '&gt');
+	return code;
+}
+
+function nameToID(name){
+    return name.replace('@', '-at-');
+}
+
+function idToName(id){
+    return id.replace('-at-', '@');
 }
 
 // (c) linkibol.com - http://blog.linkibol.com/2010/05/07/

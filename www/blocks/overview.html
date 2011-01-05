@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+<title>Overview</title>
 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
 </head>
 <body>
@@ -8,24 +9,40 @@
 		<div id='content_title'><h1>Framework statistics:</h1></div>
 		<table border='0'>
 		    <tr>
-		        <td width=300em>Started on:</td>
-		        <td><div id='start_time'></div></td>
+		        <td style='width: 20em;'>Started on:</td>
+		        <td><span id='start_time'></span></td>
 		    </tr>
    		    <tr>
    		        <td>Completed jobs:</td>
-   		        <td><div id='completed_count'></div></td>
+   		        <td><span id='completed_count'></span></td>
    		    </tr>
    		    <tr>
    		        <td>Total workers:</td>
-   		        <td><div id='worker_count'></div></td> 
+   		        <td><span id='worker_count'></span></td> 
    		    </tr>
   		    <tr>
   		        <td>Total running jobs:</td>
-  		        <td><div id='jobs_running'></div></td> 
+  		        <td><span id='jobs_running'></span></td> 
+  		    </tr>
+			<tr>
+  		        <td>&nbsp;</td>
+  		        <td>&nbsp;</td>
   		    </tr> 		    
   		    <tr>
   		        <td>Average busy time:</td>
-  		        <td><div id='busy_time'></div></td>
+  		        <td><span id='av_busy_time'></span></td>
+  		    </tr>
+			<tr>
+  		        <td>Busiest worker:</td>
+  		        <td><span id='busiest_worker'></span> ( <span id='max_busy'></span> ) </td>
+  		    </tr>
+			<tr>
+  		        <td>Idlest worker:</td>
+  		        <td><span id='idlest_worker'></span> ( <span id='min_busy'></span> ) </td>
+  		    </tr>
+			<tr>
+  		        <td>Most failing worker:</td>
+  		        <td><span id='failing_worker'></span></td>
   		    </tr>
 	    </table>
 	</div>	

@@ -4,6 +4,16 @@
 
 function getWorkers() {
 var ws = new Hashtable();
+
+var sum = 0;
+
+ws.minBusyTime = Number.MAX_VALUE;
+ws.maxBusyTime = 0;
+ws.maxFails = 0;
+ws.idlest = '';
+ws.busiest = '';
+ws.mostFailing = '';
+
 $.ajax({
   url: "smr/smr_http:get_workers",
   dataType:'json',
@@ -28,8 +38,31 @@ $.ajax({
       worker.exec_job_id = temp.exec_job_id;
       worker.last_task_started_on = convertDate(temp.last_task_started_on);
       
+	  sum += worker.busy_time;
+	  
+	  if(worker.busy_time > ws.maxBusyTime) {
+	  	ws.maxBusyTime = worker.busy_time;
+		ws.busiest = worker.node;
+	  }	  
+	  if(worker.busy_time < ws.minBusyTime) {
+	  	ws.minBusyTime = worker.busy_time;
+		ws.idlest = worker.node;
+	  }	 
+	  if(worker.num_failed > ws.maxFails) {
+	  	ws.maxFails = worker.num_failed;
+		ws.mostFailing = worker.node;
+	  }	 
       ws.put(temp.node, worker);
     }
+	
+	if(data.length > 0)
+	  ws.avBusyTime = (sum / data.length);
+	else
+	  ws.avBusyTime = 0;
+	
 }});
+	if(ws.maxBusyTime == ws.minBusyTime)
+		ws.idlest = '';
+
 	return ws;
 }

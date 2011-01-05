@@ -73,11 +73,25 @@ body a {
     font-weight: bold;	
 }
 
+.working {
+	 background: #43997A;
+}
+
 .val {
 	width: 70px;
 	float: left;
 	text-align: center;
 	border-right: 1px solid #666;
+}
+
+.wide {
+	width: 140px;
+}
+
+.block {
+	display: block;
+	float:left;
+	width: 100%;
 }
 
 /* Element styles */
@@ -120,3 +134,13 @@ body a {
     color: #AAAAAA;
     font-size: 75%;
 }
+
+#tooltip {
+	position: absolute;
+	z-index: 3000;
+	border: 1px solid #111;
+	background-color: #eee;
+	padding: 5px;
+	opacity: 0.85;
+}
+#tooltip h3, #tooltip div { margin: 0; }

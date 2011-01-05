@@ -31,8 +31,8 @@ function getJobs(){
                 job.phase_worker_time_used_on_successful = temp.phase_worker_time_used_on_successful;
                 job.total_worker_time_used = temp.total_worker_time_used;
                 job.phase = temp.phase;
-                job.map_code = temp.map_code;
-                job.reduce_code = temp.reduce_code;
+                job.map_code = prepareCode(temp.map_code);
+                job.reduce_code = prepareCode(temp.reduce_code);
                 job.map_input_size = temp.map_input_size;
                 job.reduce_input_size = temp.reduce_input_size;
                 job.using_workers = temp.using_workers;
