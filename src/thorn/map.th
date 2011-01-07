@@ -1,1 +1,5 @@
-This is the MAP function written in Thorn!
+fun mapp([name, document]) {
+   return %[[word, 1] | for word <- document.split(" ")];
+}
+
+println(mapp(["a", "a b c d"]));
