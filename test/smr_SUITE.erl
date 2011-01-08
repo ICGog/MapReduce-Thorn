@@ -104,7 +104,7 @@ big_sort_test(InputSize, NumBuckets, Replicas, ChunkSize) ->
             Id
         end,
     abstract_sort_test(InputSize, NumBuckets, NewJobFun).
-    
+
 abstract_sort_test(InputSize, NumBuckets, NewJobFun) ->
     LowerLimit = 1,
     UpperLimit = InputSize,
@@ -251,6 +251,5 @@ start_test_slaves(Names) ->
 
 start_and_add_test_slaves(Names) ->
     Nodes = start_test_slaves(Names),
-    lists:foreach(fun (Node) -> ok = smr_pool:attach_node(Node) end,
-                  Nodes),
+    lists:foreach(fun (Node) -> ok = smr_pool:attach_node(Node) end, Nodes),
     Nodes.

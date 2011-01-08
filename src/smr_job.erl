@@ -187,7 +187,7 @@ handle_task_finished(none, Cast = {task_finished, Pid, _, _, _},
                      State = #state{id = JobId}) ->
     receive Down = {'DOWN', _, process, Pid, normal} ->
                 handle_task_finished(Down, Cast, State);
-            {'DOWN', _, process, Pid, Reason} ->
+            {'DOWN', _, process, Pid, _Reason} ->
                 smr_statistics:task_failed(JobId, node(Pid)),
                 {noreply, State}
     after 60000 -> exit(did_not_receive_normal_down_after_task_finished)
