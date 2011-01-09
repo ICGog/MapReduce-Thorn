@@ -1,7 +1,7 @@
 module MAPREDUCE {
-    javaly fun doubleNum(a) = fisher.runtime.mapreduce.MapReduce.doubleNum;
-    javaly fun sendBytesToErlang(m,r,kvp,c,p) = fisher.runtime.mapreduce.MapReduce.sendBytesToErlang;
-    javaly fun getBytesFromErlang(kvp,c,p) = fisher.runtime.mapreduce.MapReduce.getBytesFromErlang;
-    javaly fun sendStringToErlang(m,r,kvp,len,c,p) = fisher.runtime.mapreduce.MapReduce.sendStringToErlang;
-    javaly fun getStringFromErlang(c,p) = fisher.runtime.mapreduce.MapReduce.getStringFromErlang;
+    javaly fun newJob(m,r,c,p) = fisher.runtime.mapreduce.MapReduce.newJob;
+    javaly fun emit(id,kv) = fisher.runtime.mapreduce.MapReduce.emit;
+    javaly fun doJob(id) = fisher.runtime.mapreduce.MapReduce.doJob;
+    javaly fun killJob(id) = fisher.runtime.mapreduce.MapReduce.killJob;
+    javaly fun retrieve(id) = fisher.runtime.mapreduce.MapReduce.retrieve;
 }

@@ -12,12 +12,32 @@ import MAPREDUCE.*;
 //println(lst);
 //println(mapreduce(m.file().contents(),r.file().contents(),[b].asBytes(),"cookieeeeee","peer"));
 //println(mapreduce(m,r,a,c,p));
-var strlist := [["A",10],["B",90],["C",100]];
 
-sendStringToErlang(m.file().contents(),r.file().contents(),strlist,3,"cookie","gigi@vector43");
 
-println(getStringFromErlang("cookie","gigi@vector43"));
+//working communication
+//var strlist := [["A",10],["B",90],["C",100]];
 
-sendBytesToErlang(m.file().contents(),r.file().contents(),[[[100].asBytes(),[10].asBytes()]],"cookie","gigi@vector43");
+//sendStringToErlang(m.file().contents(),r.file().contents(),strlist,3,"cookie","gigi@vector43");
 
-println(getBytesFromErlang([],"cookie","gigi@vector43"));
+//println(getStringFromErlang("cookie","gigi@vector43"));
+
+//sendBytesToErlang(m.file().contents(),r.file().contents(),[[[100].asBytes(),[10].asBytes()]],"cookie","gigi@vector43");
+
+//println(getBytesFromErlang([],"cookie","gigi@vector43"));
+
+//test the chunky communication
+
+data = %[ [a,b] | for a <- 1..100, for b <- 295..300];
+
+fun length([]) = 0;
+   | length([x,xs...]) = 1 + length(xs);
+
+println(length(data));
+initCommunication(m.file().contents(),r.file().contents(),"cookie","gigi@vector23",8);
+
+println("2");
+//for(i <- 0 .. data.length()){
+//	
+//}
+
+

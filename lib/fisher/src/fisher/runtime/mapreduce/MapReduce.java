@@ -18,177 +18,219 @@ import java.util.*;
  * whenever we want to change the cookie.
  */
 
-public class MapReduce { 
+public class MapReduce {
+/*
+    private static class Pair {
+        byte[] key;
+        byte[] value;
+    
+        Pair(byte[] key, byte[] value) {
+            this.key = key;
+            this.value = value;
+        }
+        
+        int size() {
+            return key.length + value.length;
+        }
+    }    
 
-    	static String copyright() {
-        	return fisher.util.Copyright.IBM_COPYRIGHT;
-    	}
+    private static class Buffer{
+        int byteSize = 0;
+        LinkedList<Pair> buffer = new LinkedList<Pair>();
+    }
+*/
+    private static Pair thingToPair(Thing thPair) {
+        return new Pair((byte[]) ((ListTh) thPair).car().unthingify(), (byte[]) ((ListTh) thPair).cdr().car().unthingify());
+    }
 
-	public static Thing doubleNum(Thing a) {
-		return a;
-	}
+    private static Thing pairToThing(Pair p) {
+        try {
+            return ListTh.of(new BytesTh(p.value), new BytesTh(p.key));
+        } catch (Exception e) {
+            return StringTh.of("error");
+        }
+    }
 
-	public static Thing sendBytesToErlang(Thing m, Thing r, Thing kvp, Thing cookie, Thing peer){
-	  try {
-		//Setup the communication with the erlang node
-		OtpSelf self = new OtpSelf("thorn", cookie.toString());
-            	// The name of the node with which we're communicating.
-            	OtpPeer other = new OtpPeer(peer.toString());
-            	OtpConnection connection = self.connect(other);
-		
-		//create the list of args of the erlang function we're calling
-		OtpErlangObject[] argErlObj = new OtpErlangObject[3];
-		argErlObj[0] = new OtpErlangString(m.toString()); //add the map function
-		argErlObj[1] = new OtpErlangString(r.toString()); //add the reduce function
+    private static OtpErlangTuple pairToErlang(Pair p) {
+        OtpErlangObject[] tuple = new OtpErlangObject[2];
+        tuple[0] = new OtpErlangBinary(p.key);
+        tuple[1] = new OtpErlangBinary(p.value);
+        return new OtpErlangTuple(tuple);
+    }
 
-		//create the list of key-value pairs from the list passed as argument from Thorn
-		ListTh kvpList = (ListTh) kvp;
-		int len = kvpList.length; 
-		OtpErlangObject[] kvpErlObj = new OtpErlangObject[len];
-		int j = 0;
-		byte[] key;
-		byte[] val;
-            	for (Thing elemThing : kvpList.toJavaArray()) {
-                	ListTh elem = (ListTh) elemThing;
-                	key = (byte[]) elem.car().unthingify();
-			val = (byte[]) elem.cdr().car().unthingify();
-			OtpErlangObject[] tuple = new OtpErlangObject[2];
-			tuple[0] = new OtpErlangBinary(key);
-			tuple[1] = new OtpErlangBinary(val);
-			OtpErlangTuple t = new OtpErlangTuple(tuple);
-			kvpErlObj[j] = t;
-			j++;
-            	}
-		OtpErlangList argErlList = new OtpErlangList(kvpErlObj);
+    private static Pair erlangToPair(OtpErlangObject erlTuple) {
+            return new Pair(((OtpErlangBinary) ((OtpErlangTuple) erlTuple).elementAt(0)).binaryValue(),
+            ((OtpErlangBinary) ((OtpErlangTuple) erlTuple).elementAt(1)).binaryValue());
+    }
 
-		argErlObj[2] = argErlList; //add the list of kvp pairs
-		OtpErlangList args = new OtpErlangList(argErlObj);
+    private static final int MAX_BUFFER_SIZE = 64 * 1024 * 1024;
 
-		// The Name of the module we're communicating with.
-		// The list of args is of the form: [ map, reduce, [ (key, value), ... ] ]
-	   	connection.sendRPC("integration", "getBytesFromThorn", args); //change the names of the function to match the erlang one
-	    	OtpErlangObject received = connection.receiveRPC();
-		System.out.println(received);
-		connection.close();
-	  } catch (Exception e) {
-	  }
-	  return m;
-	}
+    private static Map<String, Buffer> bin = new HashMap<String, Buffer>();
+    private static Map<String, Buffer> bout = new HashMap<String, Buffer>();
 
-	public static Thing getBytesFromErlang(Thing list, Thing cookie, Thing peer){
-	   OtpErlangObject received = null;
-	   ListTh res = (ListTh) list;
-	   try {
-		//Setup the communication with the erlang node
-		OtpSelf self = new OtpSelf("thorn", cookie.toString());
-            	// The name of the node with which we're communicating.
-            	OtpPeer other = new OtpPeer(peer.toString());
-            	OtpConnection connection = self.connect(other);
+    private static int bufferBytes = 50;
+    private static OtpConnection erlangConnection = null;
 
-		OtpErlangObject[] msg = new OtpErlangObject[1];
-		msg[0] = new OtpErlangString("getBytes");
-		OtpErlangList l = new OtpErlangList(msg);
+    static String copyright() {
+        return fisher.util.Copyright.IBM_COPYRIGHT;
+    }
 
-            	// The Name of the module we're communicating with.
-	    	connection.sendRPC("integration", "sendBytesToThorn", l);
-	    	received = connection.receiveRPC();
+    public static Thing doubleNum(Thing a) {
+        return a;
+    }
 
-		//assume that I get back from erlang somethign like this: [ ( bv1, bv2 ), ... ]
+    public static Thing newJob(Thing m, Thing r, Thing cookie, Thing peer){
+       try {
+            Buffer b = new Buffer();
 
-		OtpErlangList liist = (OtpErlangList) received;
-                int lenn = liist.elements().length;
-		BytesTh key;
-		BytesTh val;
-                for(int i=0; i<lenn; i++){
-                        key = new BytesTh(((OtpErlangBinary)((OtpErlangTuple)liist.elementAt(i)).elementAt(0)).binaryValue());//.toString().getBytes()); //not sure about this
-                        val = new BytesTh(((OtpErlangBinary)((OtpErlangTuple)liist.elementAt(i)).elementAt(1)).binaryValue());//.toString().getBytes()); //not sure about this
-                        //add the key val to the list
-			res.cons(key);
-			res.cons(val);
-                        //the list should now be of the form [ val, key, val, key, ... ]
-                }
-		//reverse the list to get elements in the right order
-		//in thorn we must then transform the list to [[key, val], ... ]
-		res = res.reversed();
-		connection.close();
-	   } catch(Exception e) {
-	 	
-	   }
-	   return res;
-	}
+            //Setup the communication with the erlang node
+            OtpSelf self = new OtpSelf("thorn", cookie.toString());
+            // The name of the node with which we're communicating.
+            OtpPeer other = new OtpPeer(peer.toString());
+            if (erlangConnection == null)
+                erlangConnection = self.connect(other);
 
-	public static Thing sendStringToErlang(Thing m, Thing r, Thing kvp, Thing length, Thing cookie, Thing peer){
-	   try {
-		//Setup the communication with the erlang node
-		OtpSelf self = new OtpSelf("thorn", cookie.toString());
-            	// The name of the node with which we're communicating.
-            	OtpPeer other = new OtpPeer(peer.toString());
-            	OtpConnection connection = self.connect(other);
+            //create the list of args of the erlang function we're calling
+            OtpErlangObject[] argErlObj = new OtpErlangObject[2];
+            argErlObj[0] = new OtpErlangString(m.toString()); //add the map function
+            argErlObj[1] = new OtpErlangString(r.toString()); //add the reduce function
+            OtpErlangList args = new OtpErlangList(argErlObj);
 
-		//create the list of args of the erlang function we're calling
-		OtpErlangObject[] argErlObj = new OtpErlangObject[3];
-		argErlObj[0] = new OtpErlangString(m.toString()); //add the map function
-		argErlObj[1] = new OtpErlangString(r.toString()); //add the reduce function
+            erlangConnection.sendRPC("smr_master", "new_job", args); //change the names of the function to match the erlang one
+            OtpErlangObject received = erlangConnection.receiveRPC();
+            //extract the jobId and then send it back to thorn
+            String code = ((OtpErlangTuple) received).elementAt(0).toString();
+            if (code != "ok") {
+                    return StringTh.of("Error");
+            }
 
-		//assume we have a list of 2-lists given as a string
-		//[ [k,v], ... ]
-		String list = kvp.toString();
-		//I need the length of the list of values
-		int len = Integer.parseInt(length.toString());
-		StringTokenizer st = new StringTokenizer(list, " ,[]\n\t");
-		OtpErlangObject[] kvpErlObj = new OtpErlangObject[len];
-		int j = 0;
-		String k;
-		String v;
-		while(st.hasMoreTokens()){
-			k = st.nextToken();
-			v = st.nextToken();
-			OtpErlangObject[] tuple = new OtpErlangObject[2];
-			tuple[0] = new OtpErlangString(k);
-			tuple[1] = new OtpErlangString(v);
-			OtpErlangTuple t = new OtpErlangTuple(tuple);
-			kvpErlObj[j] = t;
-			j++;
-		}
-		OtpErlangList argErlList = new OtpErlangList(kvpErlObj);
+            String jobId = ((OtpErlangTuple) received).elementAt(1).toString();
+            bin.put(jobId, b);
+            
+            return StringTh.of(jobId);
+       } catch (Exception e) {
+            return StringTh.of("Error");
+       }
+    }
 
-		argErlObj[2] = argErlList; //add the list of kvp pairs
-		OtpErlangList args = new OtpErlangList(argErlObj);
+    public static void emit(Thing thJobId, Thing kv){
+       try{
+        // kv is a list like [key, value]
+        //String jbid = jobId.toString();
+        String jobId = thJobId.toString();
+        Buffer b = bin.get(jobId);
+        Pair p = thingToPair(kv);
+        b.buffer.add(p);
+        b.byteSize += p.size();
+        
+        if (b.byteSize >= MAX_BUFFER_SIZE) {
+            sendKVPairsToErlang(jobId);
+        }
+       } catch (Exception e) {
+       }    
+    }
 
-		// The Name of the module we're communicating with.
-	   	connection.sendRPC("integration", "getStringsFromThorn", args); //change the names of the function to match the erlang one
-	    	OtpErlangObject received = connection.receiveRPC();
-		System.out.println(received);
-		connection.close();
-	  } catch (Exception e) {
-	  }
-	  return m;
-	}
+    private static void sendKVPairsToErlang(String jobId){
+       try{
+        Buffer b = bin.remove(jobId);
+        bin.put(jobId, new Buffer());
+        
+        //send the buffer to Erlang
+        OtpErlangObject[] dataObjList = new OtpErlangObject[b.buffer.size()];
+        int i = 0;
+        for (Pair p : b.buffer)
+            dataObjList[i++] = pairToErlang(p);
+        OtpErlangList dataList = new OtpErlangList(dataObjList);
 
-	public static Thing getStringFromErlang(Thing cookie, Thing peer){
-           OtpErlangObject received = null;
-	   try {
-		//Setup the communication with the erlang node
-		OtpSelf self = new OtpSelf("thorn", cookie.toString());
-            	// The name of the node with which we're communicating.
-            	OtpPeer other = new OtpPeer(peer.toString());
-            	OtpConnection connection = self.connect(other);
+        //send remainder of data to Erlang
+        OtpErlangObject[] remErlObj = new OtpErlangObject[2];
+        remErlObj[0] = new OtpErlangString(jobId);
+        remErlObj[1] = dataList;
+        OtpErlangList args = new OtpErlangList(remErlObj);
 
-		OtpErlangObject[] msg = new OtpErlangObject[1];
-		msg[0] = new OtpErlangString("getString");
-		OtpErlangList l = new OtpErlangList(msg);
+        erlangConnection.sendRPC("smr_master", "add_input", args); //change the names of the function to match the erlang one
+       } catch (Exception e) {
+       }
+    }
+    
+    public static Thing doJob(Thing thJobId){
+        try{
+        String jobId = thJobId.toString();
+        
+        //create the list of args of the erlang function we're calling
+        OtpErlangObject[] argErlObj = new OtpErlangObject[1];
+        argErlObj[0] = new OtpErlangString(jobId);
+        OtpErlangList args = new OtpErlangList(argErlObj);
 
-            	// The Name of the module we're communicating with.
-	    	connection.sendRPC("integration", "sendStringsToThorn", l);
-	    	received = connection.receiveRPC();
-	    	//System.out.println(received);
-		connection.close();
-	   } catch(Exception e) {
-	 	System.out.println(e);
-	   }
-	   if (received == null){
-		return StringTh.of("Error in getting a string from Erlang");
-	   }
-	   return StringTh.of(received.toString());
-	}    
+        bout.put(jobId, new Buffer());
+
+        erlangConnection.sendRPC("smr_master", "do_job", args);
+        OtpErlangObject received = erlangConnection.receiveRPC();
+        return StringTh.of(received.toString());
+        
+        } catch (Exception e) {
+        return StringTh.of("error");
+       }
+    }
+    
+    public static void killJob(Thing thJobId){
+        try{
+        //create the list of args of the erlang function we're calling
+        String jobId = thJobId.toString();
+        bin.remove(jobId);
+        bout.remove(jobId);
+        OtpErlangObject[] argErlObj = new OtpErlangObject[1];
+        argErlObj[0] = new OtpErlangString(jobId);
+        OtpErlangList args = new OtpErlangList(argErlObj);
+
+        erlangConnection.sendRPC("smr_master", "kill_job", args);
+        } catch (Exception e) {
+           }
+    }
+    
+    private static void getNextResult(String jobId){
+        try{
+        Buffer b = bout.get(jobId);
+        
+        OtpErlangObject[] msg = new OtpErlangObject[1];
+        msg[0] = new OtpErlangString(jobId);
+        OtpErlangList l = new OtpErlangList(msg);
+
+           // The Name of the module we're communicating with.
+        erlangConnection.sendRPC("smr_master", "next_result", l);
+        OtpErlangObject received = erlangConnection.receiveRPC();
+        if (received instanceof OtpErlangAtom && received.toString().equals("end_of_result"))
+            return;
+
+        //assume that I get back from erlang somethign like this: [ { k1, v1 }, ... ]
+        OtpErlangList liist = (OtpErlangList) received;
+        int lenn = liist.arity();
+        for(int i=0; i<lenn; i++){
+            Pair p = erlangToPair(liist.elementAt(i));
+            b.buffer.add(p);
+        }
+       } catch(Exception e) {
+       }
+    }
+
+    public static Thing retrieve(Thing thJobId){
+       try{
+           String jobId = thJobId.toString();
+           Buffer b = bout.get(jobId);
+           if (b.buffer.size() == 0)
+           {
+               getNextResult(jobId);
+               if (b.buffer.size() == 0)
+               {
+                   bout.remove(jobId);
+                   return StringTh.of("end_of_result");
+               }
+           }
+
+           return pairToThing(b.buffer.remove(0));
+       } catch (Exception e) {
+           return StringTh.of("error");
+       }    
+    }
 }
+
