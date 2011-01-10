@@ -53,6 +53,83 @@ whole_system_4_test_() ->
              smr:stop()
      end}.
 
+iterative_job_1_test_() ->
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             big_sort_test(10000, 50, 1),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+iterative_job_2_test_() ->
+    {timeout, 60,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             big_sort_test(10000, 5, 2),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+large_job_1_test_() ->
+    {timeout, 600,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             big_sort_test(1000000, 50, 2),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+large_job_2_test_() ->
+    {timeout, 600,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             big_sort_test(1000000, 5000, 2),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+large_job_3_test_() ->
+    {timeout, 600,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             big_sort_test(1000000, 5000, 1),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+large_job_4_test_() ->
+    {timeout, 600,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             sort_test(1000000, 5000, 1),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
+large_job_5_test_() ->
+    {timeout, 600,
+     fun () ->
+             smr:start(),
+             start_and_add_test_slaves([test_w1, test_w2, test_w3, test_w4,
+                                        test_w5]),
+             big_sort_test(1000000, 50000, 1, 1),
+             smr_pool:kill_all_nodes(),
+             smr:stop()
+     end}.
+
 generate_random_numbers(Size, NumBuckets, RandFun, Props) ->
     PartLen = Size div NumBuckets,
     MapFun =

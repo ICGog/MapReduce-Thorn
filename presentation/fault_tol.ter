@@ -1,0 +1,25 @@
+f(Id).
+f(MapFun).
+f(ReduceFun).
+
+MapFun = fun ({_Name, Document}) ->
+                  dict:to_list(lists:foldl(fun (Word, Dict) ->
+                                                   timer:sleep(2000),
+                                                   dict:update_counter(Word, 1, Dict)
+                                           end, dict:new(),
+                                           string:tokens(Document, " ")))
+         end.
+
+ReduceFun = fun ({_Word, CountList}) -> lists:sum(CountList) end.
+
+{ok, Id} = smr_master:new_job(MapFun, ReduceFun, [{replication_mode, [{n_ram_copies, 2}]}]).
+
+smr_master:add_input(Id, [{abc, "Thus the MapReduce framework"}]).
+
+smr_master:add_input(Id, [{def, "MapReduce allowing for side-effects"},
+                          {xyz, "A common performance measurement of a"}]).
+
+ok = smr_master:do_job(Id).
+
+smr_master:whole_result(Id).
+
