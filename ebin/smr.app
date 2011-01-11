@@ -1,0 +1,12 @@
+{application, smr,
+ [{description, "Smashing MapReduce for Thorn"},
+  {vsn, "0.1"},
+  {modules, [smr_master,
+             smr_job,
+             smr_worker,
+             smr_statistics,
+             smr_http]},
+  {registered, [smr_master, smr_statistics]},
+  {env, []},
+  {mod, {smr, [true]}},
+  {applications, [kernel, stdlib]}]}.

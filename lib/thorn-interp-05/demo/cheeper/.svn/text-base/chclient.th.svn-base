@@ -1,0 +1,39 @@
+spawn chclient {
+import CHEEPER.*;
+server = site(argv()(0));
+
+fun help() {
+  println("? = help");
+  println("/ = read");
+  println("+N = vote for");
+  println("-N = vote against");
+  println("other = chirp that");
+  }
+
+fun read() {
+  c's = server <-> read();
+  for({:chirp, plus, minus:} <- c's) {
+    println("$chirp [+$plus/-$minus]");
+    }
+  }
+
+body{
+  println("Welcome to Cheeper!");
+  println("? for help");
+
+  phil = readln("Who are you? ");
+  while(true) {
+    s = readln("Chirp: ");
+    match(s) {
+      "?" => help()
+    | "/" => read()
+    | "\\+([0-9]+)" / [.int(n)] => 
+      println(server <-> vote(n, true))
+    | "\\-([0-9]+)" / [.int(n)] => 
+      println(server <-> vote(n, false))
+    | _ => 
+      println(server <-> chirp!(s, phil))
+    }
+  }while
+}body
+}chclient;

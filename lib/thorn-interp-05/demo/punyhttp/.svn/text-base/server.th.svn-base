@@ -1,0 +1,28 @@
+spawn server3 {
+  import HTTP.*;
+  body{
+    sock = HTTPSocketeer(4321);
+    var goon := true;
+    println("Server starting");
+    while(goon) {
+      recv{
+        req && HTTPRequest("GET", resource) => {
+           f = resource.file;
+           if (f.exists?() && !f.dir?) {
+             req.respond(OK, f.contents(), {: :});
+           }
+           else if (f.exists? && f.dir?) {
+             req.respond(OK, "Sorry, I don't do directories", {: :});
+           }
+           else {
+             req.respond(HTTP_404, "Not there.", {: :});
+           }
+        }
+      | other => {
+          println("WTF is $other?");
+        }
+      }
+    }while
+    println("Server quitting.");
+  }body
+}server3;

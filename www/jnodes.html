@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>img{ height: 100px; float: left; }</style>
+  <script type="text/javascript" src="/js/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="/js/jnodes.js"></script>
+
+</head>
+<body>
+<div id="response"> </div>
+<script type="text/javascript">
+var r = getNodes();
+var current = 0;
+for (current=0; current<r.length; current++) {
+$('#response').append("node = " + r[current].node + "<br>");
+}
+</script>
+
+</body>
+</html>
+

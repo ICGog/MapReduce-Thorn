@@ -1,0 +1,39 @@
+spawn ping {
+var done := false;
+body{ 
+  // Argv = [name, otherURI]
+  [name, otherURI] = argv();
+  otherSite = site(otherURI);
+
+
+  fun play(hit) {
+     advly = readln("Hit how?");
+     done := advly == "";
+     if (done) {
+       println("You lose!");
+       otherSite <<< null;
+       }
+     else {
+       otherSite <<< 
+         "$name $`hit`s the ball $advly.";
+       }
+  }play
+
+  start = thisSite().str < otherSite.str;
+  if (start) play("serve");
+
+  do {
+     receive{
+         msg:string => {
+          println(msg);
+          play("return");
+          }
+      | null => {
+          println("You win!");
+          done := true;
+          }
+     }receive
+  } until(done);
+
+}body
+}ping;

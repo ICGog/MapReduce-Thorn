@@ -1,0 +1,85 @@
+@CHARSET "UTF-8";
+body {
+    background: #FDFFDB;
+    color: #000000;
+    font-family: sans-serif;
+    margin-left: 15px;
+    margin-top: 1%;
+}
+
+body h1 {
+    font-size: 120%;
+    font-style: normal;
+}
+
+body a {
+    color: #000000;
+    text-decoration: none;
+}
+
+
+
+/* Column styles */
+.main {
+    float: left;
+    width: 570px;
+}
+
+.menu {
+    width: 230px;
+    float: left;
+	margin-right: 1.5em;
+}
+
+/* Job styles */
+
+.jobs {
+	margin-left: 5px;
+}
+
+.job {
+	width: 80%;
+	border: 1px solid #666;
+	margin-left: 10px;
+	padding: 5px;
+}
+
+.succeeded {
+	background: #DBF2C2;
+}
+
+.failed {
+	background: #F2C2C2;
+}
+
+/* Element styles */
+.button {
+    cursor: pointer;
+    cursor: hand;
+}
+
+.num {
+	
+}
+
+.selected {
+    color: #FDFFDB;
+    background: #942436;
+    padding: 3px;
+    font-weight: bold;
+    cursor: default;
+}
+
+.margin-top {
+    margin-top: 2em;
+}
+
+.header {
+    font-size: 150%;
+    width: 100%;
+}
+
+.footer {
+    color: #AAAAAA;
+    font-size: 75%;
+}

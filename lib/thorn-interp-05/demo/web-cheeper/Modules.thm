@@ -1,0 +1,54 @@
+module HTTP {
+  javaly class StringSocketeer = fisher.runtime.lib.socketeer.StringSocketeer {
+    new StringSocketeer(port);
+  }
+  javaly class ReplySocket = fisher.runtime.lib.socketeer.ReplySocketTh {
+    def `<<<`(x) = send;
+  }
+  javaly fun siteForStrings(nodeName, port) = fisher.runtime.lib.SiteForStrings.create;
+  
+  javaly class HTTPSocketeer = fisher.runtime.lib.http.HTTPSocketeer {
+    new HTTPSocketeer(port);
+  }
+  
+  javaly class HTTPRequest(verb, params, resource) = fisher.runtime.lib.http.HTTPRequest {
+    def verb() = verb;
+    def protocol() = protocol;
+    def resource() = resource;
+    def params() = params;
+    def buildResponse(rcPlusMean, content, extraHeaders) = buildResponse;
+    def respond(rcPlusMean, content, extraHeaders) = respond;
+  }
+  
+  HTTP_404 = {: code: 404, meaning: "Not Found" :};
+  OK =       {: code: 200, meaning: "OK" :};
+  
+}
+
+module XML {
+  javaly class Elem(tag, attrs, children) = fisher.runtime.lib.Elem {
+    def tag() = tag;
+    def attrs() = attrs;
+    def children() = children;
+    def str(ctrl) = str;
+    new XML(tag, attrs, children);
+  }
+  javaly fun parseXML(source) = fisher.runtime.lib.XMLFuns.parse;
+}
+
+module HTML {
+  import XML.*;
+  fun aslist(s:string) = [s];
+    | aslist(s:list)   = s;
+    | aslist(s)        = [s.str()];
+  fun p(text) = Elem("p", {::}, aslist(text));
+  fun i(text) = Elem("i", {::}, aslist(text));
+//  fun @(text) = Elem("@", {::}, aslist(text));
+  fun li(text) = Elem("li", {::}, aslist(text));
+  fun ol(text) = Elem("ol", {::}, aslist(text));
+  fun td(text) = Elem("td", {::}, aslist(text));
+  fun tr(text) = Elem("tr", {::}, aslist(text));
+
+}
+
+  

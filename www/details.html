@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Thorn mapReduce status</title>
+	<link rel="stylesheet" href="css/style.css" type="text/css"/>
+	
+	<!-- jQueryUI css -->
+	<link type="text/css" href="css/ui-lightness/jquery-ui-1.8.6.custom.css" rel="stylesheet" />
+
+   <!-- Using jquery -->
+	<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script> 
+	<script type="text/javascript" src="js/jquery-ui-1.8.6.custom.min.js"></script>
+	<script type="text/javascript" src="js/jquery.tooltip.js"></script> 
+   	
+   	<script type="text/javascript" src="js/tools.js"></script>
+	<script type="text/javascript" src="js/jjobs.js"></script>
+	<script type="text/javascript" src="js/jnodes.js"></script>		
+	<script type="text/javascript" src="js/update.js"></script>
+</head>   
+<body onload="initialize()">
+	<div class="menu">
+	    <div id="logo"><img src="img/logo.png" width="220" height="120" alt=""/></div>
+	    <div class="button" id="menu_overview"><a href="index.html">Overview</a></div>	    
+	    <div class="selected" id="menu_details">Details</div>
+	    <div class="button" id="menu_workers"><a href="workers.html">Workers</a></div>
+	    <br/>
+	    <div class="button" id="update_toggle">[Disable Updates]</div>
+	    <br/>
+	    <div class="button" id="show_log">[Show Log]</div>
+	    <br/>
+	    <div class="button" id="expand_jobs">[Expand/Fold Jobs]</div>
+	    <div class="footer">
+	        <div id="framework_name">Thorn mapReduce</div>	   
+	    </div>	
+	</div>
+	<div class="main">
+	<div class="header">
+		<div id="page_title">THORN mapReduce status</div>
+	</div>	
+	<div class="jobs">
+	   <div class="expander"><h1>Running jobs:</h1></div> 
+		<div class="joblist"></div>			
+	</div>
+	<div class="jobs">
+	   <div class="expander"><h1>Completed jobs:</h1></div> 
+		<div class="old_joblist"></div>			
+	</div>
+    <div class="nodes">
+		<div class="expander" id="workers_header"><h1>Available workers:</h1></div>
+		<div class="nodelist"></div> 
+	</div>		
+	</div>
+	<div id="dialog-confirm" title="Kill the job?">
+		<div id="dialog-text"></div>
+	</div>
+</body>
+</html>

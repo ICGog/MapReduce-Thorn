@@ -3,60 +3,148 @@
 
 -behavior(gen_server).
 
--export([start_link/4, result/3]).
+-export([start_link/5, add_input/2, start/1, task_started/4,
+         task_finished/5, next_result/1, kill/1, handover_output/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2,
          code_change/3]).
 
--record(state, {phase, % map | reduce
+-include("smr.hrl").
+
+-record(state, {sup,
+                id,
+                phase = input, % input | map | reduce | output
                 map_fun,
                 reduce_fun,
-                master,
-                spare_workers = [],
-                ongoing = dict:new(),
-                input,
-                result}).
-
--define(MAP_BATCH_SIZE, 1).
--define(REDUCE_BATCH_SIZE, 1).
+                awaiting,
+                next_awaiting,
+                ongoing = 0,
+                input_table,
+                inter_table,
+                output_table,
+                size,
+                next_size,
+                available,
+                output_buffer = empty,
+                props}).
 
 %------------------------------------------------------------------------------
-% API
+% Internal API
 %------------------------------------------------------------------------------
 
-start_link(Master, MapFun, ReduceFun, Input) ->
-    {ok, Job} =
-        gen_server:start_link(?MODULE, [Master, MapFun, ReduceFun, Input], []),
-    error_logger:info_msg("Job ~p started~n", [Job]),
-    gen_server:cast(Job, start),
-    {ok, Job}.
+start_link(InputMode, MapFun, ReduceFun, JobId, Props) ->
+    gen_server:start_link(?MODULE, [self(), InputMode, MapFun, ReduceFun,
+                                    JobId, Props], []).
 
-result(Job, Worker, Result) ->
-    gen_server:cast(Job, {result, Worker, Result}).
+add_input(Job, Input) ->
+    gen_server:call(Job, {add_input, Input}, infinity).
+
+start(Job) ->
+    gen_server:cast(Job, start).
+
+next_result(Job) ->
+    gen_server:call(Job, next_result, infinity).
+
+kill(Job) ->
+    gen_server:call(Job, kill, infinity).
+
+task_started(Job, Worker, TaskId, Size) ->
+    gen_server:call(Job, {task_started, Worker, TaskId, Size}, infinity).
+
+task_finished(Job, Worker, TaskId, NewHashes, ResultSize) ->
+    gen_server:cast(Job,
+                    {task_finished, Worker, TaskId, NewHashes, ResultSize}).
+
+handover_output(Job) ->
+    gen_server:call(Job, handover_output, infinity).
 
 %------------------------------------------------------------------------------
 % Handlers
 %------------------------------------------------------------------------------
 
-init([Master, MapFun, ReduceFun, Input]) ->
-    {ok, #state{input = Input,
+init([Sup, InputMode, MapFun, ReduceFun, JobId, Props]) ->
+    Nodes = smr_pool:get_nodes(),
+    NNodes = length(Nodes),
+    Available = proplists:get_value(max_tasks, Props, NNodes),
+    ReplicationMode = proplists:get_value(replication_mode, Props,
+                                          ?REPLICATION_MODE),
+    ensure_enough_nodes(ReplicationMode, NNodes),
+    {NextAwaiting, NextSize} =
+        case InputMode of
+            direct                           -> {gb_sets:new(), 0};
+            {other_job, {Awaiting, Size, _}} -> {Awaiting, Size}
+        end,
+    InputTable = case InputMode of
+                     direct ->
+                         smr_mnesia:create_job_table(Nodes, ReplicationMode);
+                     {other_job, {_, _, OtherJobTable}} ->
+                         OtherJobTable
+                 end,
+    OutputTable = smr_mnesia:create_job_table(Nodes, ReplicationMode),
+    InterTable =
+        case ReduceFun of
+            none -> smr_mnesia:tables_monitor([InputTable, OutputTable]),
+                    none;
+            _    -> IT = smr_mnesia:create_job_table(Nodes, ReplicationMode),
+                    smr_mnesia:tables_monitor([InputTable, IT, OutputTable]),
+                    IT
+        end,
+    error_logger:info_msg("Job ~p created~n", [JobId]),
+    smr_statistics:job_started(JobId, MapFun, ReduceFun),
+    {ok, #state{sup = Sup,
+                id = JobId,
+                props = Props,
                 map_fun = MapFun,
+                next_size = NextSize,
+                next_awaiting = NextAwaiting,
                 reduce_fun = ReduceFun,
-                master = Master}}.
+                input_table = InputTable,
+                inter_table = InterTable,
+                output_table = OutputTable,
+                available = Available}}.
 
-handle_call(_Request, _From, State) ->
-    {stop, unexpected_call, State}.
+handle_call({add_input, Input}, _From,
+            State = #state{phase = input,
+                           input_table = InputTable,
+                           props = Props}) ->
+    {reply, ok,
+     add_task_operation_outcome(smr_mnesia:put_input_chunk(Input, InputTable,
+                                                           Props),
+                                State)};
+handle_call({task_started, WorkerPid, _TaskId, Size}, _From,
+            State = #state{phase = Phase, id = JobId}) ->
+    erlang:monitor(process, WorkerPid),
+    smr_statistics:task_started(JobId, node(WorkerPid), Phase, Size),
+    {reply, ok, State};
+handle_call(next_result, From, State = #state{output_buffer = empty}) ->
+    handle_call(next_result, From, buffer_output_chunk(State));
+handle_call(next_result, From, State = #state{output_buffer = Chunk,
+                                              output_table = OutputTable}) ->
+    gen_server:reply(From, Chunk),
+    case Chunk of end_of_result -> smr_mnesia:delete_job_table(OutputTable),
+                                   {stop, normal, State};
+                  _             -> {noreply, buffer_output_chunk(State)}
+    end;
+handle_call(kill, _From, State) ->
+    {stop, killed, ok, State};
+handle_call(handover_output, _From,
+            State = #state{phase = output,
+                           awaiting = Awaiting,
+                           size = Size,
+                           output_table = OutputTable}) ->
+    {stop, normal, {Awaiting, Size, OutputTable}, State}.
 
 handle_cast(start, State) ->
-    {noreply, set_phase(map, State)};
-handle_cast({result, Worker, Result}, State0) ->
-    State1 = agregate_result(Result, State0),
-    case remove_ongoing(Worker, State1) of
-        {all_finished, State2} -> handle_phase_finished(State2);
-        {ongoing, State3}      -> {noreply, State3}
-    end.
+    {noreply, new_phase(State#state{phase = map})};
+handle_cast(Cast = {task_finished, _, _, _, _}, State) ->
+    handle_task_finished(none, Cast, State).
 
-handle_info(Msg, State) ->
-    {stop, {unexpected_message, Msg}, State}.
+handle_info(Down = {'DOWN', _, process, Pid, Reason},
+            State = #state{id = JobId}) ->
+    case Reason of
+        normal -> handle_task_finished(Down, none, State);
+        _      -> smr_statistics:task_failed(JobId, node(Pid)),
+                  {noreply, State}
+    end.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -68,64 +156,133 @@ terminate(_Reason, _State) ->
 % Internal
 %------------------------------------------------------------------------------
 
-handle_phase_finished(State = #state{phase = map, result = Result}) ->
-    {noreply, set_phase(reduce, State#state{input = dict:to_list(Result)})};
+add_task_operation_outcome({NewHashes, TaskResultSize},
+                           State = #state{next_awaiting = NextAwaiting,
+                                          next_size = NextSize}) ->
+    NewNextAwaiting = gb_sets:union(gb_sets:from_ordset(NewHashes),
+                                    NextAwaiting),
+    State#state{next_awaiting = NewNextAwaiting,
+                next_size = NextSize + TaskResultSize}.
+
+handle_phase_finished(State = #state{phase = map,
+                                     reduce_fun = none,
+                                     id = JobId,
+                                     input_table = InputTable}) ->
+    spawn_link(fun () -> smr_mnesia:delete_job_table(InputTable) end),
+    smr_statistics:job_finished(JobId),
+    smr_master:job_finished(self()),
+    {noreply, new_phase(State#state{phase = output})};
+handle_phase_finished(State = #state{phase = map, input_table = InputTable}) ->
+    spawn_link(fun () -> smr_mnesia:delete_job_table(InputTable) end),
+    {noreply, new_phase(State#state{phase = reduce})};
 handle_phase_finished(State = #state{phase = reduce,
-                              result = Result,
-                              master = Master}) ->
-    smr_master:job_result(Master, self(), Result),
-    {stop, normal, State}.
+                                     id = JobId,
+                                     inter_table = InterTable}) ->
+    spawn_link(fun () -> smr_mnesia:delete_job_table(InterTable) end),
+    smr_statistics:job_finished(JobId),
+    smr_master:job_finished(self()),
+    {noreply, new_phase(State#state{phase = output})}.
 
-set_phase(map, State = #state{input = Input}) ->
-    error_logger:info_msg("Job ~p: map phase started~n", [self()]),
-    send_jobs(Input, State#state{phase = map,
-                                 input = undefined, % free
-                                 result = dict:new()});
-set_phase(reduce, State = #state{input = Input}) ->
-    error_logger:info_msg("Job ~p: reduce phase started~n", [self()]),
-    send_jobs(Input, State#state{phase = reduce,
-                                 input = undefined, % free
-                                 result = []}).
+handle_task_finished(none, Cast = {task_finished, Pid, _, _, _},
+                     State = #state{id = JobId}) ->
+    receive Down = {'DOWN', _, process, Pid, normal} ->
+                handle_task_finished(Down, Cast, State);
+            {'DOWN', _, process, Pid, _Reason} ->
+                smr_statistics:task_failed(JobId, node(Pid)),
+                {noreply, State}
+    after 60000 -> exit(did_not_receive_normal_down_after_task_finished)
+    end;
+handle_task_finished(Down = {'DOWN', _, process, Pid, normal}, none, State) ->
+    receive {'$gen_cast', Cast = {task_finished, Pid, _, _, _}} ->
+                handle_task_finished(Down, Cast, State)
+    after 60000 -> exit(did_not_receive_task_finished_from_task)
+    end;
+handle_task_finished(
+        {'DOWN', _, process, Pid, normal},
+        {task_finished, Pid, _TaskId, NewHashes, TaskResultSize},
+        State = #state{id = JobId,
+                       available = Available,
+                       ongoing = Ongoing,
+                       awaiting = Awaiting}) ->
+    smr_statistics:task_finished(JobId, node(Pid)),
+    NewOngoing = Ongoing - 1,
+    State1 = add_task_operation_outcome({NewHashes, TaskResultSize}, State),
+    State2 = State1#state{available = Available + 1, ongoing = NewOngoing},
+    case {gb_sets:size(Awaiting), NewOngoing} of
+        {0, 0} -> handle_phase_finished(State2);
+        _      -> {noreply, send_tasks(State2)}
+    end.
 
-agregate_result(Result, State = #state{phase = map, result = Dict}) ->
-    State#state{result =
-        lists:foldl(fun ({K, V}, DictAcc) ->
-                            case dict:is_key(K, DictAcc) of
-                                true  -> dict:append(K, V, DictAcc);
-                                false -> dict:store(K, [V], DictAcc)
-                            end
-                    end, Dict, Result)};
-agregate_result(Result, State = #state{phase = reduce, result = List}) ->
-    State#state{result = Result ++ List}.
+new_phase(State = #state{phase = NewPhase,
+                         next_size = Size,
+                         id = JobId,
+                         next_awaiting = NextAwaiting}) ->
+    error_logger:info_msg("Job ~p: ~p phase started~n", [JobId, NewPhase]),
+    State1 = State#state{next_size = 0,
+                         size = Size,
+                         awaiting = NextAwaiting,
+                         next_awaiting = gb_sets:new()},
+    case NewPhase of
+        output       -> State1;
+        _MapOrReduce -> smr_statistics:job_next_phase(JobId, NewPhase, Size),
+                        send_tasks(State1)
+    end.
 
-remove_ongoing(Worker, State = #state{ongoing = Ongoing0}) ->
-    Ongoing1 = dict:update_counter(Worker, -1, Ongoing0),
-    Ongoing2 = case dict:fetch(Worker, Ongoing1) of
-                   0 -> dict:erase(Worker, Ongoing1);
-                   _ -> Ongoing1
-               end,
-    {case dict:size(Ongoing2) of 0 -> all_finished;
-                                 _ -> ongoing
-     end, State#state{ongoing = Ongoing2}}.
-
-send_jobs([], State) ->
+send_tasks(State = #state{available = 0}) ->
     State;
-send_jobs(Input, State0 = #state{phase = Phase,
-                                 map_fun = MapFun,
-                                 reduce_fun = ReduceFun,
-                                 ongoing = Ongoing}) ->
-    {Worker, State1} = spare_worker(State0),
-    {JobInput, RestInput} = lists:split(?MAP_BATCH_SIZE, Input),
-    {JobType, Fun} = case Phase of map    -> {map, MapFun};
-                                   reduce -> {reduce, ReduceFun}
-                     end,
-    smr_worker:do_job(Worker, self(), JobType, Fun, JobInput),
-    send_jobs(RestInput, State1#state{ongoing =
-                             dict:update_counter(Worker, 1, Ongoing)}).
+send_tasks(State = #state{sup = Sup,
+                          phase = Phase,
+                          map_fun = MapFun,
+                          reduce_fun = ReduceFun,
+                          props = Props,
+                          ongoing = Ongoing,
+                          awaiting = Awaiting,
+                          available = Available,
+                          input_table = InputTable,
+                          inter_table = InterTable,
+                          output_table = OutputTable}) ->
+    {TaskType, Fun, FromTable, ToTable} =
+        case {Phase, ReduceFun} of
+            {map, none}    -> {map_no_reduce, MapFun, InputTable, OutputTable};
+            {map, _}       -> {map, MapFun, InputTable, InterTable};
+            {reduce, _}    -> {reduce, ReduceFun, InterTable, OutputTable}
+        end,
+    case gb_sets:size(Awaiting) of
+        0 ->
+            State;
+        _ ->
+            {LookupHash, NewAwaiting} = gb_sets:take_smallest(Awaiting),
+            JobPid = self(),
+            spawn_link(
+                fun () ->
+                        case smr_task_sup_sup:start_task(
+                                 smr_job_sup:task_sup_sup(Sup), TaskType,
+                                 JobPid, LookupHash, Fun, FromTable, ToTable,
+                                 Props) of
+                            {ok, _}         -> ok;
+                            {error, Reason} -> exit(Reason)
+                        end
+                end),
+            send_tasks(State#state{available = Available - 1,
+                                   ongoing = Ongoing + 1,
+                                   awaiting = NewAwaiting})
+    end.
 
-spare_worker(State = #state{spare_workers = [], master = Master}) ->
-    spare_worker(State#state{spare_workers =
-                     smr_master:allocate_workers(Master)});
-spare_worker(State = #state{spare_workers = [Worker | RestWorkers]}) ->
-    {Worker, State#state{spare_workers = RestWorkers}}.
+buffer_output_chunk(State = #state{output_table = OutputTable,
+                                   awaiting = Awaiting,
+                                   props = Props}) ->
+    case gb_sets:size(Awaiting) of
+        0 -> State#state{output_buffer = end_of_result};
+        _ -> {LookupHash, NewAwaiting} = gb_sets:take_smallest(Awaiting),
+             Chunk = smr_mnesia:get_output_chunk(LookupHash, OutputTable,
+                                                 Props),
+             State#state{output_buffer = Chunk,
+                         awaiting = NewAwaiting}
+    end.
 
+ensure_enough_nodes(Mode, NNodes) ->
+    Req = lists:foldl(fun ({_, Replicas}, Sum) -> Sum + Replicas end, 0, Mode),
+    if NNodes < Req -> exit({not_enough_nodes_for_mode,
+                             {req, Req}, {num_nodes, NNodes}});
+       true         -> ok
+    end.
