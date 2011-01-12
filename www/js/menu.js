@@ -280,6 +280,11 @@ function updateWorkerData(worker){
         $("#header", loc).html(worker.node + ' running job ' + worker.exec_job_id).addClass('working');
     else 
         $("#header", loc).html(worker.node).removeClass('working');
+		
+	if (worker.is_dead) 
+        $("#header", loc).html(worker.node + ' is dead ').addClass('dead');
+    else 
+        $("#header", loc).removeClass('dead');
     
     $('#num_succ', loc).html(worker.num_succ);
     $('#num_failed', loc).html(worker.num_failed);
