@@ -19,7 +19,8 @@ JINTERFACE_JAR=$(ERL_TOP)/lib/jinterface-?.?.?/priv/OtpErlang.jar
 
 THORNROOT=lib/thorn-interp-05
 THORNJARS="$(THORNROOT)/classes/fisher.jar:$(THORNROOT)/classes/junit.jar:$(JINTERFACE_JAR)"
-TH=java -classpath $(THORNJARS) fisher.run.Thorn
+THPARAMS=
+TH=java -classpath $(THORNJARS) fisher.run.Thorn -m src/thorn/MAPREDUCE.thm $(THPARAMS)
 THREPL=java -classpath $(THORNJARS) fisher.run.REPL
 
 ADDITIONAL_ERL_SOURCES=$(LIB_DIR)/rfc4627/rfc4627.erl $(LIB_DIR)/plists/plists.erl

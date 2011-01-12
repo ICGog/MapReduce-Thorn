@@ -1,7 +1,9 @@
 module MAPREDUCE {
-    javaly fun newJob(m,r,c,p) = fisher.runtime.mapreduce.MapReduce.newJob;
-    javaly fun emit(id,kv) = fisher.runtime.mapreduce.MapReduce.emit;
+    javaly fun newJob(m, r, c, p) = fisher.runtime.mapreduce.MapReduce.newJob;
+    javaly fun emit(id, kv) = fisher.runtime.mapreduce.MapReduce.emit;
     javaly fun doJob(id) = fisher.runtime.mapreduce.MapReduce.doJob;
     javaly fun killJob(id) = fisher.runtime.mapreduce.MapReduce.killJob;
     javaly fun retrieve(id) = fisher.runtime.mapreduce.MapReduce.retrieve;
+    javaly fun getInput(type, peer, cookie) = fisher.runtime.mapreduce.Worker.getInput;
+    javaly fun sendOutput(output) = fisher.runtime.mapreduce.Worker.sendOutput;
 }

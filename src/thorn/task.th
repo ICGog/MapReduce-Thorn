@@ -1,0 +1,39 @@
+import MAPREDUCE.*;
+
+fun doTask(type, peer, cookie) {
+    var input := getInput(peer, cookie);
+    var output;
+    if (type == "map") {
+        for (tuple <- input) {
+            for(resTuple <- mapFun(tuple)) {
+                output := [resTuple, output...];
+            }
+        }
+    } else {
+        for ([k, v] <- input) {
+            output := [[k, reduceFun([k, v])], output...];
+        }
+    }
+    sendOutput(output);
+}
+
+fun strToBytes(s) { return %[s.char(i).num() | for i <- 0..(s.len()-1)].asBytes(); }
+
+fun mapFun([name, document]) {
+    return %[[word, 1] | for word <- document.split(" ")];
+}
+
+fun reduceFun([word, values]) {
+    var count := 0;
+    for (value <- values) {
+        count += 1;
+    }
+    return [word, count];
+}
+
+var cookie := "thorn";
+var peer := "peer";
+var type := "map";
+
+doTask(type, peer, cookie);
+
