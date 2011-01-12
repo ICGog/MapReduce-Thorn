@@ -131,6 +131,11 @@ handle_info({nodedown, N}, State = #state{nodes = Ns, free_nodes = FNs}) ->
     error_logger:info_msg("Worker node ~p died~n", [N]),
     {noreply, State#state{nodes = dict:erase(N, Ns),
                           free_nodes = ordsets:del_element(N, FNs)}};
+handle_info({'DOWN', _, process, Pid, noconnection},
+             State = #state{free_nodes = FNs, nodes = Ns}) ->
+    error_logger:info_msg("No connection to ~p~n", [node(Pid)]),
+    {noreply, State#state{nodes = dict:erase(node(Pid), Ns),
+                          free_nodes = ordsets:del_element(node(Pid), FNs)}};
 handle_info({'DOWN', _, process, Pid, _Reason}, State = #state{free_nodes = FNs,
                                                                nodes = Ns}) ->
     N = node(Pid),
