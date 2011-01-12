@@ -1,0 +1,29 @@
+spawn dirlis {
+  import HTTP.*;
+  import XML.*;
+  import HTML.*;
+body{
+  HTTPSocketeer(4321);
+  var goon := true;
+  println("Dirlis starting.");
+  while (goon) {
+    recv{
+      req && HTTPRequest("GET", params, path) => {
+        f = params.where.file;
+        if (f.exists? && f.dir?) {
+          msg = simpleTable({:border:1:},
+            %[ [fi.str, fi.len] 
+             | for fi <- f.asDir.files]
+            );
+          req.respond(OK, html(msg), {::});
+          }
+        else {
+          req.respond(OK, html("No such directory as $f"), {::});
+          }
+        }
+      | other => {println("WTF is $other?");}
+    }recv
+  }while   
+}body
+     
+}dirlis;

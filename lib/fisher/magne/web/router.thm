@@ -1,0 +1,75 @@
+module webrouter{
+  
+  /** A router pattern */
+  class Route(){
+    
+    val regexp;
+    val group_names;
+    val path;
+    val handler;
+
+    new Route(p, handlercls){
+      path = p;
+      regexp = this.extract_regexp();
+      group_names = this.extract_group_names();
+      handler = handlercls;
+    }
+    
+    def extract_regexp(){
+      return path.replaceRE(":[a-zA-Z0-9_-]+","([a-zA-Z0-9_\\.-]+)");
+    }
+
+    def extract_group_names(){
+      var names := ord();
+      
+      for(i <- path.range()){
+        if(path(i) == ":"){
+          var name := "";
+          // for each character
+          for(j <- i+1..path.len()-1){
+            // if character valid in group name
+            if(path(j).matchRE?("[a-zA-Z-_]")){
+              name += path(j);
+            }
+            else{
+              break;
+            }
+          }
+          // append to head
+          names @= name;
+        }
+      }
+      // order of insertion
+      return names.lst();
+    }
+
+    def toRecord(){
+      return {: 
+        regexp,
+          handler,
+          group_names 
+          :};
+    }
+  }
+
+  /** A router */
+  class Router(){
+    
+    var routes := [];
+
+    def getRoute(path_pattern, cls){
+      p = Route(path_pattern, cls);
+      return p.toRecord();
+    }
+
+    def connect(path_pattern, cls){
+      route = this.getRoute(path_pattern, cls);
+      routes := routes @ [route]; 
+    }
+
+    def connect_insert_as_head(path_pattern, cls){
+      route = this.getRoute(path_pattern, cls);
+      routes := route :: routes;
+    }
+  }
+}webrouter

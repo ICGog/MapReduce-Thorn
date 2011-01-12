@@ -1,0 +1,56 @@
+/*
+Another exercise: 
+th -1 stats.th -- nRolls nDice nSides 
+rolls a whole bunch of dice and computes statistics thereof.
+*/
+
+import MATH.*;
+
+
+[.int(nRolls), .int(nDice), .int(nSides) ] = argv();
+
+dieRange = nDice .. nDice * nSides;
+
+// One dieroll.
+fun roll() = %[nSides.rand1 | for i <- 1 .. nDice].sum;
+
+dice = %[roll() | for i <- 1 .. nRolls];
+println("dice = $dice");
+
+// Power sums
+n = nRolls;
+sx = dice.sum;
+sx2 = %[x*x | for x <- dice].sum;
+
+// Stats
+
+mean = sx / n;
+sdev = sqrt((sx2 - sx*sx/n) / (n-1)); // or whatever.
+
+println("mean=$mean; standard deviation = $sdev");
+
+// Median
+
+sorted_dice = %sort[x %< x | for x <- dice];
+n2 = n div 2;
+median = (if (n mod 2 == 0) 
+            (sorted_dice(n2-1) + sorted_dice(n2))/2;
+          else sorted_dice(n2); );
+println("median = $median" );
+
+// Mode
+
+counts = %group(die = diet) {num = %count; | for diet <- dice}; 
+
+for(i <- dieRange) {
+  if (counts(i) ~ {:num:}) println("" + i + ": " + num);
+  else                     println("" + i + ": " + 0);
+}
+
+maxCount = 0.max(%[num | for {: num :} <- counts]);
+
+modes = %sort[ d %< d | for {:die:d,num:} <- counts, if num == maxCount ];
+
+println("modes = $modes");
+
+

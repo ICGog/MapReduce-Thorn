@@ -1,0 +1,16 @@
+module A {
+  class Aglet : pure {}
+}
+
+module B {
+  import A.*;
+  component Balrog(burny) {
+     fun bite() {
+       a = Aglet();
+       a;
+     }
+     body {
+       println("bite = " + bite());
+     }
+  }
+}

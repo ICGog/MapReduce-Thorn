@@ -1,0 +1,40 @@
+//CLS
+
+class Penguin(a, b) extends Bird(a), Swimmer(b) {
+
+	// Constructor
+	
+	// TODO new Penguin(a) { super@Bird(a); super@Swimmer(a); c=a; }
+	// TODO new Penguin(a,b,c) = this(a, [b,c...]));
+	
+	// FIELDS
+	
+	// Simple field binding
+	name = a + b;
+	
+	// 2 field from match
+	[bright,dark] = a;
+	
+	// VAR FIELDS
+	
+	var fullness := 0;
+	
+	// DEFDS
+	
+	def swim() {
+	   print("$name swims!");
+	}swim 
+
+	// Pattern-matching argument for def
+	
+	def eat([]) = {}
+	     | eat([f, foods...]) {
+	              fullness := fullness + f.foodValue(); // TODO: +=
+	              this.eat(foods);
+	              }
+	     | eat([f] && (f.isPickle())? ) = print("Do not want!");
+	     | eat(_) {} 
+
+
+
+}Penguin

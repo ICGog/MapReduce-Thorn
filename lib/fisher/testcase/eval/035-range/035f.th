@@ -1,0 +1,8 @@
+{
+  class Flaw(x) {
+    def `..`(y) = "Dotdot($x,$y)";
+  }
+  
+  ~!@eq(Flaw(1) .. "fish" , "Dotdot(1,fish)")@!~  ;
+  
+}

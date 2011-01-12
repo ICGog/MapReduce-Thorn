@@ -1,0 +1,30 @@
+spawn whiff {
+  var talkingTo := null;
+  var goon := true;
+  var ph := null;  // identity of the zapper
+  var total := 0;
+  initially{ ~!@testStartLatch(); }
+  sync snag(ph') from sender && (talkingTo == null)? {
+    talkingTo := sender;
+    ph := ph';
+    "snagged";
+    }snag
+  sync sizzle(ph', n) from $(talkingTo) {
+    ~!@eq(ph, ph');
+    total += n;
+    }sizzle
+  sync done(ph') from $(talkingTo) {
+    ~!@eq(ph, ph') ;
+    talkingTo := null;
+    ph := null;
+    "bye";
+    }done
+  sync plzDie() { goon := false; }
+  body{
+    while(goon){
+      serve;
+    }
+  }body
+
+}whiff;
+

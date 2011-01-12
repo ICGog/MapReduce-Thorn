@@ -1,0 +1,17 @@
+
+
+
+  {
+  s = "w√∏„Ç´·æõêêò‡Øπ‚òù";
+  {
+  ~!@eq(s.codePointAt(0), 119)@!~;
+  ~!@eq(s.codePointAt(1), 248)@!~;
+  ~!@eq(s.codePointAt(2), 12459)@!~;
+  ~!@eq(s.codePointAt(3), 8091)@!~;
+  ~!@eq(s.codePointAt(4), 66584)@!~;
+  ~!@eq(s.codePointAt(5), 56344)@!~;
+  ~!@eq(s.codePointAt(6), 3065)@!~;
+  ~!@eq(s.codePointAt(7), 9757)@!~;
+  }
+
+  }

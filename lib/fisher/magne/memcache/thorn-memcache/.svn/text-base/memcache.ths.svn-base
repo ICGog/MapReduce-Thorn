@@ -1,0 +1,63 @@
+/**
+ * Memcache.
+ */
+spawn memcache{
+
+  /** Rather simplistic memcache */
+  var cache := table(key_){map var obj;};
+
+  /** 
+   * Sets the value of a key 
+   * 
+   * Args:
+   *   key: key of object
+   *   value: the object
+   */
+  async set(key_, value){
+    println("set key:$key_");
+    cache[key_] := value;
+  }
+
+  /**
+   * Gets the object with the correponding key.
+   *
+   * Args:
+   *   key: key of object
+   * Returns:
+   *   object identified by key.
+   */
+  sync get(key_){
+    println("get key:$key_");
+    return cache[key_];
+  }
+
+//   async getWorker(e){
+//     println("envelope: $e");
+//     syncReply(e, )
+//   }
+  
+  /**
+   * Deletes object under key.
+   *
+   * Args:
+   *   key: key of object.
+   */
+  async delete(key_){
+    cache(key_) := null;
+  }
+
+  /**
+   * Flush all data.
+   */
+  async flush_all(){
+    cache := table(key_){map var obj;};
+  }
+
+  body{
+    println("Memcache started at: " + thisSite().host() + ":" + thisSite().port());
+
+    while(true){
+      serve;
+    }
+  }
+}

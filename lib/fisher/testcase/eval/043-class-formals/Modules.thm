@@ -1,0 +1,27 @@
+module RAINBOW {
+
+/*
+  class Doily(diam, color) {
+   def terminate() = diam + 1; // I dunno what this means.
+  }     
+  
+  class Aggressor(weapon) {
+    def straighten() = "straight " + (this.weapon);
+  }
+
+*/
+
+  class Doily{
+    def terminate() = diam + 1;
+    new Doily(d,c) { diam = d; color = c; }
+    diam;
+    color;
+  }
+
+  class Aggressor{
+    weapon;
+    def straighten() = "straight $weapon";
+    new Aggressor(w) { weapon = w; }
+  }
+
+}

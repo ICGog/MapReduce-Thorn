@@ -1,0 +1,20 @@
+spawn auth {
+users = table(name){var pw: Password; var fails:int; };
+sync register(name, pw) {
+  if (users.has?(name)) "No";
+  else users(name) := {: pw, fails:0 :};
+}register
+sync confirm?(name, attempt:string) {
+  if (users(name) ~ {: pw :}) {
+    if (pw.is?(attempt)) return true;
+    else {
+      users(name).fails += 1;
+      return false;
+    }
+  }
+  else {return false;}
+}confirm?
+body{
+while(true) serve;
+}body
+}auth;

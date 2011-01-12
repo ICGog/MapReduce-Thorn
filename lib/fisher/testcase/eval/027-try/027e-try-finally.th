@@ -1,0 +1,36 @@
+{
+  fun infect(L) {
+    for( x <- L ) {
+      ~!@hit()@!~ 6 ; 
+      try {
+         if (x ~ [[[y]]]) throw ['sweet necessity', y];
+      }
+      // no catch
+      finally {
+        ~!@hit()@!~ 6 ;
+      }
+    }for
+    'abusive';
+  }fun
+
+  ~!@eq(infect([1,2,3]), 'abusive')@!~  ;
+  
+  try {
+    infect([ [1], [[2]], [[[3]]], [[[[4]]]] ]);
+    { ~!@hit()@!~ 0 ; }
+  }
+  catch {
+    [a,b] = {
+       ~!@eq(a, 'sweet necessity')@!~ 1 ;
+       ~!@eq(b, 3)@!~  ;
+    }
+  }
+  finally {
+    ~!@undef(a,b)@!~  1;
+    ~!@undef(x,L)@!~  ;
+    ~!@isdef(infect)@!~  ;
+  }
+
+
+  
+}

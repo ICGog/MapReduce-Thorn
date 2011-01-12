@@ -1,0 +1,26 @@
+spawn echo {
+  body{
+    import LINES.*;
+    ss = StringSocketeer(4321);
+    var goon := true;
+    var vyctym;
+    while(goon) {
+      recv {
+        x from y => {
+          goon := (x != "");
+          println("y*w: $y sezz $x. ...  GOON = $goon");
+          vyctym := y;
+        }
+      }
+    }while
+    println("SERVING");
+    vyctym <<< "HTTP/1.0 200 OK \r\n";
+    vyctym <<< "Content-Type: text/html; charset=ISO-8859-1\r\n";
+    content = "<html><head><title>You Rugging Fulker</title><body>Teck you, you bozzy rumper!</body></html>\r\n";
+    vyctym <<< "Content-length: " + content.len() + "\r\n";
+    vyctym <<< "\r\n";
+    vyctym <<< content;
+
+  }body
+  
+}echo;

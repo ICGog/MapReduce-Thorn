@@ -1,0 +1,18 @@
+{ 
+  class C{
+    var a;
+    val e;
+    new C(é, à) { a := à; e = é;}
+    def tally() = a + e;
+    def lace() = [a,e];
+    def don't_can't_won't() = 1;
+  }C
+
+  c = C(3,7);
+  ~!@eq(c.tally(), 10)@!~  ;
+  ~!@eq(c.lace(), [7,3])@!~  ;
+  c.a := 43;
+  ~!@eq(c.tally(), 46)@!~  ;
+  ~!@eq(c.lace(), [43,3])@!~  ;
+  
+}

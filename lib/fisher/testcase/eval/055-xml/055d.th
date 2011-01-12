@@ -1,0 +1,11 @@
+{
+  import XML.*;
+     resp = 
+     Elem("html", {::}, [
+       Elem("head", {::}, [Elem("title", {::}, ["The Listing of Wisdom"])]),
+       Elem("body", {::}, [
+          Elem("p", {:style: "color:blue;":}, ["Of wisdom I know nothing."])
+       ])
+     ]);
+//  println("055d: " + resp.str());  
+}

@@ -1,0 +1,57 @@
+// First example -- translated from SETL manual p.37
+{
+  import TOP_TEST.*;
+  
+  fun topsort1(g : Graph) {
+    topics = ord();
+    follows = table(fr,to){};
+    yes = {::};
+    for(n <- g.nodes) topics @= n;
+    for({:fr,to:} <- g.edges) follows(fr,to) := yes;
+    order = ord();
+    fun hasPred?(nxt) = %some(follows(a,nxt) != null | for a <- topics);
+    fun findPredless() =  %first(nxt %none null | for nxt <- topics, if !hasPred?(nxt));
+    while (findPredless() ~ +nxt) {
+       topics.del(topics.lst().index(nxt));
+       order @= nxt;
+    }
+    if (topics.num() != 0) {
+       return null;
+       }
+    else {
+       return order.lst();
+       }
+  }topsort1
+  
+  ~!@assert(g1.sortedBy?(topsort1(g1)))@!~  ;
+  testTopSort(topsort1);
+
+  // topsort2 inlines the function calls, mostly to check 
+  // about the desugaring of nested %some.
+  // (Which wasn't the bug in the original code -- I had forgotten + in ~ +nxt.)
+  fun topsort2(g : Graph) {
+    topics = ord();
+    follows = table(fr,to){};
+    yes = {::};
+    //for(n <- g.nodes) topics @= n;
+    topics.add1All(g.nodes);
+    for({:fr,to:} <- g.edges) follows(fr,to) := yes;
+    order = ord();
+    while(%first(nxt |
+          for nxt <- topics,
+          if !(%some(follows(a,nxt) != null | for a <- topics))
+          ) ~ +nxt) {
+       topics.del(topics.lst().index(nxt));
+       order @= nxt;
+    }while
+    if (topics.num() != 0) {
+       return null;
+       }
+    else {
+       return order.lst();
+       }
+  }topsort2
+  
+  ~!@assert(g1.sortedBy?(topsort2(g1)))@!~  ;
+  testTopSort(topsort2);
+}

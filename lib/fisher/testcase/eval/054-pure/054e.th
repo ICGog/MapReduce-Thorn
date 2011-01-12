@@ -1,0 +1,21 @@
+{
+  class Seraglio(x):pure;
+  ~!@eq(Seraglio(1), Seraglio(1))@!~  ;
+  
+  class Syringe(x);
+  ~!@bad(Syringe(1) == Syringe(1))@!~  ;
+  
+  class Finances(x,y):pure {
+    def `==`(other) = (x == other.x); // ignoring y
+  }
+  
+  ~!@eq(Finances(1,2), Finances(1,100))@!~  ;   
+  ~!@eq(Finances(1,2), Finances(1,2))@!~  ;   
+  
+  class Jug(x):pure extends Seraglio(x);
+  ~!@ne(Jug(1), Seraglio(1))@!~  ;
+
+  ~!@ne(Jug(1), null)@!~  ;
+  ~!@ne(null, Jug(1))@!~  ;
+  
+}

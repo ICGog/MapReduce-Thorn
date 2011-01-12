@@ -1,0 +1,124 @@
+\section{Changes to Serialization}
+
+\subsection{Allowing transmission of arbitrary pure closures and objects}\label{sec:transmit-closures}
+
+\subsubsection*{Proposal}
+We should allow transmission of arbitrary pure closures and arbitrary pure objects (including anonymous objects).
+
+\subsubsection*{Rationale}
+
+This is needed to model queries against long-lived data (persistent or otherwise), code mobility in a cloud setting, allow encoding of futures, etc.  Additional justifying comments below.
+
+\subsubsection*{Details}
+
+Revised definition of purity:
+\begin{itemize}\renewcommand{\labelitemi}{--}
+
+\item a variable or field is pure if it is immutable (non-val) and bound to a pure value
+\item a closure/method is pure if it contains no non-local references to impure variables/fields (an object's own fields are considered non-local)
+\item any javaly class or function that accesses site-specific (mutable or immutable) state is impure 
+\item a class reference is pure if its constructor is pure 
+\item a pure object has only pure fields and pure methods 
+\item a pure class has only pure fields and pure methods 
+\item tables, maps, and ords are impure
+\item files are impure
+\item all other built-in values (primitive types, records, and lists) are pure
+
+\item NB: 
+  \begin{itemize}
+  \item pure closures and methods can mutate values passed as arguments, call impure methods on objects passed as arguments, and 
+    access mutable local state 
+  \item pure class references can be used to construct impure objects, and pure objects can be constructed via impure class references  
+  \end{itemize}
+\end{itemize}
+Additional details:
+
+\begin{itemize}\renewcommand{\labelitemi}{--}
+\item Do not require the `pure' keyword (but allow it for documentation/optimization) for defining pure values.  Instead, values are (conceptually) checked dynamically for purity.  The dynamic check can be optimized in various ways, including adding an extra bit to make the check unit time. 
+
+\item Closures/methods should (conceptually) be double-checked for purity on receipt, as well as on sending.  Such checks can be implemented fairly cheaply when the sender and receiver are aware of each other.  When they don't, something like a bytecode verifier will probably be needed. 
+
+\item Classes defined in two components (even if derived from the same module) are incomparable.  So, e.g., an object o of class A defined in component C1 will, when transmitted to component C2, fail to match a pattern in C2 which constrains o to have type A.  "like A" tests should still work, however. 
+
+\item Given the above, we should consider changing the semantics of ``:A'' tests, e.g., ``:A'' is an eager version of ``:like A''---it checks for interface compatibility with A, but unlike ``:like A'', does so immediately.  Or perhaps we should just get rid of ``:A'' altogether.  Classes in thorn are mostly about code sharing/inheritance and encapsulation, not typing.  So making the distinction between types and classes clearer is probably a good thing.
+
+\item Get rid of \kw{import own}.  It complicates the semantics and implementation in a number of respects.  No one has found a compelling need for it thus far.  Components provide an alternative, and more thorn-idiomatic way of replicating ``global'' state, and objects are always available if you want ``per instance-of-something'' state. 
+
+\item Eliminate the Identity predefined superclass in favor of GlobalIdentity.  This ensures that object identity (if it exists at all---recall that it doesn't by default) can be safely preserved when objects are transmitted, and remains invariant when an object is passed from component to component.  We can avoid generating a globally-unique identity when the object is known not to escape.
+\end{itemize}
+
+\subsection{Allowing transmission of modules}\label{sec:transmit-modules}
+
+\subsubsection*{Proposal}
+The concept is that you can send around a \emph{module}. 
+Transmitted modules are received as \emph{seeds} rather than data. Seeds have very
+few operations on them. The most crucial operation is that they may be passed
+to new components when they are being instantiated, and the new component can
+import the module. (This is kindred to Erlang's mechanism for sending module
+names around.)
+
+\subsubsection*{Rationale}
+
+Sending around arbitrary closures, and having them be receivable and
+applyable, carries a variety of security and implementation costs.
+
+\subsubsection*{Details}
+
+We take advantage of the isolation of components here---untrustable
+transmitted code is executed in a \emph{new} component, so its privileges and
+ability to mutate data are naturally somewhat curtailed.  
+
+We write \lstinline{seed(DB1)} for the seedification of DB1, and \lstinline{seed M} for a
+seed-valued formal parameter of a component.  We may need to
+know which formals are which, for compilation.
+
+A standard example of something we want to do is, send a query to a database
+and have it evaluated on the database. 
+
+We'll package that query in a module.  Here's one, which gets the `a' column
+from records a,b,c in the table ``abc's'' where c==31 and a$<$b: 
+
+\begin{lstlisting}
+module MyQuery {
+  import AbstractDB.DB;   
+  fun query({: a,b,c:31 :} && a<b) = +a
+    | query(_) = null;
+}
+\end{lstlisting}
+
+The database server would look something like: 
+
+\begin{lstlisting}
+sync runQuery(Q : seed) {
+  // Spawn a local component...
+  comp = QueryProcessor(Q);
+  answer = comp <-> doIt();
+  answer;
+  }
+\end{lstlisting}
+
+and QueryProcessor would be defined as something like: 
+
+\begin{lstlisting}
+component QueryProcessor(seed Q, db) {
+  import Q.query;
+  sync doIt() =
+    %[ res | for (row <- db.iter()), if query(row) ~ +res];
+  }component
+\end{lstlisting}
+
+db.iter() does lots of communication, sending rows of the database one at a
+time to the QueryProcessor.  However, this is local communication, and
+hopefully sending the rows is a cheap pointer toss.
+
+The "import Q.query;" line is where the magic happens in this proposal.
+
+Oh, and to use the query processor, you'd have
+\begin{lstlisting} 
+   import MyQuery;
+   database <-- runQuery( seed(MyQuery) );
+\end{lstlisting}
+
+The use of \kw{seed} may not be necessary in all those places.  
+The use of modules makes this example somewhat blurrier.  It'll probably come
+out looking better when sending a class around, or several related things.  

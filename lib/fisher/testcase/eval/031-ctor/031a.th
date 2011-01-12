@@ -1,0 +1,11 @@
+{
+  import REGION.Abdomen;
+  l = Abdomen(1); 
+  ~!@eq(l.donate(), [1, 11, 10])@!~  ;
+  m = Abdomen(2, []);
+  ~!@eq(m.donate(), [2, 333, 222])@!~  ;
+  n = Abdomen(3,4);
+  ~!@eq(n.donate(), [3,11,4])@!~  ;
+  o = Abdomen(5,6,7);
+  ~!@eq(o.donate(), [5,6,7])@!~  ;
+}

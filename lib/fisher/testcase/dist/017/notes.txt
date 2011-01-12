@@ -1,0 +1,9 @@
+This is a test of before/after.  liber keeps a record of: the total number of
+messages processed, and, for each client, the number processed in 'scenic' and
+'ugly' mode. 
+  tap() ---- return current records.  Start a new record if necessary, in
+             scenic mode.
+  flap() --- flip modes.
+  zap() ---- kill liber.
+
+The counting is all done with before and after functions.

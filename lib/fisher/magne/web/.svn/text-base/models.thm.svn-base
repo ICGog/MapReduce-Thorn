@@ -1,0 +1,81 @@
+module webmodels{
+
+  import webdatastore.datastore_get;
+  import webdatastore.datastore_put;
+  import webdatastore.datastore_query;
+  import webdatastore.datastore_delete;
+  
+  import webquery.Query;
+  
+  class Model{
+    
+    // abstract tableName
+    // abstract properties
+
+    /**
+     * Gets entity by key from the datastore.
+     */
+    def get(key_:string){
+      entity = datastore_get(this.tableName, key_);
+      return e.toMap() if entity ~ +e else null;
+    }
+    
+    /**
+     * Puts entity to the datastore.
+     * Args:
+     *   entity: map
+     */
+    def put(entity:table){
+      key_ = datastore_put(this.tableName, entity.toRecord());
+      return key_; 
+    }
+    | put(entities:list){
+      recordified = %[e.toRecord() | for e <- entities];
+      return datastore_put(this.tableName, recordified);
+    }
+
+    /**
+     * Deletes entity from datastore.
+     */
+    def delete(key_:string){
+      return datastore_delete(this.tableName, key_);
+    }
+
+    /**
+     * Finds all entities that match the query record.
+     */
+    def find_(queryRec:record){
+      // convert all transfered records to a map.
+      return %[r.toMap() | for r <- datastore_query(this.tableName, queryRec)];
+    }
+
+    /**
+     * Finds all entities that match the query.
+     */
+    def find_all(query:Query){
+      return this.find_(query.limit(0).rec());
+    }
+
+    /**
+     * Finds the first matching entity of the query.
+     */
+    def find_one(query:Query){
+      entities = this.find_all(query.limit(1));
+      return e if entities ~ [e,_...] else null;
+    }
+
+    /**
+     * Create new instance (a map) of this model.
+     */
+    def new_instance(){
+      return this.properties().toMap();
+    }
+    
+    /**
+     * Get a query object for this model.
+     */
+    def query(){
+      return Query(this);
+    }
+  }
+}webmodels

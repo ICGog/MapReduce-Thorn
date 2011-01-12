@@ -1,0 +1,4 @@
+{
+  class Jade{}
+  ~!@eq(Jade.str(), "Jade")@!~  ;
+}

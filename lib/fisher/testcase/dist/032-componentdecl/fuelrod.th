@@ -1,0 +1,15 @@
+spawn fuelrod {
+body{
+  import EEL.*;
+  p1 = spawn Whale();
+  v1 = p1 <-> navigate(1);
+  ~!@eq(v1, "whaled 1")@!~  ;
+  p2 = spawn Whale();
+  v2 = p2 <-> navigate(2);
+  ~!@eq(v2, "whaled 2")@!~  ;
+  ~!@checkphase(
+    {: phase: 1, bag: [1]:},
+    {: phase: 2, bag: [2]:}
+    )@!~  ;
+}body
+}fuelrod;

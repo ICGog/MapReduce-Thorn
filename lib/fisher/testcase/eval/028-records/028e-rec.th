@@ -1,0 +1,6 @@
+{
+  fun borf <a,b> = <a= b+1, b=a+1>;
+  ba = borf(<a=1,b=12>);
+  ~!@eq(ba.a, 13)@!~  ;
+  ~!@eq(ba.b, 2)@!~  ;
+}

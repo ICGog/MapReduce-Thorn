@@ -1,0 +1,9 @@
+{
+  class A {
+     var x;
+  }
+  class B extends A{}
+  class C extends A{}
+  class D extends A, B{}
+  d = D();
+}

@@ -1,0 +1,6 @@
+{
+  o = object { 
+    def mew(x) = [x];
+  };
+  ~!@eq(o.invoke("mew", [3]), [3])@!~  ;
+}

@@ -1,0 +1,50 @@
+{
+  import Virtue = `film projector`.Coffin;
+  import Pepper = REMORSE.Loser;
+  import Algorithm = SIN.Foulmouthed;
+  
+  var v;
+  
+  v := Virtue();
+  ~!@eq(v.hateful, 0)@!~  ;
+  ~!@eq(v.glitter(), 1)@!~  ;
+  ~!@eq(v.glitter(), 2)@!~  ;
+  ~!@eq(v.orchestrate() , [2])@!~  ;
+  
+  v := Pepper();
+  ~!@eq(v.hateful, 0)@!~  ;
+  ~!@eq(v.glitter(), 2)@!~  ;
+  ~!@eq(v.glitter(), 4)@!~  ;
+  ~!@eq(v.orchestrate() , [4, 'Loser'])@!~  ;
+
+  v := Algorithm();
+  ~!@eq(v.hateful, 0)@!~  ;
+  ~!@eq(v.glitter(), 4)@!~  ;
+  ~!@eq(v.glitter(), 8)@!~  ;
+  ~!@eq(v.orchestrate() , [8, 'Loser'])@!~  ;
+    
+
+  class Desert extends Virtue{}
+  v := Desert();
+  ~!@eq(v.hateful, 0)@!~  ;
+  ~!@eq(v.glitter(), 1)@!~  ;
+  ~!@eq(v.glitter(), 2)@!~  ;
+  ~!@eq(v.orchestrate() , [2])@!~  ;
+
+  class Powder extends Pepper{};  
+  v := Powder();
+  ~!@eq(v.hateful, 0)@!~  ;
+  ~!@eq(v.glitter(), 2)@!~  ;
+  ~!@eq(v.glitter(), 4)@!~  ;
+  ~!@eq(v.orchestrate() , [4, 'Loser'])@!~  ;
+
+  class Singer extends Algorithm{}
+  v := Singer();
+  ~!@eq(v.hateful, 0)@!~  ;
+  ~!@eq(v.glitter(), 4)@!~  ;
+  ~!@eq(v.glitter(), 8)@!~  ;
+  ~!@eq(v.orchestrate() , [8, 'Loser'])@!~  ;
+
+/*  */
+
+}

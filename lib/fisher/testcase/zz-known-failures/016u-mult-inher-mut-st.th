@@ -1,0 +1,13 @@
+//FAIL
+
+{
+  class A {
+     var a;
+  }
+  class B extends A;
+  class C extends A;
+  class D extends A,B;
+  d = D();
+  d.a := 1;
+  ~!@eq(d.a, 1)@!~  ;
+}

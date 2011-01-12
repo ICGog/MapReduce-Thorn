@@ -1,0 +1,111 @@
+import unittest.*;
+import urilib.*;
+
+println("uri Test");
+
+fun should_parse_regular_query_string(){
+  qs = "a=a&a=b";
+  kv = parse_query(qs);
+  assertEquals(kv(0).attribute, "a");
+  assertEquals(kv(0).value, "a");
+
+  assertEquals(kv(1).attribute, "a");
+  assertEquals(kv(1).value, "b");
+
+}
+test(should_parse_regular_query_string);
+
+fun should_parse_irregular_query_string(){
+  qs = "a&a=b";
+  kv = parse_query(qs);
+  assertEquals(kv(0).attribute, "a");
+  assertEquals(kv(1).attribute, "a");
+  assertEquals(kv(1).value, "b");
+}
+test(should_parse_irregular_query_string);
+
+fun should_parse_query_string_with_plus_and_convert_to_space(){
+  qs = "a+b=b+b";
+  kv = parse_query(qs);
+  assertEquals(kv(0).attribute, "a b");
+  assertEquals(kv(0).value, "b b");
+}
+//test(should_parse_query_string_with_plus_and_convert_to_space);
+
+fun should_parse_empty_value(){
+  qs = 'Name=fads&Password=&Submit=Submit+Query';
+  kv = parse_query(qs);
+  assertEquals(kv(0).attribute, "Name");
+  assertEquals(kv(0).value, "fads");
+  assertEquals(kv(1).attribute, "Password");
+  assertEquals(kv(1).value, "");
+  assertEquals(kv(2).attribute, "Submit");
+  assertEquals(kv(2).value, "Submit Query");
+}
+//test(should_parse_empty_value);
+
+fun should_decode_string(){
+  assertEquals(decode("%41"), 'A');
+  assertEquals(decode("%61"), 'a');
+  assertEquals(decode('a%20b'), 'a b');
+  assertEquals(decode('%0D%0A%21'), '\r\n!');
+}
+
+test(should_decode_string);
+
+fun should_parse_cookie(){
+  cookie = 'location=40.8848632634,-73.7951660156; latest_address="Aarhus Municipality, Denmark"; userkey=jakob';
+  kv = parse_header_value(cookie);
+  assertEquals(kv(0).attribute, "location");
+  assertEquals(kv(0).value, "40.8848632634,-73.7951660156");
+  assertEquals(kv(2).attribute, "userkey");
+  assertEquals(kv(2).value, "jakob");
+}
+
+test(should_parse_cookie); 
+
+fun should_parse_header_value(){
+  value = '/';
+  kv = parse_header_value(value);
+  assertEquals(kv(0).attribute, '/');
+}
+test(should_parse_header_value);
+
+fun should_parse_key_value_with_empty_value(){
+  value = 'key=';
+  kv = parse_header_value(value);
+  assertEquals(kv(0).value, '');
+  assertEquals(kv(0).attribute, 'key');
+  
+}
+test(should_parse_key_value_with_empty_value);
+
+fun should_create_http_header_value_dict(){
+  import webdict.*;
+  s = 'form-data; name="avatar"; filename="foo.txt"';
+  h = HeaderValueDict(s);
+  assertEquals(h.get('name'), 'avatar');
+  assertEquals(h.get('filename'), 'foo.txt');
+  assertEquals(h.get('form-data'), null);
+}
+
+test(should_create_http_header_value_dict);
+
+// FIXME: convert multipart to bytes for this to work
+
+// fun should_parse_multipart(){
+//   multipart = [
+// 		"------WebKitFormBoundaryoJiu4foSUpIzOwTQ", 
+//     "Content-Disposition: form-data; name=\"avatar\"; filename=\"foo.txt\"", 
+//     "Content-Type: text/plain", 
+//     "",
+//     "foo", 
+// 		"------WebKitFormBoundaryoJiu4foSUpIzOwTQ--"];
+//   m = parse_multipart("multipart/form-data; boundary=----WebKitFormBoundaryoJiu4foSUpIzOwTQ", "\r\n".join(multipart));
+//   entry = m(0);
+//   assertEquals(entry.attribute, 'avatar');
+//   assertEquals(entry.content.value.str(), 'foo');
+// }
+
+// test(should_parse_multipart);
+

@@ -1,0 +1,11 @@
+{
+import MATH.*;
+
+  for (x <- [0.0, 0.5, 1.0, 1.5]) {
+
+    ~!@assert(x.within?( asin(sin(x)), 0.01))  ;
+    ~!@assert(x.within?( acos(cos(x)), 0.01))  ;
+    ~!@assert(x.within?( atan(tan(x)), 0.01))  ;
+  }
+
+}

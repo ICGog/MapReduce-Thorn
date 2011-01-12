@@ -1,0 +1,21 @@
+{
+  ot = ord{map var a; var b;};
+  var p := ‹a:11, b:"by the elven druid with a +2 Barbed Scroll Of Shower Of Lightning's wok"›;
+  var i := ‹a:22, b: "by Uranus's tnoique!"›;
+  var g := ‹a:33, b: "by Darkseid's reverie!"›;
+  
+  ot.addAll([p, i, g]);
+  ~!@eq(ot.rows(), [p,i,g])@!~  ;
+  
+  si = "the Nacreous Staff";
+  ot[1] := si;
+  i := ‹a:si, b:i.b›;
+  ~!@eq(ot.rows(), [p,i,g])@!~  ;
+
+  for(j <- 0 .. 2) {
+    ~!@eq(ot.pos(j), j);
+  }
+  for(j <- -3 .. -1) {
+    ~!@eq(ot.pos(j), j + 3) ;
+  }
+}

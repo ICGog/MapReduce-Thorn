@@ -1,0 +1,26 @@
+spawn crient {
+body{
+  import NET.*;
+  protoclient = object extends Protocol {
+    def encode(msg) = msg;
+    def decode(msg) = msg;
+    def input() = UseHTTP;
+  };
+  sirvir = NetSite("localhost", PORT, protoclient);
+  
+  fun sned(m) {
+    req = HTTPRequest(m1.verb, m1.resource, m1.params,
+            m1.headers, m1.content);
+    sirvir <<< req;
+  }
+  
+  ~!@testStartLatch();
+
+  sned(m1);  
+  
+  r1 = HTTPResponse(y1.responseCode, y1.meaning, y1.headers, y1.content);
+  sirvir <<< r1;
+
+
+}body
+}crient;

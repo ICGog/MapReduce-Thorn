@@ -1,0 +1,52 @@
+{
+import JSON.* ;
+//  Checking various objects for JSON-ness.
+  j0 = [null, 1, "yes", true, false, [], {: :}];
+  
+  fun someof(L) = %[ L.rand | for j <- 1 .. 3];
+  
+  fun jinc(j, want) {
+     J = 
+       j 
+       @
+       someof(%[ [x] | for x <- j])
+       @
+       someof(%[ [x,y] | for x <- j, for y <- j])
+       @ 
+       someof(%[ {: x :} | for x <- j])
+       @
+       someof(%[ {: x, y :} | for x <- j, for y <- j ])
+       ;
+     ~!@assert(%all(json?(z) == want | for z <- J))  ;
+     J;}
+  j1 = jinc(j0, true);
+  j2 = jinc(j1, true);
+  j3 = jinc(j2, true);
+
+// And, some things that are not JSON
+
+  class No {def hashCode()=1;}
+  ~!@assert(! json?(No))@!~  ;
+  no = No();
+  ~!@assert(! json?(no))@!~  ;
+  ~!@assert(! json?(jinc))@!~  ;
+  t = map();
+  ~!@assert(! json?(t))@!~  ;
+  o = ord();
+  ~!@assert(! json?(o))@!~  ;
+  r = 1..2;
+  ~!@assert(! json?(r))@!~  ;
+  s = site("localhost", 5432);
+  ~!@assert(! json?(s))@!~  ;
+  f = "nope".file;
+  ~!@assert(! json?(f))@!~  ;
+  c = "c".char(0);
+  ~!@assert(! json?(c))@!~  ;
+  
+  nj0 = [No, no, t, o, r, s, f, c];
+  nj1 = jinc(nj0, false);
+  nj2 = jinc(nj1, false);
+  nj3 = jinc(nj2, false);
+  
+  
+}

@@ -1,0 +1,16 @@
+{
+  t = table(a,b) {c;};
+
+  t(1,2) := ‹c:12›;
+  t(2,1) := ‹c:21›;
+  r12 = ‹a:1, b:2, c:12›;
+  r21 = ‹a:2, b:1, c:21›;
+  ~!@eq(t.get(‹a:1,b:2›), r12)@!~  ;
+  ~!@eq(t.get(‹a:2,b:1›), r21)@!~  ;
+  ~!@eq(t.get(‹a:2,b:1, c:"No!"›), r21)@!~  ;
+  o12 = object{ a=1; b=2; c="by Sodosma's hollow rake!"; def aowug()=321; };
+  ~!@eq(t.get(o12), r12)@!~  ;
+  
+  ~!@bad(t.get(1,2))@!~  ;
+  
+}

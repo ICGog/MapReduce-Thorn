@@ -1,0 +1,23 @@
+{
+  ot = ord{a, b;};
+  var o := {: a: "by Rattol's foul travesty", b:"by Iraz Varuun's lackadaisical barrow" :};
+  var r := {: a: "phosphoric", b:"ancient"  :};
+  var r2:= {: a: "phosphoric", b:"ancient", nope: "NONONONONO"  :};
+  var k := {: a: "sanctimonious", b: "white crappie"  :};
+  ot.add(o);
+  ot.add(r2);
+  ot.add(k);
+  ~!@eq(ot.rows(), [o,r,k])@!~  ;
+  ot(1) := {: a: "phosphoric", b:"ancient", please: "die"  :};
+  ~!@eq(ot.rows(), [o,r,k])@!~  ;
+  ~!@bad(
+    ({
+      ot(5) := r;
+    })
+  )@!~  ;
+  k := {: a:"by Karakan's black whip", b:"by Gnarn's lackadaisical injury" :};
+  ot(-1) := k;
+  ~!@eq(ot.rows(), [o,r,k])@!~  ;
+  
+  ~!@eq(ot(40), null)@!~  ;
+}

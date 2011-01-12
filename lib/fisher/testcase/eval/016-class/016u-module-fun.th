@@ -1,0 +1,4 @@
+{
+  import IDEOLOGY;       
+  ~!@eq(IDEOLOGY.startle(1), [1])@!~  ;
+}

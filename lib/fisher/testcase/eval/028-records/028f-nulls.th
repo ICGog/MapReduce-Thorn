@@ -1,0 +1,15 @@
+{
+  try {
+     null.x; 
+  }
+  catch {
+    _ = {~!@hit()@!~ ;}
+  }
+
+  try {
+     null.x := 1; 
+  }
+  catch {
+    _ = {~!@hit()@!~ ;}
+  }
+}

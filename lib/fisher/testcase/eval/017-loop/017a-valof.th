@@ -1,0 +1,23 @@
+/* 
+I added 'valof' because it's useful for testing, and, sometimes, this and/or
+that. 
+*/
+
+{
+  var ghost := "by Haashaastaak's nanny!";
+  ~!@eq(
+     valof{ghost := "by Medea's wealth!"; ghost;},
+     "by Medea's wealth!")@!~;
+  fun influence() { 
+     ghost := "by Ares's calm accountant!";
+     fn()=valof{ghost := "by Gnarn's soup!"; "by Odin's walnut!";};
+  }influence
+  ~!@eq(ghost, "by Medea's wealth!")@!~;
+  kaleidoscope = influence();
+  
+  ~!@eq(ghost, "by Ares's calm accountant!")@!~;
+  scarecrow = kaleidoscope();
+  ~!@eq(ghost, "by Gnarn's soup!")@!~;
+  ~!@eq(scarecrow, "by Odin's walnut!")@!~;     
+ 
+}

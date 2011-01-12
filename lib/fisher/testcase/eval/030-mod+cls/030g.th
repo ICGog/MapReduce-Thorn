@@ -1,0 +1,9 @@
+{
+  import PET;
+  import own POT = PET;
+  import Neutron = POT.Neutrino;
+  n = Neutron();
+  ~!@eq(n.shield, 1)@!~  ;
+  
+  
+}

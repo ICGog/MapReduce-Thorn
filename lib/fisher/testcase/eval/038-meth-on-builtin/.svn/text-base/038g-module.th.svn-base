@@ -1,0 +1,4 @@
+{
+  import RIDDLE;
+  ~!@eq(RIDDLE.str(),"RIDDLE")@!~  ;
+}

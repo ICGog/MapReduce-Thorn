@@ -1,0 +1,17 @@
+{
+
+class Chair(var a){
+  def `a:=`(b) { a := [b]; }
+}
+
+class Maggot(a) extends Chair(a) {
+   def zong() {
+     ~!@undef(a)@!~  ;
+     this.a := 'b';
+     ~!@eq(this.a, ['b'])@!~  ;
+   }
+}
+
+Maggot(1).zong();
+
+}

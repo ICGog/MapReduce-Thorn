@@ -1,0 +1,6 @@
+spawn cuckoo {
+  sync clatter() = "C!";
+  body {
+    serve;
+  }
+}cuckoo;

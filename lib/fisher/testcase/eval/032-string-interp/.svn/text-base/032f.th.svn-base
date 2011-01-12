@@ -1,0 +1,89 @@
+{
+  fun stringInvariantTest(s) {
+    n = s.len;
+    for(i <- 0 .. n-1) {
+       ~!@eqprint(s.left(i) + s.butleft(i),  s,
+          {:i,s,`s.left(i)`:s.left(i),`s.butleft(i)`:s.butleft(i),n:}
+          )  ;
+       ~!@eqprint(s(-(i+1)), s(n-i-1))  ;
+       ~!@eqprint(s.left(i).len, i)  ;
+       ~!@eqprint(s.butleft(i).len, n-i)  ;
+       ~!@eqprint(s.butright(i) + s.right(i), s) ;
+       ~!@eqprint(s.butright(i).len, n-i)  ;
+       ~!@eqprint(s.right(i).len, i)  ;
+       ~!@eqprint(s.sub(0,i), s.left(i+1))  ;
+       ~!@eqprint(s.left(i), s.subx(0,i))  ;
+       ~!@eqprint(s.right(i), s.sub(n-i,n-1))  ;
+       ~!@eqprint(s.butleft(i), s.subx(i, n))  ;
+       ~!@eqprint(s.butright(i), s.subx(0,n-i), {:s,i,n:}) ;
+       ~!@eqprint(s.sub(i,n), s.right(n-i), {:i,n:})  ;
+       for(j <- i .. n-1) {
+          if (i>0) ~!@eqprint(s.sub(i,j), s.left(j+1).butleft(i), 
+             {:s,i,j, `s.left(j)`:s.left(j+1):})  ;
+/*
+ println("032f 15 j=$j s='$s' n=$n s.len=" + s.len + " i=$i");
+ println("032f 15 s.subx(i,j) = " + s.subx(i,j));
+ println("032f 15 s.sub (i,j) = " + s.sub(i,j));
+*/
+          ~!@eqprint(s.subx(i,j), s.sub(i,j).butright(1),
+             {:s,i,j, `s.sub(i,j)`:s.sub(i,j):}
+             )  ;
+          ~!@eqprint(s.sub(i,j), s.subx(i,j)+s(j))  ;
+       }
+    }
+    for (i <- 0 .. 4) {
+       ~!@eqprint(s.left(n+i), s.left(n))  ;
+       ~!@eqprint(s.butleft(n+i), s.butleft(n))  ;
+       ~!@eqprint(s.butleft(n+i), s.butleft(n))  ;
+       ~!@eqprint(s.butright(n+i), s.butright(n))  ;
+    }
+    
+  }
+  
+  // Some surrogate-pair chars
+  lots = "FFFF".intHex() + 1;
+  Ł = (lots+100).char.str;
+  Ņ = (lots+200).char.str;
+  Ĵ = (lots+300).char.str;
+  A = "A";
+  B = "B";
+  C = "C";
+
+  sow = Ł+A;
+  ~!@eqprint(sow.butleft(0), sow)@!~  ;
+  
+  stringInvariantTest(Ł+A ); 
+  stringInvariantTest(A+B+C);
+  stringInvariantTest(Ł); 
+  stringInvariantTest(Ł+Ņ); 
+  stringInvariantTest(Ł+Ņ+Ĵ); 
+  stringInvariantTest(A+B+C+Ł+Ņ+Ĵ); 
+  stringInvariantTest(Ł+Ņ+Ĵ+A+B+C); 
+  stringInvariantTest(Ł+Ņ+A+Ĵ+B+C); 
+  stringInvariantTest(Ł+Ņ+A+B+Ĵ+C); 
+  stringInvariantTest(Ł+A+Ņ+B+C+Ĵ); 
+  stringInvariantTest(Ł+A+B+C+Ņ+Ĵ); 
+  stringInvariantTest(A+Ł+B+C+Ņ+Ĵ); 
+  stringInvariantTest(Ł+Ņ+A+B+C+Ĵ); 
+  stringInvariantTest(Ł+Ņ+A); 
+  stringInvariantTest(Ł+Ņ+B); 
+  stringInvariantTest(Ł+Ņ+B+A); 
+  stringInvariantTest(Ł+Ņ+Ĵ+B+A); 
+  stringInvariantTest(A+Ł);
+  stringInvariantTest(A+B+Ł);
+  stringInvariantTest(A+Ņ+Ł+B);
+  stringInvariantTest(A+B+C+Ņ+Ł+B);
+  stringInvariantTest(A+B+C+Ņ+Ł+B+Ņ+B);
+  stringInvariantTest(A+B+C+Ņ+Ł+B+Ņ+Ņ+B);
+
+
+  stringInvariantTest("");
+  stringInvariantTest("0");
+  stringInvariantTest("01");
+  stringInvariantTest("012");
+  stringInvariantTest("0123");
+  stringInvariantTest("01234");
+  stringInvariantTest("012345");
+  stringInvariantTest("0123456");
+
+}

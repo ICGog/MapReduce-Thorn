@@ -1,0 +1,17 @@
+spawn client {
+  body{
+    import HTTP.*;
+    ~!@testStartLatch();
+    srvr = siteForStrings("localhost", 4321);
+    srvr.send("GET pie HTTP/not.really\n");
+    srvr.send("\n");
+    recv{
+      x => {
+         ~!@phase(2, x.str());
+      }
+    }
+    srvr.send("BYEBYE\n");
+    srvr.send("\n");
+
+  }body
+}client;

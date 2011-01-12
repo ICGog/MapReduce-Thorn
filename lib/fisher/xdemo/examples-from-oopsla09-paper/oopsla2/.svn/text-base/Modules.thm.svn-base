@@ -1,0 +1,39 @@
+
+module dating { 
+fun registry() = site("thorn://localhost:5555"); 
+fun sum([]) = 0; 
+| sum([x,y...]) = x + sum(y); 
+class Profile(interests, limit) : pure { 
+def compatible?(other) = 
+other != null && 
+this.compat?(other) && other.compat?(this); 
+def likes?(topic) = 
+%exists(t==topic | for {: topic:t :} <- interests); 
+def compat?(other : Profile) { 
+matches = %[ weight | 
+for {:topic, weight:} <- interests, 
+if other.likes?(topic)]; 
+sum(matches) > limit; 
+} 
+} 
+}dating 
+
+
+##OLDmodule dating {
+##OLD  fun registry() = site("thorn://localhost:5555");
+##OLD
+##OLD  fun sum([]) = 0;
+##OLD    | sum([x,y...]) = x + sum(y);
+##OLD
+##OLD  class Profile(interests, limit) : pure {
+##OLD    def compatible?(other) =
+##OLD      other != null && this.compat?(other) && other.compat?(this);
+##OLD    def likes?(topic) = %exists(t==topic | for {:topic:t:} <- interests);
+##OLD    def compat?(other : Profile) {
+##OLD      matchTotal = sum( %[ weight | 
+##OLD        for {:topic, weight:} <- interests,
+##OLD          if other.likes?(topic)]);
+##OLD      matchTotal > limit;
+##OLD    }
+##OLD  }
+##OLD}dating

@@ -1,0 +1,7 @@
+{
+  import PROPOSAL.*;
+  Purr(1); // no error
+  ~!@bad(Purr(Impy()))@!~  ;
+  Purr(Lamb()); // no error
+  ~!@bad(Purr(Purr(Purr(Impy()))))@!~  ;
+}

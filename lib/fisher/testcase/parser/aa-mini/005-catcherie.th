@@ -1,0 +1,8 @@
+//STMT
+try {
+  x := 1;
+}
+catch {
+  [x] = {print(1);}
+| [x,y…] = {print("ø!");}
+}

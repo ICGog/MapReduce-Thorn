@@ -1,0 +1,22 @@
+{
+  b = ord{x,y;};
+  u = ord{y,x;};
+  g = ord{var x; map val y;};
+  
+  ~!@eq(b,u,g)@!~  ;
+  
+  b.add({:x:1, y:2:});
+  ~!@ne(b,u)@!~  ;
+  ~!@ne(b,g)@!~  ;
+  ~!@eq(b,b)@!~  ;
+  
+  u.add({:x:1, y:2:});
+  ~!@eq(b,u)@!~  ;
+  ~!@ne(b,g)@!~  ;
+  ~!@ne(u,g)@!~  ;
+  
+  L = [b,u,g];
+  for(i <- L.range()) for(j <- L.range()) {
+    ~!@eq(L(i).same?(L(j)), i==j)  ;
+  }
+}

@@ -1,0 +1,12 @@
+spawn a {
+
+body{
+    ~!@testStartLatch();
+    {: bComp: b:} = ~!@recOfPorts();
+    x = b <-> frog();
+    ~!@eq(x, null)@!~  ;
+    ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+}body
+}a;

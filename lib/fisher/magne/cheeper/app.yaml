@@ -1,0 +1,12 @@
+application: webcheeper
+version: production
+runtime: thorn
+language: thorn
+api_version: 1
+
+handlers:  
+- url: /.*
+  script: main.th
+
+- url: /static
+  static_dir: static

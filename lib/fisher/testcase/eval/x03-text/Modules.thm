@@ -1,0 +1,13 @@
+module TEXTUAL {
+  fun wordCounts(corpus) {
+    words = corpus.split("[^A-Za-z']+");
+    counts = %group(word = w.toLower()){
+      n = %count;
+      | for w <- words
+      };
+    sorted' = %sort(r %> n %< word | for r && {: n, word :} <- counts);
+    for (r <- sorted') {
+//      ~!@println(r);
+    }
+  }
+}

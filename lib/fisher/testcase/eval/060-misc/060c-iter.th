@@ -1,0 +1,24 @@
+{
+  class MyRangeIter {
+    val high;
+    var n;
+    new MyRangeIter(low', high') {
+      n := low' - 1;
+      high = high';
+    }
+    def next() { 
+      n += 1;
+      if (n <= high) +n; // '+' redundant
+      else null;
+    }
+  }
+  
+  fun iterall(iter) {
+    L = ord();
+    while (iter.next() ~ +x) L @= x; 
+    return L.lst();
+  }
+  
+  ~!@eq(iterall(MyRangeIter(1,3)), [1,2,3])@!~  ;
+  ~!@eq(iterall(MyRangeIter(3,1)), [])@!~  ;
+}

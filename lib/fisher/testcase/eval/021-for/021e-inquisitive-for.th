@@ -1,0 +1,49 @@
+{
+  class A(scrupulous) {
+     def craven?() = true;
+  }
+  L = [
+     1,
+     2,
+     "matzoh ball soup",
+     ‹madhouse: true, card: 'ace of tentacles'›,
+     ‹madhouse: false, tailor: true›,
+     A(true),
+     A(false), 
+     3,
+     [1,2,3]
+  ];
+  
+  ~!@bad(
+    ({
+      for( i:int <- L ) {
+         ~!@hit()@!~ 2 ;
+      }
+    })
+  )@!~  ;
+  
+  for( i:int <~ L ) {
+    ~!@hit()@!~ 3 ;
+  }
+  
+  for( ‹madhouse: true, card› <~ L) {
+    ~!@eq(card, 'ace of tentacles')@!~  ;
+  }
+  
+  // And, since for in a query desugars to a for-statement, it ought to work there too.
+
+  ~!@assert(
+     %some(true | for [_,_,_] <~ L)
+  )@!~  ;
+  ~!@bad(
+     %some(true | for [_,_,_] <- L)
+  )@!~  ;
+
+  ~!@eq(
+    true,
+    %first(a.scrupulous %none null
+      | for a:A && (a.craven?())? <~ L
+    )
+  )@!~  ;
+
+}

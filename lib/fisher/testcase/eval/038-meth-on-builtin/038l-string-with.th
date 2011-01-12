@@ -1,0 +1,83 @@
+{
+  s = "01234567";
+  ~!@eq(s.withSub(2,3,"owie"), "01owie4567")@!~  ;
+  ~!@eq(s.withSub(0,0,"hi"), "hi1234567")@!~  ;
+  ~!@eq(s.withSub(7,7, "bi"), "0123456bi")@!~  ;
+  ~!@eq(s.withSub(0,7,"--"), "--")@!~  ;
+  
+  ~!@eq(s.range, 0..7)@!~  ;
+  ~!@eq("".range, 0..(-1))@!~  ;
+  ~!@eq("x".range, 0..0)@!~  ;
+  
+  ~!@eq([].range, 0..-1)@!~  ;
+  ~!@eq([0].range, 0..0)@!~  ;
+  ~!@eq([0,1,2].range, 0..2)@!~  ;  
+  
+  fun withInvariants(x) {
+    t = "ow";
+    for(i <- x.range) {
+       for(j <- i..x.len-1) {
+       ll = x.left(i);
+       rr = x.butleft(j+1);
+       ~!@eq(x.withSub(i,j,t), x.withSubx(i,j+1,t), ll + t + rr);
+       }for
+       for(n <- 0 .. x.len + 10) {
+         ll = x.left(i);
+         rr = x.butleft(i+n);
+         ~!@eq(x.withSublen(i,n,t), ll + t + rr)  ;
+       }for
+    }for
+
+  }withInvariants
+
+  withInvariants("");
+  // Some surrogate-pair chars
+  lots = "FFFF".intHex() + 1;
+  Ł = (lots+100).char.str;
+  Ņ = (lots+200).char.str;
+  Ĵ = (lots+300).char.str;
+  A = "A";
+  B = "B";
+  C = "C";
+
+  sow = Ł+A;
+  ~!@eq(sow.butleft(0), sow)@!~  ;
+  
+ withInvariants("");
+  withInvariants("0");
+  withInvariants("01");
+  withInvariants("012");
+  withInvariants("0123");
+  withInvariants("01234");
+  withInvariants("012345");
+  withInvariants("0123456");
+
+  withInvariants(Ł+A ); 
+  withInvariants(A+B+C);
+  withInvariants(Ł); 
+  withInvariants(Ł+Ņ); 
+  withInvariants(Ł+Ņ+Ĵ); 
+  withInvariants(A+B+C+Ł+Ņ+Ĵ); 
+  withInvariants(Ł+Ņ+Ĵ+A+B+C); 
+  withInvariants(Ł+Ņ+A+Ĵ+B+C); 
+  withInvariants(Ł+Ņ+A+B+Ĵ+C); 
+  withInvariants(Ł+A+Ņ+B+C+Ĵ); 
+  withInvariants(Ł+A+B+C+Ņ+Ĵ); 
+  withInvariants(A+Ł+B+C+Ņ+Ĵ); 
+  withInvariants(Ł+Ņ+A+B+C+Ĵ); 
+  withInvariants(Ł+Ņ+A); 
+  withInvariants(Ł+Ņ+B); 
+  withInvariants(Ł+Ņ+B+A); 
+  withInvariants(Ł+Ņ+Ĵ+B+A); 
+  withInvariants(A+Ł);
+  withInvariants(A+B+Ł);
+  withInvariants(A+Ņ+Ł+B);
+  withInvariants(A+B+C+Ņ+Ł+B);
+  withInvariants(A+B+C+Ņ+Ł+B+Ņ+B);
+  withInvariants(A+B+C+Ņ+Ł+B+Ņ+Ņ+B);
+
+
+ 
+
+  
+}

@@ -1,0 +1,18 @@
+module FILE {
+ javaly class File = fisher.runtime.lib.File {
+     new File(filename);
+     method abs() = abs;
+     method clear() = clear;
+     method contents() = contents;
+     method del() = del;
+     method dir?() = dirp;
+     method exists?() = exists;
+     method flush() = flush;
+     method parent() = parent;
+     method path() = path;
+     method rename(newname) = rename;
+     method writeln(obj) = writeln;
+     method writeBytes(obj) = writeBytes;
+     method readBytes() = readBytes;
+  }File
+}

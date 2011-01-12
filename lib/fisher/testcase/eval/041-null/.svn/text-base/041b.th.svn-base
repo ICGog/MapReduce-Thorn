@@ -1,0 +1,33 @@
+{
+
+  fun assoc(x, []) = null;
+    | assoc(x, [[$(x), y], z...]) = +y;
+    | assoc(x, [_, z...]) = assoc(x, z);
+
+  LL = [ [1, true], [2, null] ];
+  if( assoc(2, LL) ~ +y) {~!@eq(y, null)@!~  ;} else { ~!@hit()@!~ 0 ; }
+
+
+  
+  if( assoc(1, LL) ~ +y) {~!@eq(y, true)@!~  ;} else { ~!@hit()@!~ 0 ; }
+  if( assoc(3, LL) ~ +y) { ~!@hit()@!~ 0 ; } else {~!@hit()@!~  ;}
+
+
+  fun pos(x, L) { 
+    fun pos3([], i) = null;
+      | pos3([$(x), y...], i) = i;
+      | pos3([_, y...], i) = pos3(y, i+1);
+    pos3(L, 0);
+  }
+  
+  if( pos(1, [0,1,2,3]) ~ +i) {
+     ~!@eq(i, 1)@!~  ;
+  }
+  else { ~!@hit()@!~ 0 ; }
+  
+  if (pos(1, []) ~ +i) {
+    { ~!@hit()@!~ 0 ; }
+  }
+  else {~!@hit()@!~  ;}
+
+}

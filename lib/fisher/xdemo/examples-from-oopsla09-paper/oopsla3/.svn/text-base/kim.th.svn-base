@@ -1,0 +1,11 @@
+spawn kim {
+  import PROFILE.*;
+
+body{
+   agency = registry() <-> agencyAdvertising(".*matches.*");
+   agency <-> register("Kim", Profile([
+                 {: topic: "j-pop", weight: 7:}, {:topic: "sushi", weight: 3:} ]));
+   date = agency<->matchFor("Kim");
+   println("Kim gets a date with $date!");
+}body
+}kim;

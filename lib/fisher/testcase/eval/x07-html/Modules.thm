@@ -1,0 +1,45 @@
+module XmlMod {
+  javaly class Elem(tag, attrs, children) = fisher.runtime.lib.Elem {
+    def tag() = tag;
+    def attrs() = attrs;
+    def children() = children;
+    def str(ctrl) = str;
+    new Elem(tag, attrs, children);
+  }
+  javaly fun parseXML(source) = fisher.runtime.lib.XMLFuns.parse;
+  javaly fun systemProperty(s) = fisher.runtime.lib.MiscFunctions.systemProperty;
+}
+
+module CHOP {
+  fun chops(str) {
+    o = ord();
+    var s := str;
+    var goon := true;
+    word = "\\-a-zA-Z'"; 
+    while (goon && s != "") {
+      sbefore = s;
+      // Annoying subtlety: 
+      // For multi-line input, we need to have '.' match \n.
+      // We do this by (?s) to turn on DOTALL.
+      if( s ~ "^([$word]+)(?s)(.*)" / [w, r] ) { 
+         //println("w** s='$s' r='$r' w='$w'");
+         o @= w; 
+         s := r;
+         }if
+      if(s ~ "^([^$word]+)(?s)(.*)" / [w,r] ) { 
+         //println("W** s='$s' r='$r' w='$w'");
+         o @= w; 
+         s := r;
+         }if
+      if (s.startsWith?("\n")) {
+         o @= "\n";
+         s := s(1, -1);
+      }         
+      goon := sbefore != s;
+    }while    
+    if (s != "") {
+      throw "Yeh!  s=$s! This is not complete!";
+    }
+    o.lst();
+  }chops
+}

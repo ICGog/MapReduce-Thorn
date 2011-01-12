@@ -1,0 +1,11 @@
+{
+   var v := 1;
+   class Government {
+      var w := v+1;
+   }Government
+   
+   g = Government();
+   ~!@eq(g.w, 2)@!~;
+   ~!@obj_local_struct(g, "w=2,")@!~;
+   // Once we have defs, we will need to see that (a) v is accessable from w, and (b) it gets the right ones.
+}

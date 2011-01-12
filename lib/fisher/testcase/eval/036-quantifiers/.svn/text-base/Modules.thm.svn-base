@@ -1,0 +1,6 @@
+module PRIME {
+  fun divides?(x,y) = (x div y)*y == x;
+  fun composite?(n) = 
+     %some(divides?(n, k) | for k <- 2 .. n, while k*k <= n);
+  fun prime?(n) = not (composite?(n));
+}

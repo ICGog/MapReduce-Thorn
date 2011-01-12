@@ -1,0 +1,23 @@
+spawn target {
+   async plink(x, y:int) {
+     ~!@phase(x,y);
+   }
+body{
+   ~!@testStartLatch();
+   serve; // 1
+   
+   // 2
+   serve catch { x => {~!@phase(2,222);}};
+      
+   // 3
+   serve catch { x => {~!@phase(3,333);}};
+   
+   // 4
+   serve catch { x => {~!@phase(4,444);}};
+   
+   
+   
+   {:shooterComp: shooter:} = ~!@recOfPorts();
+   shooter <<< "done";
+}body
+}target;

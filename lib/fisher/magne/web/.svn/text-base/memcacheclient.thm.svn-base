@@ -1,0 +1,32 @@
+/**
+ * Client for memcache interaction from the application side.
+ */
+module webmemcache{
+  
+  import web.*;
+
+  var server := site(settings().datastoreaddress);
+
+  fun memcache_set_address(address){
+    println("server:" + server);
+    server := site(address);
+  }
+
+  fun memcache_set(key_, value){
+    println("memcacheclient: set $key_");
+    server <-- set(key_, value);
+  }
+  
+  fun memcache_get(key_){
+    println("memcacheclient: get $key_");
+    return server <-> get(key_);
+  }
+
+  fun memcache_delete(key_){
+    server <-- delete(key_);
+  }
+
+  fun memcache_flush_all(){
+    server <-- flush_all();
+  }
+}

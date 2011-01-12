@@ -1,0 +1,7 @@
+//STMT
+{
+a = fn(x,y) = x*5;
+b = fn x = x*x*x;
+c = fn(x,y) { a := 1; b := 2; };
+d = fn 1 = 0 | 2 = "zero";
+}

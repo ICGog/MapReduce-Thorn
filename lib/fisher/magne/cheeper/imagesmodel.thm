@@ -1,0 +1,16 @@
+module wcmodelimages{
+
+  import webmodels.*;
+  
+  class ImagesModel extends Model{
+    
+    tableName = "images";
+
+    properties = {:
+                  image: null,
+                  createdat:null,
+                  contenttype:null
+                  :};
+    
+  }
+}

@@ -1,0 +1,50 @@
+module CLUE {
+  // I don't have Identity yet, so I'm faking it.
+
+  var clueCount := 1;
+  class Clue{
+     val id;
+     new Clue() { 
+       id = clueCount;
+       clueCount += 1;
+     }
+  }Clue
+  
+  // Some clues are numbers.
+  class NumClue(n) extends Clue{}
+
+}CLUE
+
+
+module CLUESET {
+  import CLUE.*;
+  
+    class ClueSet {
+    var clues := [];
+    def learn(cl : Clue) {
+       clues := [cl, clues...];
+    }learn
+    
+    def twoCluesWithSameNumber() {
+       // This query is not as simple as possible:
+       // iterating over matches would clean it up, but that's not in place yet.
+       // and iterating over cdrs would improve the loop too.
+       %first(+n %none null
+              |
+              for c1 <- clues,
+              for c2 <- clues,
+              if c1 ~ NumClue(n) && c2 ~ NumClue($(n)) && c1.id != c2.id
+             );
+    }twoCluesWithSameNumber
+    
+    def cluesAPrimeApart() = 
+       %first(+[m,n] %none null
+             |
+             for c1 <- clues,
+             for c2 <- clues,
+             if  c1 ~ NumClue(m) && c2 ~ NumClue(n) && m<n && (n-m).prime?()
+             );
+    
+  }ClueSet
+
+}CLUESET

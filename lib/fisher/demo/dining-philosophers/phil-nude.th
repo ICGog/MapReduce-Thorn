@@ -1,0 +1,70 @@
+spawn DiningPhil {
+body{
+  nIter = 10;
+  outer = thisComp();
+
+  component Fork(n) {
+    var holder := null;
+    var waiting := null;
+    var done := false;
+    fun taken(phil) {
+      holder := phil;
+      phil <<< "taken";
+      }
+    body {
+      until(done) {
+         receive{
+           "die" => {done := true;}
+         | {:take:pn:} from phil => {
+             if (holder == null) taken(phil);
+             else waiting := phil;
+           }//take
+         |
+           "drop" from phil => {
+             phil <<< "dropped";
+             if (waiting != null) {
+               taken(waiting);
+               waiting := null;
+             }
+             else holder := null;
+           }// drop
+         }
+      }
+    }
+  }Fork;
+
+  forks = %[spawn Fork(i) | for i <- 0 .. 4];
+
+  component Phil(name, ln, rn) {
+    body {
+      left = forks(ln);
+      right = forks(rn);      
+      for(i <- 1 .. nIter) {
+         // THINK: I think, therefore I am.         
+         // TAKE FORKS: 
+         left <<< {:take:name:}; 
+         recv{"taken" => {}};
+         right <<< {:take:name:};
+         recv{"taken" => {}};
+         // CRITICAL: I eat, therefore I am fed.
+         // DROP FORKS
+         right <<< "drop";
+         recv{"dropped" => {}};
+         left <<< "drop";
+         recv{"dropped" => {}}; 
+      }for
+      outer <<< "done";
+    }body
+  }Phil;
+
+  phils = [
+    spawn Phil("Aris.", 0, 1),
+    spawn Phil("Berk.", 1, 2),
+    spawn Phil("Chur.", 2, 3),
+    spawn Phil("DesC.", 3, 4),
+    spawn Phil("Emer.", 0, 4)];  
+  for(phil <- phils) recv{"done" from $(phil) => {}};
+  for(fork <- forks) fork <<< "die";
+  
+}body
+}DiningPhil;

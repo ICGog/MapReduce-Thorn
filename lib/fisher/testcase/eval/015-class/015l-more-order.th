@@ -1,0 +1,17 @@
+{
+  {
+    class C {
+      def m() = v+1;
+      var v := 0;
+    }
+    ~!@eq(C().m(), 1)@!~  ;
+  }
+  // Same code but decls swapped.
+  {
+    class C {
+      var v := 0;
+      def m() = v+1;
+    }
+    ~!@eq(C().m(), 1)@!~  ;
+  }
+}

@@ -1,0 +1,42 @@
+{
+  var i := 1;
+  sensible: while (i < 10) {
+     ~!@hit()@!~ 4; 
+     if (i == 4) {
+        ~!@hit()@!~ 1;
+        break sensible;
+     }
+     i := i + 1;
+  }
+  ~!@eq(i,4)@!~;
+  
+  i := 1;
+  rambunctious: while (i < 10) {
+    i := i + 1;
+    var j := 1;
+    ~!@isdef(rambunctious)@!~;
+    ~!@undef(goofy)@!~;
+    goofy: while (j < 10) {
+       if (j == 4) { break rambunctious; }
+       j := j + 1;
+      ~!@isdef(rambunctious, goofy)@!~3;
+    }while
+  }while
+  ~!@undef(j, rambunctious, goofy)@!~;
+  ~!@eq(i, 2)@!~;
+  
+  i := 1;
+  light: while (i <= 10) { 
+     i := i + 1;
+     var j := 1;
+     ~!@hit()@!~ 10;
+     Hunnish: while (j < 10) {
+        ~!@hit()@!~ 40; 
+        if (j == 4) break Hunnish;
+        ~!@hit()@!~ 30; 
+        j := j + 1;
+     }
+  }while
+  ~!@hit()@!~;
+  ~!@eq(i, 11)@!~;
+}

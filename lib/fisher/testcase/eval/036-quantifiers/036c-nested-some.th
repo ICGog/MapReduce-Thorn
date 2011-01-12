@@ -1,0 +1,59 @@
+{ 
+  // Query in the predicate
+  {
+    q = %some(
+           %some(a*a == n | for a <- 1 .. n)
+        |
+           for n <- 1 .. 10, if n == 4
+        );
+    ~!@eq(q,true)@!~  ;
+  }
+
+  { // false from inner query
+    q = %some(
+           %some(a*a*a == n | for a <- 2 .. n)
+        |
+           for n <- 1 .. 10, if n == 4
+        );
+    ~!@eq(q,false)@!~  ;
+  }
+
+  { // false from outer query
+    q = %some(
+           %some(a*a == n | for a <- 1 .. n)
+        |
+           for n <- 1 .. 10, if n == 3
+        );
+    ~!@eq(q,false)@!~  ;
+  }
+  // Query in the body of query.
+  
+  { // True
+    q = %some (n == 9 
+        |
+         for n <- 2..10,
+         if %some(r*r == n | for r <- 1 .. n-1)
+        );
+    ~!@eq(q,true)@!~  ;
+  }
+  
+  { // false from inner query
+    q = %some (n == 9 
+        |
+         for n <- 2..10,
+         if %some(r*r*r == n | for r <- 1 .. n-1)
+        );
+    ~!@eq(q,false)@!~  ;
+  }
+
+  { // false from outer query
+    q = %some (n == 7
+        |
+         for n <- 2..10,
+         if %some(r*r == n | for r <- 1 .. n-1)
+        );
+    ~!@eq(q,false)@!~  ;
+  }
+
+
+}

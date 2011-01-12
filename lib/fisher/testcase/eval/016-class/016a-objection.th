@@ -1,0 +1,9 @@
+{
+  import IDEOLOGY.*;
+
+  o1 = Objection();
+  ~!@eq(o1.theme, 2)@!~;  ~!@eq(torpor, 1)@!~;
+  o1.nestle();
+  ~!@eq(o1.theme, 2)@!~;   ~!@eq(torpor, 3)@!~;
+
+}

@@ -1,0 +1,44 @@
+import unittest.*;
+import webappinfo.*;
+
+println("webappinfo Test");
+
+fun should_get_dirname_of_running_script{
+  name = dirname(thisScript());
+  expected_last_part = "web/test/";
+  assertTrue(name.matchRE?(".*" + expected_last_part), 
+             "path of this script contains webth/test");
+}
+
+test(should_get_dirname_of_running_script);
+
+fun should_get_static_dirs_of_app_yaml(){
+  text = """
+application: webcheeper
+version: production
+runtime: thorn
+language: thorn
+api_version: 1
+
+handlers:  
+- url: /.*
+  script: main.th
+
+- url: /foo
+  static_dir: bar
+
+- url: /static
+  static_dir: static
+""";
+
+  values = appYamlFileHandlers(text);
+  h0 = values(0);
+  assertEquals(h0.url, "/foo");
+  assertEquals(h0.path, "bar");
+
+  h1 = values(1);
+  assertEquals(h1.url, "/static");
+  assertEquals(h1.path, "static");
+}
+
+test(should_get_static_dirs_of_app_yaml);

@@ -1,0 +1,12 @@
+{
+  class C{
+    def m() {
+       // This def might actually be OK, if called on a subclass of C with 
+       // a 'blurg' field.
+       this.blurg := "squid"; 
+    }m
+  }
+  
+  c = C();
+  ~!@bad(c.m())@!~;
+}

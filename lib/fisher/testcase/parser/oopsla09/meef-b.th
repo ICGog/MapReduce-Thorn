@@ -1,0 +1,16 @@
+{
+  class Named(name){
+    def salutation() = name;
+    }
+  class Prof {
+    def salutation() = "Prof.";
+  }
+  class NamedProf(name) extends Named(name), Prof {
+    def salutation() = super@Prof.salutation() + " " + super@Named.salutation();
+  }
+  
+  theProfFromGilligansIsland = Prof();
+  moriarty = NamedProf("Moriarty");
+  ~!@eq(theProfFromGilligansIsland.salutation() == "Prof.");
+  ~!@eq(moriarty.salutation() == "Prof. Moriarty");
+}

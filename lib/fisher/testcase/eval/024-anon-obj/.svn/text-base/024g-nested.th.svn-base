@@ -1,0 +1,15 @@
+{
+  o = object {
+        val oo = 0;
+        val vo = object {vop = 1; def mop()=[vop, oo]; };
+        def op() {
+          object {zop = 2; def mop()= [[zop, oo]];};
+          }op
+      };
+  ~!@eq(o.oo, 0)@!~  ;
+  ~!@eq(o.vo.vop, 1)@!~  ;
+  ~!@eq(o.vo.mop(), [1,0])@!~  ;
+  op = o.op();
+  ~!@eq(op.zop, 2)@!~  ;
+  ~!@eq(op.mop(), [[2,0]])@!~  ;
+}

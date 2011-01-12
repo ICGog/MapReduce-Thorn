@@ -1,0 +1,31 @@
+import webquery.*;
+import unittest.*;
+
+println("webquery test");
+
+fun should_create_query_record_with_filters(){
+  q = Query();
+  q.filter('name', '>', 'J');
+  queryRecord = q.rec();
+  assertEquals(queryRecord.filters, 
+               [{: property:"name", type: ">", value: "J" :}]);
+  // apply another one
+  q.filter('name', '<', 'Q');
+  assertEquals(q.rec().filters, 
+               [{: property:"name", type: ">", value: "J" :},
+                {: property:"name", type: "<", value: "Q" :}]);
+}
+
+test(should_create_query_record_with_filters);
+
+fun should_create_query_record_with_orderings(){
+  q = Query();
+  q.order('id', 'ASC');
+  queryRecord = q.rec();
+  assertEquals(queryRecord.orderings,
+               [{: property: "id", direction: "ASC" :}]);
+  
+}
+
+test(should_create_query_record_with_orderings);
+

@@ -1,0 +1,35 @@
+module BROWSERINTERFACE {
+  javaly fun writeToFile(x) = fisher.runtime.`security`.tests.BrowserInterface.writeToFile;
+  javaly fun popUpBrowser(x) = fisher.runtime.`security`.tests.BrowserInterface.popUpBrowser;
+}module
+
+spawn boing {
+
+  body{
+   println("System started");
+   C1 = spawn C1 {
+     body {import BROWSERINTERFACE.*;
+      try {
+        recv {
+          x from y checked => {
+             println("Message from $y is: '$x'");
+             t = writeToFile(x);
+             popUpBrowser(t);
+             println("I am here -- C1");
+          }
+        }recv
+      }try
+      catch {
+        Z => {println("Security violation or something: $Z");}
+      }catch
+     }body
+   }C1;
+   
+   C2 = spawn C2 {
+     body{
+       C1 <<< "Hi!" security ["XSS Safe"];
+     }
+   }C2;
+   
+  }body
+};

@@ -1,0 +1,32 @@
+module TIME {
+  var now := 0;
+  fun tick() {now += 1;}
+}
+
+
+module CHEEP {
+   import TIME.*;
+   class Chirp(writer, text, time){
+      var plusVotes := 0;
+      var minusVotes := 0;
+      var modTime := now;
+      def str() = 
+         "($time) $text [from $writer, mod $modTime, +$plusVotes/-$minusVotes]";
+      def vote(up?) {
+         if (up?) {
+           plusVotes += 1;
+         } else {
+           minusVotes += 1;
+         }
+         modTime := tick();
+      }vote
+      def love() = plusVotes - minusVotes;
+      def modTime() = modTime;
+   }Chirp
+}
+
+
+module CLIENT {
+  configFileName = "cheep.cnf";
+  fun cheeperServer() = site(configFileName.file.contents.trim);
+}

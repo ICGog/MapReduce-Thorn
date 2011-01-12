@@ -1,0 +1,9 @@
+{
+  import BYWORD;
+  import BYWORD.*;
+  ~!@eq(BYWORD.paw, 0)@!~  ;
+  BYWORD.paw := 1;
+  ~!@eq(BYWORD.paw, paw, 1, BYWORD.hoopy, hoopy)@!~  ;
+  paw := 2;
+  ~!@eq(BYWORD.paw, paw, 2, BYWORD.necromantic, necromantic)@!~  ;
+}

@@ -1,0 +1,25 @@
+{
+  t = table(a) {var b;};
+  fun it's(l) {
+    st = %sort( r %< r.a | for r <- t );
+    ~!@eq(st, l);
+    }
+  fun hey(a, b) {
+    t(a) := {: b :};
+    {: a, b :};
+    }
+  t(1) := {: b:11 :};
+  var r := {: a:1, b:11 :};
+  it's([r]);
+  t(1) := null;
+  it's([]);
+  
+  r := hey(1,11);
+  it's([r]);
+  var s := hey(2,22);
+  it's([r,s]);
+  t(2) := null;
+  it's([r]);
+  
+  
+}

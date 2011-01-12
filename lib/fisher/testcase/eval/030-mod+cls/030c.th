@@ -1,0 +1,6 @@
+{
+  // Testing modules-as-values
+  import BYWORD;
+  x = BYWORD;
+  ~!@eq(1, x.hoopy, BYWORD.hoopy)@!~  ;
+}

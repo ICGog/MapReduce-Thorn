@@ -1,0 +1,24 @@
+{
+  mysteries = ord();
+  fun m(x) {
+    match(x) {
+      1 => "one"
+    | [z] => "singleton"
+    | [z, ($(z)) ... ] => "repeater"
+    | _ => {
+        mysteries @= x;
+        "mystery";
+        }
+    }match
+  }
+  
+  ~!@eq(mysteries.lst(), [])@!~  ;
+  ~!@eq(m(1), "one")@!~  ;
+  ~!@eq(m(2), "mystery")@!~  ;
+  ~!@eq(mysteries.lst(), [2])@!~  ;
+  ~!@eq(m([3]), "singleton")@!~  ;
+  ~!@eq(m([3,3,3]), "repeater")@!~  ;
+
+  
+
+}

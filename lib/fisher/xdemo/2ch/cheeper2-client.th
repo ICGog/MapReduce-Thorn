@@ -1,0 +1,99 @@
+spawn cheeper_client {
+
+  import CLIENT.*;
+  
+  prompt = "Chirp: ";
+
+  fun slogan() = 
+    [
+      "Not as nice for half the price!",
+      "Talk is cheep. Wisdom is Cheeper.",
+      "Cheeper by the dozen."
+    ].rand();
+
+  fun printChirps(L) {
+     for (chirp <- L) println(chirp);
+  }
+
+  fun printHelp() {
+    println("/q: quit client");
+    println("/x: quit client and server");
+    println("/a: print all chirps");
+    println("/ : print all chirps since the last time you used the '/' command");
+    println("/t N: print the top N (default: 5) chirps");
+    println("/?: this help message");
+    println("+n: vote for chirp number n");
+    println("-n: vote against chirp number n");
+    println("/s; tell server to save");
+    println("/r: tell server to reload from saved");
+    println("/f -U: ignore chirps from user U");
+    println("/f U: follow chirps from user U.");
+    println("/f*: follow everyone (cleared by /f)");
+    println("/i: give some info from the system.");
+    println("Anything else is a chirp of your wisdom!");
+  }
+
+  var pushee := null;
+  fun spawn_pushee() {
+    pushee := spawn {
+       sync chirped(c){
+         println("Wow: " + c);
+         println(prompt);
+         "yes-I-live";
+       }
+       async done() { goon := false; }
+       var goon:=true;
+       body{
+          while(goon){serve;}
+       }body
+    };
+  }spawn_pushee
+
+  body{
+    spawn_pushee();
+  
+    println(slogan());
+    
+    username = readln("Who are you: ");
+    password = readln("Password: ");
+    server = cheeperServer();
+    me = {:username, password:};
+    
+    res = server <-> register(me, pushee); 
+
+    println("-- Welcome to Cheeper.  /? for help --");
+    
+    var goon := true;
+    while(goon) {
+      s = readln(prompt).trim();
+      match (s) {
+        "/q" => {goon := false;}
+      | "/x" => {goon := false; server <-- plz_die();}
+      | "/s" => {println(server <-> writeDB());}
+      | "/r" => {println(server <-> readDB());}
+      | "/i" => {println(server <-> info(me));}
+      | "/a" => {printChirps(server <-> allChirps() ); }
+      | "/t" => {printChirps(server <-> topChirps(5) ); }
+      | "/t *([0-9]+)" / [ .int(n) ] =>
+          {printChirps(server <-> topChirps(n));}
+      | "/"  => {printChirps(server <-> unseen(me));}
+      | "\\+ *([0-9]+)" / [ .int(n) ] => 
+           {println(server <-> vote(n, true, me));}
+      | "\\- *([0-9]+)" / [ .int(n) ] => 
+           {println(server <-> vote(n, false, me));}
+      | "/f *([a-zA-Z0-9]+)" / [U] => {
+          println(server <-> follow(me, U, true));
+          }
+      | "/f *- *([a-zA-Z0-9]+)" / [U] => {
+          println(server <-> follow(me, U, false));
+          }
+      | "/.*" /_ => {printHelp();}
+      | _ => {
+          response = server <-> chirp(s, me);
+          println(response);
+        }
+      }match
+    }while
+    pushee <-- done();
+  }body
+}cheeper_client;

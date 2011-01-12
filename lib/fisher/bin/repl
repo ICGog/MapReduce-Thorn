@@ -1,0 +1,11 @@
+#/bin/bash/!
+BASEDIR=`dirname $0`
+
+if [ $# -gt 0 ] ; then
+  if [ $1 == "-w" ] ; then
+    java -classpath $BASEDIR/../www/classes/ www.WebServer
+    exit 0
+  fi
+fi
+
+java -classpath $BASEDIR/../fisher.jar:$BASEDIR/../junit.jar fisher.run.REPL $*

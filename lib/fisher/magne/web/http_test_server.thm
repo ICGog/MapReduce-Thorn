@@ -1,0 +1,87 @@
+/*
+ * Used in http_test.th to test http messages.
+ * It is placed here so it will be loaded by the shellscript.
+ */
+module httptestserver{
+  
+  component TestServer(port:int, address:string){
+
+    import simplehttp.*;
+    
+    var goon := true;
+    var server;
+
+    fun serverActivate(){
+      server := SimpleHTTPServer(port);
+    }
+
+    fun serverStop(){
+      server.stop();
+    }
+
+    fun rootPage(req){
+      req.respond(200, "<html><head></head><body></body></html>", 
+                  [{: header: "cache-control", value:"private, max-age=0" :},
+                   {: header: "content-type", value:"text/html; charset=UTF-8" :}
+                   ]);
+    }
+
+    fun parametersPage(req){
+      req.respond(200, req.query(), []);
+    }
+
+    fun postPage(req){
+      if(req.method() == "POST"){
+        req.respond(201, req.content(), []);
+      }
+      else{
+        req.respond(400, "POST ERROR", []);
+      }
+    }
+
+    fun putPage(req){
+      req.respond(200, req.content(), []);
+    }
+    
+    fun run(){
+        
+      println("Running on port $port: http://$address");
+
+       while(goon) {
+         receive{
+          // req: the Java object
+           req && SimpleHTTPRequest() => {
+             match(req.path()){
+               "/" => {
+                 rootPage(req);
+               }
+               | "/parameters/" => {
+                 parametersPage(req);
+               }
+               | "/post/" => {
+                 postPage(req);
+               }
+               | "/put" =>{
+                 putPage(req);
+               }
+               | x => {
+                 println("Error: no page handler for: $x");
+                 goon := false;
+               }
+             }
+           }
+          | {: verb:"go", comp: c :} => {c <<< "test";}
+          | {: verb: "stop" :} => {goon := false;}
+          | x => { println("what is rec: $x"); }
+         }
+       }
+    }
+    
+    body{
+      serverActivate();
+      run();
+      serverStop();
+      println("Server shutdown...");
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  import ADAGE.*;
+  
+  ftmp = File(tmpfilename); // tmpfilename.file();
+  
+  ~!@assert(ftmp.dir?())@!~  ;
+  
+//DIR  ~!@eq(ftmp.asDir(), tmp)@!~  ;
+  
+  s = "glordumental.tmp";
+//DIR  f = tmp.file(s);
+//DIR  g = tmp.file(s);
+//DIR  ~!@eq(f, g)@!~  ;
+  
+}

@@ -1,0 +1,52 @@
+{
+  named  = table(name) {map thing;};
+  
+  class Named {
+     val name;
+     new Named(name') {
+       name = name';
+     }
+     def init() {
+       if (named(name) == null) {
+         named(name) := {: thing: this :};
+         println("Named.init: namerating $name");
+       }
+       else {
+         throw "Duplicate definition of $name!";
+       }       
+     }init
+  }Named
+  
+  
+  class Tree extends Named {
+    new Tree(name') {
+       new@Named(name');
+    }
+    def str = "Tree($name)";
+  }Tree
+  
+  class Pear(x) extends Tree(x) {
+    def str = "Pear($name)";
+  }
+  
+  class Mutant(x) extends Named(x) {
+    def pow(y) {
+      x = this.str;
+      println("$x uses its mutant power on $y");
+    }pow
+    def str = "Mutant($name)";
+  }
+  
+  class MutantPear(x) extends Pear(x), Mutant(x) {
+    def str = "XPear($name)";
+  }
+  
+  {
+    p = Pear("pearoo");
+    m = Mutant("mutabile");
+    m.pow(p);
+    x = MutantPear("X-18");
+    x.pow(m);
+  }
+  
+}

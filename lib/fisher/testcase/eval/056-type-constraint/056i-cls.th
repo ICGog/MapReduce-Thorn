@@ -1,0 +1,17 @@
+{
+  class Residence {
+    x : int = 1;
+  }
+  Residence();
+  
+  class Powder {
+    val x : int;
+    new Powder(x') {
+      x = x';
+    }
+  }
+  
+  Powder(1);
+  ~!@bad(Powder("no!"))@!~  ;
+  
+}

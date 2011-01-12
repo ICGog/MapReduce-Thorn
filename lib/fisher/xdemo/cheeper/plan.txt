@@ -1,0 +1,2 @@
+* The Cheeper server should have an admin console, letting it do things like
+  "emergency quit". This will illustrate high-prio actions.

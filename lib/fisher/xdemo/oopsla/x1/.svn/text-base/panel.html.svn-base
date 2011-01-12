@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>Thorn Demo at OOPSLA 2009</title>
+  </head>
+  <body>
+    <p>
+       This is just a web page... now.
+    </p>
+    <form action="http://localhost:4121" method="get">
+       <input type="text" name="fuzz"/>
+       <input type="text" name="furk"/>
+       <input type="submit" value="Go!"/>
+    </form>
+  </body>
+</html>

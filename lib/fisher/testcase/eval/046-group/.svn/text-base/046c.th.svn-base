@@ -1,0 +1,12 @@
+{
+  p = %group(prime = n.prime?()) {
+         numbers = %list n;
+         srebmun = %rev n;
+         count = %count;
+         |
+         for n <- 2 .. 12
+      };
+
+  ~!@eq(p(true) ~ ‹numbers: [2,3,5,7,11], srebmun: [11,7,5,3,2], count: 5›)@!~  ;
+  ~!@eq(p(false) ~ ‹numbers: [4,6,8,9,10,12], srebmun: [12,10,9,8,6,4], count: 6›)@!~  ;
+}

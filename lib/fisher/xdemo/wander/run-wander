@@ -1,0 +1,4 @@
+#!/bin/bash
+source ~/.bashrc
+th -m $FISHER/lib/web.thm -s wander.th
+

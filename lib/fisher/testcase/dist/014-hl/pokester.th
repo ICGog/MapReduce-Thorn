@@ -1,0 +1,25 @@
+spawn pokester {
+  var n := 0;
+  sync poke() { n += 1; }
+  body{
+    pokester = thisComp();
+    quackster = spawn quackster {
+       body{
+          ~!@testStartLatch();
+          a = pokester <-> poke();
+          b = pokester <-> poke();
+          c = pokester <-> poke();
+          ~!@phase(100, [a,b,c]);
+          pokester <<< "done";
+       }body
+    }quackster;
+    ~!@testStartLatch();
+    serve;
+    serve;
+    serve;
+    recv{ "done" => {}};
+    ~!@checkphase(
+    {: phase: 100, bag: [[1,2,3]]:}
+    )@!~  ;
+  }body
+}pokester;

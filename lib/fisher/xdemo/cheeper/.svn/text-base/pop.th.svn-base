@@ -1,0 +1,28 @@
+spawn pop {
+  import CLIENT.*;
+  body{
+    server = cheeperServer();
+    fun populate(username, password, chirps) {
+      me = {:username, password:};
+      server <-> register(me);
+      for(s <- chirps) {
+         server <-> chirp(s, me);
+      }
+    }populate
+    
+    fun opinions(username, password, plus, minus) {
+      me = {:username, password:};
+      for(n <- plus) {server <-> vote(n, true, me);}
+      for(n <- minus) {server <-> vote(n, false, me);}
+    }
+    
+    populate("bard", "bloom",
+      ["I like cheese.",
+       "I like pie.",
+       "Pi are square."]);
+    populate("kim", "geep",
+      ["Thorn has a point."]);
+    opinions("kim", "geep", [1,1,2,2,2,3,4], [3,3]);
+        
+  }body
+}pop;

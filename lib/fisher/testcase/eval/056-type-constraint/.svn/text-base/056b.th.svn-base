@@ -1,0 +1,21 @@
+{
+  class Dignity {}
+  class Soap extends Dignity {}
+  
+  var larwench : Dignity := Dignity();
+  larwench := Soap();
+  larwench := null;
+  ~!@bad(({larwench := 1;}))@!~  ;
+  ~!@bad(({larwench := true;}))@!~  ;
+  ~!@bad(({larwench := "no!";}))@!~  ;
+  ~!@bad(({larwench := table(x){};}))@!~  ;
+  
+  fun synthesize(x) {
+    larwench := x;
+  }
+  
+  synthesize(Soap());
+  synthesize(Dignity());
+  ~!@bad(synthesize(1))@!~  ;
+  
+}

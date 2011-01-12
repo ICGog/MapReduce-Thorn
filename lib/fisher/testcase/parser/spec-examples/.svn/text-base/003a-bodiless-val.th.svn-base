@@ -1,0 +1,6 @@
+//CLS
+class C {
+  val a;
+  new C(x) { a = x; }
+  [b,c,d...]; // This is a bit whonky.
+}

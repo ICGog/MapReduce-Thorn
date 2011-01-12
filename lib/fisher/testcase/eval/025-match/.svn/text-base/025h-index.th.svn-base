@@ -1,0 +1,16 @@
+{
+  s = "by Kaschei's half-heartedly big cage!";
+  
+  if( s.index("a") ~ +i) {
+    ~!@eq(i, 4)@!~  ;
+  }
+  else { ~!@hit()@!~ 0 ; }
+  
+  if( s.index("NOT THERE") ~ +i) {
+     { ~!@hit()@!~ 0 ; }
+  }
+  else {
+    ~!@hit()@!~  ;
+  }
+  
+}

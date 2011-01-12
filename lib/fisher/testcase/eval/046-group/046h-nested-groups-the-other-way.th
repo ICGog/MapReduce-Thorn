@@ -1,0 +1,32 @@
+// Now, try to nest a %group inside the non-key fields of a group. 
+// I'm less worried about this one.
+
+{
+
+a = %group(i3 = i mod 3, i2 = i mod 2) 
+    {
+      i's = %list i;
+      n = %count;
+      b = %list 
+            %group(x=1){eeps = %list "eep"; | for j <- 1 .. i mod 3};
+      | 
+      for i <- 1 .. 10
+    };
+
+/*
+for({:i2,i3,i's,n,b:} <- a) {
+println("i2=$i2 i3=$i3 i's=$`i's` n=$n b=$b");
+}
+*/
+
+{
+  r = a(0, 1); // for 3 and 9
+  ~!@eq(r.i's, [3,9])@!~  ;       
+  ~!@eq(r.b.len, 2)@!~  ;
+  ~!@assert(
+     %all(brow.len == 0 | for brow <- r.b)
+  )@!~  ;
+}
+
+
+}

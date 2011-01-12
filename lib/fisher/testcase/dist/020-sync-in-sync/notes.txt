@@ -1,0 +1,8 @@
+The goal of this test is to check out syncs that call further syncs: 
+
+albatross:: bustard <-> blast()
+
+  But, as part of bustard<->blast(), bustard calls: 
+   cuckoo <-> clatter()
+   dodo <-> dicker()
+

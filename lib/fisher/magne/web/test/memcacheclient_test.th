@@ -1,0 +1,37 @@
+component webmemcachetest(){
+  
+  import webmemcache.*;
+  import unittest.*;
+
+  fun should_set_and_get_value(){
+    memcache_set("key", "value");
+    value = memcache_get("key");
+    assertEquals(value, "value");
+  }
+
+  fun should_delete_value(){
+    memcache_set("key", "value");
+    memcache_delete("key");
+    value = memcache_get("key");
+    assertEquals(value, null);
+  }
+
+  fun should_flush_all(){
+    memcache_set("key", "value");
+    memcache_flush_all();
+    value = memcache_get("key");
+    assertEquals(value, null);
+  }
+  
+  body{
+    println("memcacheclient test");
+    
+    memcache_set_address("thorn://localhost:11211");
+
+    test(should_set_and_get_value);
+    test(should_delete_value);
+    test(should_flush_all);
+  }
+}
+
+spawn webmemcachetest();

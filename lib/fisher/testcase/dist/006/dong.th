@@ -1,0 +1,16 @@
+spawn dong{
+  body{
+    ~!@testStartLatch();
+    recv{
+      x = {
+        ~!@phase(1, x)  ;
+      }
+      timeout(1000) {
+      }
+    }
+
+    ~!@checkphase(
+      {: phase: 1, bag: [123]:}    
+    )@!~  ;
+  }body      
+}dong;

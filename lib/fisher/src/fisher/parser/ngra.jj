@@ -1,0 +1,3634 @@
+options {
+  LOOKAHEAD = 1;
+  CHOICE_AMBIGUITY_CHECK = 4;
+  OTHER_AMBIGUITY_CHECK = 3;
+  STATIC = false; 
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = true;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = false;
+} 
+
+PARSER_BEGIN(FisherParser)
+package fisher.parser;
+import fisher.desugar.*;
+import fisher.syn.*;
+import fisher.syn.core.*;
+import fisher.syn.interfaces.*;
+import fisher.syn.converters.*;
+import fisher.util.FisherSource;
+import java.util.*;
+import fisher.util.FisherException;
+import static fisher.util.Bard.*;
+import fisher.runtime.*;
+public class FisherParser {
+
+   public static ParseException error(Token start, Token end, Object msg, Object ... stuffs)
+   throws ParseException {
+      throw new ParseException(
+        msg 
+        + (start != null ? "\n starting at line " + start.beginLine + ", column "  +start.beginColumn : "")
+        + (end != null ? "\n ending at line " + end.endLine + ", column " + end.endColumn : "")
+        + "\n"
+        + sep(stuffs, "\n")
+        );
+   }
+
+   public static FisherParser current; 
+
+   public static CmdToPat dworkin = new CmdToPat();
+
+   public FisherSource source;
+
+   public Pat pattern(Cmd cmd) throws ParseException {
+      try {
+         dworkin.source = source;
+         Pat pat = cmd.accept(dworkin, "unicorn");
+         if (pat == null) {
+           throw error(cmd.start, cmd.end, 
+             "Can't convert this expression to pattern " + cmd + "\n "
+             + dworkin.reasonForFailure
+             );
+         }
+         else {
+           return pat;
+         }
+     }
+     catch(FisherException fe) {
+         throw error(cmd.start, cmd.end, 
+           fe.toString() + dworkin.reasonForFailure
+           );
+     }
+   }
+
+   public static CmdToAssignmentTarget cheney = new CmdToAssignmentTarget();
+   public static AssignTarget assignTarget(Cmd cmd) throws ParseException {
+      AssignTarget at = cmd.accept(cheney, "abbreviate!");
+      if (at == null) {
+         throw error(cmd.start, cmd.end, 
+           "Can't convert this expression to an assignment target: " + cmd);
+      }
+      else {
+        return at;
+      }
+   }
+
+   // Throw a parse exception if the token isn't one of: 
+   // "}"
+   // "}ids[0]"
+   // "}ids[1]"
+   // etc
+   public static void requireClose(Token token, String... ids) throws ParseException {
+      String t = token.image;
+      if ("}".equals(t)) return;
+      for(String id : ids) {
+         if (t != null && t.equals("}" + id)) return;
+      }
+      throw error(token, token, 
+        "Closing bracket must have id equal to " + sep(ids, " or ") 
+           + ", not " + t  + ".",
+        t);
+   }
+   
+   public static void requireEek(Token assigner, ColAccess colac) throws ParseException {
+     boolean good = colac.op.equals(assigner.image);
+     if (!good) {
+       throw error(assigner, assigner, 
+         "Wrong syntax for assigning/binding.",
+         "This is a " + colac.whatis + " and needs a '" + colac.op + "'."
+         );
+     }
+   }
+   
+   public static Id tok2id(Token token) throws ParseException {
+      return new Id(token);
+   }
+
+   public static Cmd rassoc(Op op, List<? extends Cmd> operands) {
+      int n = operands.size();
+      assert(n > 1);
+      Cmd e = operands.get(n-1);
+      for(int i = n-2; i >= 0; i--) {
+         Cmd f = operands.get(i);
+         e = new OpExp(f.start, e.end, op, list(f, e));
+      }
+      return e;
+   }
+
+   
+}
+PARSER_END(FisherParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+SPECIAL_TOKEN : /* COMMENTS */
+{
+  <TABBY_COMMENT: "//"  (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+|
+  <LOKI_COMMENT: "#"  (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+|
+  <OTHER_TABBY_COMMENT: "/*" (~["*"] | ("*" (~["/"])))* "*/">
+}
+
+TOKEN: 
+{
+  <DOT : ".">
+| <DOTDOT: "..">
+| <DOTDOTLT: "..<">
+| <ELLIPSIS: "..." | "\u2026">
+| <COMMA : ",">
+| <COLON : ":">
+| <EQUALS : "=">
+| <EQEQ : "==">
+| <QUESTION : "?">
+| <TYPE : ":?">
+| <IN: "in">
+| <PLUS : "+">
+| <PLUSAB : "+=">
+| <CONSAB : "::=">
+| <COLONGT : ":>">
+| <ARROW2R : "=>">
+| <MINUSAB : "-=">
+| <TIMESAB : "*=">
+| <FDIVAB : "/=">
+| <AT : "@">
+| <SEMI : ";">
+| <LPAREN : "(">
+| <RPAREN : ")">
+| <RPARENQU : ")?">
+| <LBRACKET: "[">       
+| <RBRACKET: "]">
+| <LBRACE: "{">
+| <RBRACE: "}">
+| <MINUS: "-">
+| <AMPERSAND: "&">
+| <STAR: "*">
+| <SLASH: "/">
+| <LT: "<">
+| <LE: "<=" | "\u2264">
+| <NE: "!=" | "\u2260">
+| <GT: ">" >
+| <GE: ">=" | "\u2265" >
+| <TILDE: "~">
+| <LRECBRACE: "{:" | "\u2039">
+| <RRECBRACE: ":}" | "\u203A">
+| <BAR: "|">
+| <SEND: "<<<">
+| <RARROW: "->">
+| <SYNCCALL: "<->">
+| <ASYNCCALL: "<--">
+| <DOLLAR: "$">
+| <DOLLARLPAREN: "$(">
+| <PROBE: "~!@">
+| <PROBECOUNT: "@!~">
+| <FROM: "from">
+| <ENVELOPE: "envelope">
+| <PRIO: "prio">
+| <ITER_DEM: "<-">
+| <ITER_INQ: "<~">
+| <GETS: ":=">
+| <WILD: "_">
+| <CONS: "::">
+| <DOTSTAR: ".*">
+| <ADDTO: "@=">
+| <DELFROM: "\\=">
+| <MOREL: "%>" | "%many" | "%then1" >
+| <NONE: "%<" | "%none" | "%then" | "%then0" >
+
+
+| <METHODLY1: "@!" | "@~" | "@$" >
+| <METHODLY2: "@+" | "@*" | "@/" | "@-" >
+
+| <TABLE: "table">
+| <KEY: "key">
+
+| <PERCENT: "%">
+| <QUERYSWISS: "%(">
+| <FIRST: "%first" | "%find">
+| <QIF: "first" | "find">
+| <QUERYAFTER: "%after">
+| <QUERYLISTWORD: "%list">
+| <QUERYLIST: "%[">
+| <COUNT: "%count">
+| <QUERYREV: "%rev">
+| <EVERY: "%all" | "%every">
+| <SOME: "%some" | "%exists">
+| <QUERYSORT: "%sort">
+| <QUERYTABLE: "%table">
+| <QUERYGROUP: "%group">
+
+| <VALOF: "valof">
+| <COMPONENT: "component">
+
+| <CLASS: "class">
+| <PURE: "pure">
+| <METH: "def">
+| <OBJECT: "object">
+| <EXTENDS: "extends">
+| <THIS: "this">
+| <NEW : "new">
+
+| <SPAWN: "spawn" >
+| <INITIALLY: "initially">
+| <IT: "it">
+| <REINIT: "reinit">
+| <STABLE: "stable">
+| <SYNC: "sync">
+| <ASYNC: "async">
+| <SERVE: "serve">
+| <BEFORE: "before">
+| <AFTER: "after">
+| <BODY: "body">
+
+| <OWN: "own">
+| <AS: "as">
+| <ALIAS: "alias">
+| <IMPORT: "import">
+| <NOT: "not" | "!">
+| <SUPER: "super">
+
+| <MAP: "map">
+| <ORD: "ord">
+
+| <MODULE: "module">
+| <PUBLIC: "public">
+| <PRIVATE: "private">
+| <MEMBER: "member">
+
+| <BREAK: "break">
+| <CONTINUE: "continue">
+
+
+| <FUN: "fun">
+| <FN: "fn">
+
+| <THROW: "throw">
+| <TRY: "try">
+| <CATCH: "catch">
+| <FINALLY: "finally">
+
+| <NULL: "null">
+| <TRUE: "true">
+| <FALSE: "false">
+| <AND : "&&">
+| <OR : "||">
+| <ONEOF : "^^">
+
+| <IDIV: "div" | "\u00F7">
+| <MOD: "mod">
+| <VAR: "var">
+| <VAL: "val">
+
+| <BARD: "bard">
+
+| <MATCH: "match">
+
+| <IF: "if">
+| <UNLESS: "unless">
+| <ELSE: "else">
+| <FOR: "for">
+| <WHILE: "while">
+| <DO: "do">
+| <UNTIL: "until">
+| <RETURN: "return">
+
+| <RECV : "recv" | "receive">
+| <TIMEOUT : "timeout">
+
+| <JAVALY : "javaly">
+
+// \u00C0 = A-grave, first Latin-1 Supplement letter in the big block.
+// \u00D6 = O-umlaut, just before mult sign.
+// \u00D7 = multiplication sign (should be omitted from range)
+// \u00D8 = O-stroke, just after mult sign
+// \u00F6 = o-umlaut, before division sign
+// \u00F7 = division sign (should be omitted from range)
+// \u00F8 = o-stroke, just after division sign.
+// \u00FF = y-umlaut, last in Latin-1 Supplement
+// \u0100 = A-macron, first in Latin Extended-A
+// \u017F = small letter long s, last in Latin Extended-A
+
+| <#ALPHA:[
+     "a"-"z","A"-"Z",
+     "\u00C0"-"\u00D6", "\u00D8"-"\u00F6",   // unicode Latin-1 supplement
+     "\u00F8"-"\u017F"]>                     // unicode Latin Extended-A
+| <HEXINT: ("0x" ( ["0"-"9", "a"-"f", "A"-"F"] )+) >
+| <OCTINT: ("0o" ( ["0"-"7"] )+ )>
+| <BININT: ("0b" ( ["0"-"1"] )+ )>
+| <#ID_MID: [
+     "0"-"9", "_", "?", "'", "!",
+     "\u00B7"            // centered dot
+     ]>
+| <ID1:  <ALPHA> ( <ALPHA> | <ID_MID> )*  >
+| <ID2: "`" ( ~ ["\n","`"] )* "`">
+| <CLOSE_ID:  "}" (<ID1> | <ID2> | "%if") >
+| <INT: // ( ["-"] )? 
+   ( ["0"-"9"] )+>
+
+| <FLOAT:  <INT> "." (<INT>) ( ["e", "E"] ("-")? <INT> )? >
+| <STRING2: 
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ["n","t","b","r","\\","'","\"" , "$"])
+      )*
+      "\""
+  >
+| <STRING1: 
+      "'"
+      (   (~["\'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","\\","'","\"", "$"]
+            )
+          )
+      )*
+      "'"
+  >
+| <STRING4: 
+     "\"\"\""
+     (
+       ~["\""]
+     | ("\"" ~["\""])
+     | ("\"" "\"" ~["\""])
+     )*  
+     "\"\"\""
+  >
+| <STRING3: 
+     "'''"
+     (
+       ~["'"]
+     | ("'" ~["'"])
+     | ("'" "'" ~["'"])
+     )*
+     "'''"
+  >
+}
+
+
+////////////////////////////////////////////////////////////////
+// Common Stuff
+////////////////////////////////////////////////////////////////
+
+Token /*&*/SkipSemi(Token end):
+  {
+  }
+{
+  (end = <SEMI>)*
+  {return end;}
+}//////////////////////SkipSemi
+
+Id /*&*/Id():
+  { Token tok;
+    String name; 
+  }
+{
+(
+  tok = <ID1> 
+  {name = tok.image; }
+| 
+  tok = <ID2>
+  {name =  tok.image.substring(1, tok.image.length()-1);}
+)
+  {if (!Id.isAcceptableIdName(name)) {
+    throw error(tok, tok, Id.messageAbout(name));
+  }}
+  {return new Id(tok,name);}
+}//////////////////////Id
+
+Id /*&*/MethodNameId():
+  { Token tok;
+    Id id;
+  }
+{
+  id = Id() {return id;}
+}//////////////////////MethodNameId
+
+
+List<Id> /*&*/Ids():
+  { Id id;
+    List<Id> L = Collections.EMPTY_LIST;
+  }
+{
+  [
+     id = Id() {L = list(id);}
+     (
+        <COMMA>
+        id = Id() {L.add(id);}
+     )*  
+  ]
+  {return L;}
+}//////////////////////Ids
+
+
+Token /*&*/Rbrace():
+  { 
+    Token end;
+  }
+{
+  (end = <RBRACE> | end = <CLOSE_ID>) 
+  {return end;}
+}//////////////////////Rbrace
+
+Token /*&*/RbraceOf(String s):
+  { 
+    Token end;
+  }
+{
+  (end = <RBRACE> | end = <CLOSE_ID>)
+  {requireClose(end, s);}
+  {return end;}
+}//////////////////////Rbrace
+
+Token /*&*/RbraceOf2(String s1, String s2):
+  { 
+    Token end;
+  }
+{
+  (end = <RBRACE> | end = <CLOSE_ID>)
+  {requireClose(end, s1, s2);}
+  {return end;}
+}//////////////////////Rbrace
+
+
+
+
+QualName /*&*/QualName(int minLength):
+  {
+    Id id, first;
+    List<Id> ids = null;
+  }
+{
+  id = Id() {ids = list(id); first = id;}
+  (<DOT> id = Id() { ids.add(id); })*
+  {
+    if (ids.size() < minLength) {
+      throw error(first.start, id.end, "This qualified name (" 
+        + sep(ids, ".")
+        + ") must have at least " 
+        + minLength + " elements, but it has only " + ids.size());
+    }
+    return new QualName(first.start, id.end, ids);
+  }
+}//////////////////////QualName
+
+
+QualName /*&*/TypeNameAsQualName():
+  {
+    Token it;
+  }
+{
+  (
+    it = <ORD>
+  | it = <TABLE>
+  | it = <FN>
+  | it = <PURE>
+  )
+  {
+    return new QualName(it, it, list( new Id(it)));
+  }
+}//////////////////////TypeNameAsQualName
+
+boolean /*&*/Purity():
+  { boolean pure = false;
+  }
+{
+  [<COLON> <PURE> {return true;}]
+  {return false;}  
+}//////////////////////Purity
+
+Formals /*&*/Formals():
+  { 
+    Token start, end;
+    Cmd exp;
+    Pat pat;
+    Id id;
+    List<Pat> formals = null;
+  }
+{
+  (
+    LOOKAHEAD(SquishedExp())
+    exp = SquishedExp()
+    {formals = list(pattern(exp));
+     start = exp.start; end = exp.end;
+     }
+  |
+    start = <LPAREN>
+    [
+      pat = Pat() {formals = list(pat);}
+      ( 
+        LOOKAHEAD(3)
+        <COMMA>
+        pat = Pat() {formals.add(pat);}
+      )*
+    ]
+    [<COMMA>]
+    {if (formals == null) formals = Collections.EMPTY_LIST;}
+    end = <RPAREN>
+  )
+  {return new Formals(start, end, formals);}
+}//////////////////////Formals
+
+Pat /*&*/Pat():
+  { Cmd e;
+    Pat p;
+  }
+{
+  e = CompactExp()
+  {return pattern(e);}  
+}//////////////////////Pat
+
+////////////////////////////////////////////////////////////////
+// Cmd and its variants.
+////////////////////////////////////////////////////////////////
+
+
+Cmd /*&*/StmtForInsideParens():
+  {
+    Cmd e;
+  }
+{
+  (
+    e = If()   
+  | e = Match()
+  | e = Recv()
+  | e = Try()
+  | e = Throw()
+  | e = QueryIf() 
+  )
+  {return e;}
+}//////////////////////StmtForInsideParens
+
+Cmd /*&*/StmtButNotBraced():
+  { Cmd e;
+  }
+{
+  (  e = StmtForInsideParens()
+  | e = FunDecl()
+  | e = ImportStmt()
+  | e = Alias()
+  | e = Break()
+  | e = Continue()
+  | e = VarDecl()
+  | e = SuperCtorCall() 
+  | e = Return()
+  | e = Serve()
+  | e = StmtsWhichCanStartWithId()
+  | e = ClsDecl()
+  | e = ComponentDecl()
+  )
+  {return e;}
+}//////////////////////StmtButNotBraced
+
+Cmd /*&*/Stmt(String tag1,String tag2):
+  {
+  Cmd e;  
+  }
+{
+  ( 
+    e = SeqOf2(tag1, tag2)
+  | e = StmtButNotBraced()
+  )
+  {return e;}
+}//////////////////////Stmt
+
+
+Cmd /*&*/StmtWithOptSemi(String tag1,String tag2):
+  {
+  Cmd e;  
+  }
+{
+  ( 
+    (
+      e = SeqOf2(tag1, tag2)
+      [<SEMI>]
+    )
+  | e = StmtButNotBraced()
+  )
+  {return e;}
+}//////////////////////Stmt
+
+Cmd /*&*/StmtsWhichCanStartWithId():
+  { Cmd e;
+  }
+{
+  (
+  LOOKAHEAD(3) // 
+    e = CommandlikeExp() <SEMI> // Can be 'x;', or 'x.foo();'
+  | LOOKAHEAD(3)
+    e = While()      // Can be 'x:while(x.yup()) { x.noper() }' 
+  | e = For()        // Can be 'x:for(y<-L) y.frob();'
+  )
+  {return e;}
+}//////////////////////StmtsWhichCanStartWithId
+
+
+
+////////////////////////////////////////////////////////////////
+// The Exp hierarchy
+////////////////////////////////////////////////////////////////
+
+Cmd /*&*/CommandlikeExp():
+  { Cmd e;
+  }
+{
+  e = ExpA() {return e;}
+}//////////////////////ExpA
+
+Cmd /*&*/CompactExp():
+  { Cmd e;
+  }
+{
+   e = ExpM()
+   {return e;}
+}//////////////////////CompactExp
+
+Cmd /*&*/SquishedExp():
+  { Cmd e;
+  }
+{
+   e = ExpZ1()
+   {return e;}
+}//////////////////////SquishedExp()
+
+
+Cmd /*&*/ExpOrBlock():
+  { Cmd e;
+  }
+{
+  (        
+    e = CompactExp()
+  | e = Seq()
+  )
+  {return e;}
+}//////////////////////ExpOrBlock
+
+
+Cmd /*&*/ExpOrBlockOf(String s):
+  { Cmd e;
+  }
+{
+  (        
+    e = CompactExp()
+  | e = SeqOf(s)
+  )
+  {return e;}
+}//////////////////////ExpOrBlock
+
+Cmd /*&*/BiggishExp():
+  { Cmd e;
+  }
+{
+   e = ExpC()
+   {return e;}
+}//////////////////////BiggishExp
+
+
+
+Cmd /*&*/ExpA():
+  { Cmd e;
+  }
+{
+  e = ExpB() {return e;}
+}//////////////////////ExpA
+
+
+/*
+  ExpB's can have commas at the top level: a,b := c,d.
+  No later exps can.  
+  Later exps can, however, be arguments to functions, which ExpB's cannot be.
+*/
+Cmd /*&*/ExpB():
+  { Cmd e, f, g, timeout=null;
+    List<AssignTarget> lhs = null;
+    List<Cmd>  rhs = null;
+    Id id;
+    List<Cmd> actuals = null;
+    Token end;
+    Token[] ender = null;
+  }
+{
+  e = ExpC() 
+  [ 
+    ( <COMMA> f = ExpC() {if (lhs==null) lhs=list(assignTarget(e),assignTarget(f)); 
+    else lhs.add(assignTarget(f)); } )*
+    <GETS>
+    // Now we know we're really in an assigment.  
+    // (Maybe we did before, if we saw a <COMMA>)
+    {if (lhs == null) lhs = list(assignTarget(e));}
+    g = ExpC() {rhs = list(g);}
+    (<COMMA> g = ExpC() { rhs.add(g); })*
+    {e = new Assign(e.start, last(rhs).end, lhs, rhs);}
+  |
+    ( <EQUALS> f = ExpC() )
+    {return new Bind(e.start, f.end, pattern(e), f);}
+  |
+    (<CONSAB> f = ExpC() )
+    {e = new OpABExp(e.start, f.end, assignTarget(e), OpAB.CONSAB, f);}
+  |
+    (<PLUSAB> f = ExpC() )
+    {e = new OpABExp(e.start, f.end, assignTarget(e), OpAB.PLUSAB, f);}
+  | 
+    (<MINUSAB> f = ExpC() )
+    {e = new OpABExp(e.start, f.end, assignTarget(e), OpAB.MINUSAB, f);} 
+  | 
+    (<TIMESAB> f = ExpC() )
+    {e = new OpABExp(e.start, f.end, assignTarget(e), OpAB.TIMESAB, f);} 
+  | 
+    (<FDIVAB> f = ExpC() )
+    {e = new OpABExp(e.start, f.end, assignTarget(e), OpAB.FDIVAB, f);} 
+  | 
+    (<ASYNCCALL> id = Id() 
+      {ender = new Token[1];}
+      <LPAREN>
+      actuals = ActualsPlusRparen(ender)
+      {end = ender[0];}
+      //WAS <LPAREN> actuals = Actuals() end=<RPAREN>
+      {e = new AsyncStmt(e.start, end, e, id, actuals, DistDesugarer.asyncCall(e.start, e.end, e, id, actuals));})
+  | 
+    (<SEND> f = ExpC()
+    {e = new Send(e.start, f.end, e, f);})
+  ]
+  {return e;}
+
+}//////////////////////ExpB
+
+Cmd /*&*/ExpC():
+  { Cmd e, f, g;
+    Token start;
+    FunBody funbody = null;
+  }
+{ 
+  e = ExpD()
+  {return e;}
+|
+  start = <FN>
+  funbody = FnBody("fn", null)
+  {return new AnonFun(start, funbody.end, funbody, funbody.isMarkedPure());}
+
+}//////////////////////ExpC
+
+Cmd /*&*/ExpD():
+  { Cmd e,f,g, timeout=null, timcmd = null;
+    Token end;
+    Id id;
+    List<Cmd> actuals;
+    Token[] ender;
+  }
+{
+   e = ExpF()
+   [
+     <IF>
+     f = ExpF()
+     <ELSE>
+     g = ExpD()
+     {e = new If(e.start, g.end, f, e, g, false, true);}
+   |
+     <UNLESS>
+     f = ExpF()
+     <ELSE>
+     g = ExpD()
+     {e = new If(e.start, g.end, f, e, g, true, true);}
+   |
+      (<SYNCCALL> id = Id() <LPAREN> 
+        {ender = new Token[1];}
+        actuals = ActualsPlusRparen(ender) 
+        {end = ender[0];}
+      [<TIMEOUT> <LPAREN> timeout = BiggishExp() <RPAREN>
+       [timcmd = ExpOrBlock()]
+      ]
+      {e = new SyncStmt(e.start, end, e, id, actuals, timeout, timcmd,
+         DistDesugarer.syncCall(e.start, end, e, id, actuals, timeout, timcmd)
+         );})
+   ]
+   {return e;}
+}//////////////////////ExpD
+
+Cmd /*&*/ExpF():
+  { Cmd e;
+  }
+{ e = ExpM()
+  {return e;}
+}//////////////////////ExpF
+
+
+
+
+Cmd /*&*/ExpM():
+  { Cmd e,f;
+    List<Cmd> L = null;
+  }
+{
+  // ExpM is currently CompactExp.  
+  // If anything gets into the hierarchy before ExpM, revise CompactExp accordingly.
+  e = ExpP()
+  (
+       <AND> f = ExpP() {L = list(e,f);} 
+       (<AND> f = ExpP() {L.add(f);})*
+       {e = new OpExp(e.start, f.end, Op.AND, L);}
+  |
+       <OR> f = ExpP() {L = list(e,f);} 
+       (<OR> f = ExpP() {L.add(f);})*
+       {e = new OpExp(e.start, f.end, Op.OR, L);}
+  |
+       <ONEOF> f = ExpP() {L = list(e,f);} 
+       (<ONEOF> f = ExpP() {L.add(f);})*
+       {e = new OpExp(e.start, f.end, Op.ONEOF, L);}
+  )?
+  {return e;}
+}//////////////////////ExpM
+
+
+Cmd /*&*/ExpP():
+  {
+  Cmd e,f;
+  Op op;
+  List<Cmd> conses = null;
+  }
+{
+  e = ExpQ()
+  [
+      <TILDE>
+      f = ExpQ()
+      {e = new MatchExp(e.start, f.end, (e), pattern(f));}
+  | 
+    (
+       <CONS> 
+       f = ExpQ()
+       {conses = list(e,f);}
+       (<CONS> 
+        f = ExpQ()
+        {conses.add(f);}
+       )*
+    )
+    {e = rassoc(Op.CONS, conses);}
+  |
+    ( 
+      ( <AT> {op = Op.APPEND;}
+      | <ADDTO> {op = Op.ADDTO;}
+      | <DELFROM> {op = Op.DELFROM;}
+      )
+      f = ExpQ()
+      { e = new OpExp(e.start, f.end, op, list(e,f));}
+    )+
+  ]
+  {return e;}
+}//////////////////////ExpP
+
+Cmd /*&*/ExpQ():
+  { Cmd e;
+    Cmd f = null;
+    Token comp=null; 
+    ComparisonBit cb = null;
+    List<ComparisonBit> rest = null;
+  }
+{
+  e = ExpR()
+  (
+    ( 
+      (comp = <LE> | comp = <LT> | comp = <GT> | comp = <GE> | comp = <EQEQ> | 
+       comp = <NE> | comp = <IN> | comp = <TYPE>
+      )
+      f = ExpR()
+      {cb = new ComparisonBit(comp, f.end, ComparisonOp.of(comp.image), f);}
+      {if (rest == null) rest = list(cb); else rest.add(cb);}
+    )*
+    {if (rest != null) e = new Comparison(e.start, f.end, e, rest);}
+  )
+  {return e;}
+}//////////////////////ExpQ
+
+
+
+Cmd /*&*/ExpR():
+  { Cmd e;
+  }
+{
+  e = ExpS()
+  {return e;}
+}//////////////////////ExpR
+
+Cmd /*&*/ExpS():
+  { Cmd e, f;
+    Token op; 
+  }
+{
+  e = ExpT()
+  (
+    <DOTDOT> f = ExpT() {e = new OpExp(e.start, f.end, Op.DOTDOT, list(e,f));}
+  |
+    <DOTDOTLT> f = ExpT() {e = new OpExp(e.start, f.end, Op.DOTDOTLT, list(e,f));}
+  )?
+  {return e;}
+}//////////////////////ExpS
+ 
+
+Cmd /*&*/ExpT():
+  { Cmd e,f;
+  }
+{
+  e = ExpU()
+  (
+    <PLUS> f = ExpU() {e = new OpExp(e.start, f.end, Op.PLUS, list(e,f));}
+  | <MINUS> f = ExpU() {e = new OpExp(e.start, f.end, Op.MINUS, list(e,f));}
+  )*
+  {return e;}
+}//////////////////////ExpT
+
+Cmd /*&*/ExpU():
+  { Cmd e,f,g;
+    Token op;
+  }
+{
+  e = ExpV()
+  (
+    <STAR> f = ExpV() {e = new OpExp(e.start, f.end, Op.TIMES, list(e,f));}
+  )*
+  (
+      <SLASH> f = ExpV() {e = new OpExp(e.start, f.end, Op.FDIV, list(e,f));}
+    | <IDIV> f = ExpV() {e = new OpExp(e.start, f.end, Op.IDIV, list(e,f));}
+    | <MOD>  f = ExpV() {e = new OpExp(e.start, f.end, Op.MOD, list(e,f));}
+    | op=<METHODLY2> f = ExpV() {
+       e = new MethodCall(e.start, f.end, e, tok2id(op), list(f));
+       }
+    | op="<@" f = ExpV() "@>" g = ExpV() {
+         e = new MethodCall(e.start, g.end, e,new Id(op, "<@@>"), list(f,g));
+         }
+    | op="[@" f = ExpV() "@]" g = ExpV() {
+         e = new MethodCall(e.start, g.end, e,new Id(op, "[@@]"), list(f,g));
+         }
+  )?
+  {return e;}
+}//////////////////////ExpT
+
+Cmd /*&*/ExpV():
+  { Cmd e;
+    QualName qn;
+  }
+{
+  e = ExpY()
+  (
+    <COLON>
+    ( 
+      qn = QualName(1)
+    | qn = TypeNameAsQualName()
+    )
+    {e = new TypedExp(e.start, qn.end, e, qn);}
+  )?
+  {return e;}
+}//////////////////////ExpV
+
+Cmd /*&*/ExpY():
+  {
+     Cmd e;
+     Token start, end;
+     Op op;
+  }
+{
+  (
+    (start = <NOT> {op = Op.NOT; }
+    |start = <MINUS> {op = Op.NEG;}
+    |start = <PLUS> {op = Op.POS;}
+    )
+    e = ExpY()
+    {return new OpExp(start, e.end, op, list(e)); }
+  |
+    e = ExpZ()
+    {return e;}
+  )
+}//////////////////////ExpY
+
+Cmd /*&*/ExpZ():
+  {
+     Cmd e;
+     PostExp post;
+     List<PostExp> posts = null;
+  }
+{
+  e = ExpZ1()
+  (
+    post = PostExp()
+    {if (posts == null) posts = list(post); else posts.add(post);}
+  )*
+  {return PostfixesToExp.convert(e, posts, 0);}
+}//////////////////////ExpZ
+
+PostExp /*&*/PostExp():
+  { Token start, end;
+    Id id;
+    Op op;
+    List<Cmd> actuals;
+    RecordCtor rc; 
+    Token[] ender = null;
+  }
+{
+   start = <DOT>
+   id = Id()
+   {return new PostExpDotId(start, id.end, id);}
+|
+   start = <LPAREN>
+   {ender = new Token[1];}
+   actuals = ActualsPlusRparen(ender)
+   //end = <RPAREN>
+   {end = ender[0];}
+   {
+     return new PostExpArgs(start, end, actuals);
+   }
+|
+   start = <LBRACKET>
+   actuals = Actuals()
+   end = <RBRACKET>
+   {return new PostExpBracketArgs(start, end, actuals);}
+|
+   rc = RecordCtor()
+   {return new PostExpRecordArgs(rc.start, rc.end, rc.fields);}
+}//////////////////////PostExp
+
+
+List<Cmd> /*&*/ActualsPlusRparen(Token[] ender):
+  {
+    List<Cmd> actuals = Collections.EMPTY_LIST;
+    Token end;
+    Cmd e;
+  }
+{
+  // cf. Actuals, only, in parens, and allowing trailing comma.
+  
+  (
+    e = BiggishExp() {actuals = list(e);}
+    (
+      LOOKAHEAD(3)
+      <COMMA>
+      e = BiggishExp() {actuals.add(e);}      
+    )*
+  )?
+  [<COMMA>]
+  end = <RPAREN>
+  {if (ender != null) ender[0] = end;}
+  {return actuals;}
+}//////////////////////ActualsPlusRparen
+
+List<Cmd> /*&*/Actuals():
+  { Cmd e;
+    List<Cmd> actuals = new ArrayList<Cmd>(0);
+  }
+{ // ExpC is used here because ExpB can have commas in it (a,b := b,a) and
+  // ExpC can't
+  (
+    e = BiggishExp() {actuals.add(e);}
+    (
+      <COMMA>
+      e = BiggishExp() {actuals.add(e);}      
+    )*
+  )?
+  {return actuals;}
+}//////////////////////Actuals
+
+
+Cmd /*&*/ExpZ1():
+  {
+  Cmd e;
+  Op op;
+  Token start, end;
+  }
+{
+  ( e = Literal() 
+  | e = VarExp()
+  )
+  {return e;}
+|
+   start = <LPAREN>
+   (
+     e = BiggishExp()
+     (
+       end = <RPAREN>
+       {return new Parens(start, end, e);}
+     |
+       end = <RPARENQU>
+       {return new EvalTestExpExp(start, end, e);}
+     )
+  |
+     (
+        e = StmtForInsideParens()
+      | e = Seq()
+     )
+     end = <RPAREN>
+     {return new Parens(start, end, e);}
+  )
+| 
+  e = ListCtor() {return e;}
+| 
+  e = RecordCtor() {return e;}
+|
+  e = SuperCall() {return e;}
+
+| e = AnonObj() {return e;}
+| e = Valof() {return e;}
+| e = Table() {return e;}
+| e = Ord() {return e;}
+| e = ItExp() {return e;}
+| e = WildcardExp() {return e;}
+| e = InterpolationExp(){return e;}
+| e = Probe(){return e;}
+| e = Query(){return e;}
+| e = MapCtor(){return e;}
+| e = Methodly1(){return e;}
+| e = Spawn() { return e;}
+| e = DotMethodCallExp() {return e;}
+| (start = <ELLIPSIS> e = ExpZ1() {return new ListForGroup(start, e.end, e);})
+}//////////////////////ExpZ
+
+
+////////////////////////////////////////////////////////////////
+// Exp bits 
+////////////////////////////////////////////////////////////////
+
+MethodCall /*&*/Methodly1():
+  { Token start;
+    Cmd exp;
+  }
+{
+  start = <METHODLY1>
+  exp = ExpZ1()
+  {return new MethodCall(start, exp.end, exp, tok2id(start), Collections.EMPTY_LIST);}
+}//////////////////////Methodly1
+
+FunBody /*&*/FnBody(String keyword, String name):
+  { MonoBody mb; 
+    List<MonoBody> mbs=null;
+    boolean purity;
+  }
+{
+  mb = MonoBody(keyword, name) {mbs = list(mb); purity = mb.isMarkedPure();}
+  (<BAR> mb = MonoBody(keyword, name) { mbs.add(mb); purity |= mb.isMarkedPure();})*
+  {return new FunBody(mbs.get(0).start, last(mbs).end, mbs, purity);}
+}//////////////////////FnBody
+
+MonoBody /*&*/MonoBody(String s1, String s2):
+  {
+    Formals formals = null;
+    Token a = null;
+    Token start = null;
+    boolean pure = false;
+    Cmd e;
+  }
+{
+  [formals = Formals()]
+  pure = Purity()
+  (
+    (a = <EQUALS>)
+    {if (formals == null) {formals = new Formals(start, start, new ArrayList<Pat>(0)); start=a;}
+     else {start = formals.start;}
+     }
+    ( e = CompactExp() | e = Seq() )
+  |
+    (
+      e = SeqOf2(s1, s2)
+    )
+  )
+  {return new MonoBody(start, e.end, null, formals, null, null, false, 0, e, pure);}
+}//////////////////////MonoBody
+
+
+
+
+Cmd /*&*/Literal():
+  { Token t;
+  }
+{
+  t = <STRING1> {return QuoteStyle.Q1.engulf(t);}
+| t = <STRING2> {return QuoteStyle.Q2.engulf(t);}
+| t = <STRING3> {return QuoteStyle.QQQ1.engulf(t);}
+| t = <STRING4> {return QuoteStyle.QQQ2.engulf(t);}
+
+| t = <FLOAT>
+  {return new Literal(t,t,Double.parseDouble(t.image));}
+|
+  t = <INT>
+  {return new Literal(t,t,Long.parseLong(t.image));}
+| t = <HEXINT>
+  {return new Literal(t,t,Long.parseLong(
+     t.image.substring(2), 16));}
+| t = <OCTINT>
+  {return new Literal(t,t,Long.parseLong(
+     t.image.substring(2), 8));}
+| t = <BININT>
+  {return new Literal(t,t,Long.parseLong(
+     t.image.substring(2), 2));}
+| t = <TRUE> {return new Literal(t,t,true);}
+| t = <FALSE> {return new Literal(t,t,false);}
+| t = <NULL> {return new Literal(t, t, null);}
+}//Literal
+
+Cmd /*&*/VarExp():
+  { Id id;
+    Token hwn;
+  }
+{
+  id = Id()
+  {return new VarExp(id.start, id.end, id);}
+| 
+  hwn = <THIS>
+  {return new This(hwn, hwn);}
+}//////////////////////VarExp
+
+
+
+Probe /*&*/Probe():
+  { Id id = null;
+    Cmd exp;
+    Token count = null; 
+    int icount = -1;
+    List<Cmd> cmds = null;
+    Token start, end;
+  }
+{
+  start = <PROBE>
+  [id = Id()]
+  {cmds = Collections.EMPTY_LIST;}
+  <LPAREN>
+  [
+    exp = CompactExp() {cmds = list(exp);}
+    (<COMMA> exp = CompactExp() { cmds.add(exp); })*
+  ]
+  end = <RPAREN>
+  [
+    <PROBECOUNT>
+    { icount = 1; }
+    [ count = <INT>  {icount = Integer.parseInt(count.image);} ]
+  ]
+  {
+    fisher.test.Prober prober = 
+       id == null ? fisher.test.Prober.NULL : fisher.test.Prober.of(id.str());
+    Probe p = new Probe(start, end, id, cmds, icount);
+    p.prober = prober;
+    return p;
+  }
+}//////////////////////Probe
+
+
+
+
+RecordCtor /*&*/RecordCtor():
+  {
+    Token start, end;
+    RecordField rf;
+    List<RecordField> fields = null;
+  }
+{
+  start = <LRECBRACE>
+  [
+    rf = RecordField() {fields = list(rf);}
+    (<COMMA> rf = RecordField() { fields.add(rf); })*
+  ]
+  {if (fields == null) fields = list();}
+  end = <RRECBRACE>
+  {return new RecordCtor(start, end, fields);}
+}//////////////////////RecordCtor
+
+RecordField /*&*/RecordField():
+  {
+    Id id;
+    Cmd exp=null;
+  }
+{
+  id = Id()
+  [ 
+    <COLON>
+    exp = BiggishExp()
+  ]
+  {
+    if (exp == null) {
+       return new RecordField(id.start, id.end, id, 
+          new VarExp(id.start, id.end, (Id) id.ingestedDeepCopy(id.start, id.end)));
+       }
+    else 
+       return new RecordField(id.start, exp.end, id, exp);
+  }
+}//////////////////////RecordField
+
+ListCtor /*&*/ListCtor():
+  {
+    Token start, end;
+    ListBit lb;
+    List<ListBit> bits = null;
+  }
+{ 
+  start = <LBRACKET>
+  {bits = new ArrayList<ListBit>(0);}
+  (
+    lb = ListBit() {bits.add(lb);}
+    (
+      LOOKAHEAD(3)
+      <COMMA>
+      lb = ListBit() {bits.add(lb);}
+    )*
+  )?
+  [<COMMA>]
+  end = <RBRACKET>        
+  {return new ListCtor(start, end, bits);}
+}//////////////////////ListCtor
+
+ListBit /*&*/ListBit():
+  { Cmd c;
+    Token ellip = null;
+  }
+{
+  c = CompactExp()
+  [ ellip = <ELLIPSIS> ]
+  { if (ellip == null) 
+       return new ListBitExp(c.start, c.end, c);
+    else 
+       return new ListBitEllip(c.start, ellip, c);
+  }
+}//////////////////////ListBit
+
+
+Cmd /*&*/SuperCall():
+  {
+    Token supes, last;
+    QualName qn = null;
+    Id id = null;
+    List<Cmd> actuals;
+    Token[] ender;
+  }
+{
+  supes = <SUPER>
+  (
+     <AT> qn = QualName(2) {id = qn.last(); qn = qn.butlast();}
+  |
+     <DOT> id = Id() {qn = null;}
+  )?
+  <LPAREN>
+  {ender = new Token[1];}
+  actuals = ActualsPlusRparen(ender)
+  {last = ender[0];}
+  {
+    return new SuperCall(supes, last, qn, actuals,id);
+  }
+  
+}//////////////////////SuperCall
+
+
+SuperCtorCall /*&*/SuperCtorCall():
+  {
+    Token start, end;
+    QualName qn = null;
+    List<Cmd> actuals;
+  }
+{
+   start = <NEW>
+   [
+     <AT>
+     qn = QualName(1)
+   ]
+   <LPAREN>
+   actuals = ActualsPlusRparen(null)
+   end = <SEMI>
+   {return new SuperCtorCall(start, end, qn, actuals);}
+}//////////////////////SuperCtorCall
+
+////////////////////////////////////////////////////////////////
+// Query
+////////////////////////////////////////////////////////////////
+
+QueryAbstract /*&*/Query():
+  {
+    QueryAbstract a;
+  }
+{
+  (
+    a = QueryQuantifier()
+  | a = QuerySwiss()
+  | a = QueryFirstlike()
+  | a = QueryAfter()
+  | a = QueryListComprehension()
+  | a = QueryTable()
+  | a = QueryGroup()
+  | a = QuerySort()
+  )
+  {return a;}
+}//////////////////////Query
+
+List<QueryControl> /*&*/QueryControls():
+  {
+    QueryControl c;
+    List<QueryControl> controls = new ArrayList<QueryControl>(1);
+  }
+{
+ c = QueryControl() {controls = list(c);}
+ (<COMMA> c = QueryControl() { controls.add(c); })*
+ {return controls;}  
+}//////////////////////QueryControls
+
+QueryControl /*&*/QueryControl():
+  { QueryControl qc;    
+  }
+{
+  (qc = QueryControlFor()
+  |qc = QueryControlWhile() 
+  |qc = QueryControlIf() 
+  |qc = QueryControlVal()
+  |qc = QueryControlVar()
+  )
+  {return qc;}
+}//////////////////////QueryControl
+
+QueryControlFor /*&*/QueryControlFor():
+  { 
+    Token start, end;
+    Pat pat;
+    Cmd list;
+    boolean inquisitive;
+  }
+{
+  start = <FOR>
+  pat = Pat()
+  (<ITER_DEM> {inquisitive = false;}
+  |<ITER_INQ> {inquisitive = true;}
+  )
+  list = CompactExp()
+  {return new QueryControlFor(start, list.end, pat, list, inquisitive);}
+}//////////////////////QueryControlFor
+
+QueryControlIf /*&*/QueryControlIf():
+  {
+    Token start;
+    Cmd pred;
+  }
+{
+  start = <IF>
+  pred = CompactExp()
+  {return new QueryControlIf(start, pred.end, pred);}
+}//////////////////////QueryControlIf
+
+QueryControlVal /*&*/QueryControlVal():
+  {
+    Token start = null;
+    Cmd patc, exp;
+  }
+{
+  [ start = <VAL> ]
+  patc = CompactExp()
+  <EQUALS>
+  exp = CompactExp()
+  {return new QueryControlVal(
+     start == null ? patc.start : start, 
+     exp.end, pattern(patc), exp);}     
+}//////////////////////QueryControlVal
+
+
+QueryControlVar /*&*/QueryControlVar():
+  {
+    Token start;
+    Id var;
+    Cmd init, next;
+    boolean doBeforeFirst;
+  }
+{
+  start = <VAR>
+  var = Id()
+  <GETS>
+  init = CompactExp()
+  (<MOREL> {doBeforeFirst = false;} | <NONE> {doBeforeFirst = true;})
+  next = CompactExp()
+  {return new QueryControlVar(start, next.end, var, init, next, doBeforeFirst);}
+}//////////////////////QueryControlVar
+
+QueryControlWhile /*&*/QueryControlWhile():
+  {
+     Token start;
+     boolean isUntil;
+     Cmd test;
+  }
+{
+  (
+    start = <WHILE> {isUntil = false;}
+  | start = <UNTIL> {isUntil = true;} 
+  )
+  test = CompactExp()
+  {return new QueryControlWhile(start, test.end, test, isUntil);}
+}//////////////////////QueryControlWhile
+
+
+QuerySwiss /*&*/QuerySwiss():
+  {
+    Token start, end, mid;
+    Cmd one, many = null, none=null;
+    List<QueryControl> controls; 
+  }
+{
+  start = <QUERYSWISS>
+  one = CompactExp()
+  (
+    (
+      mid = <MOREL>
+      {if (many != null) throw error(start, mid, "Too many %> clauses");}
+      many = CompactExp()
+    )
+    |
+    (
+      mid = <NONE>
+      {if (none != null) throw error(start, mid, "Too many %< clauses");}
+      none = CompactExp()
+    )
+   )*
+  <BAR>
+  controls = QueryControls()
+  end = <RPAREN>
+  {return QueryDesugarer.swiss(start, end, controls, one, many, none);}
+}//////////////////////QuerySwiss
+
+
+QueryAfter /*&*/QueryAfter():
+  {
+    Token start, end;
+    Cmd exp;
+    List<QueryControl> controls;
+  }
+{
+  start = <QUERYAFTER>
+  <LPAREN>
+  exp = CompactExp()
+  <BAR>
+  controls = QueryControls()
+  end = <RPAREN>
+  {return QueryDesugarer.after(start, end, controls, exp);}
+}//////////////////////QueryAfter
+
+
+QueryFirstlike /*&*/QueryFirstlike():
+  {
+    Token start, end;
+    char kind;
+    Cmd exp;
+    Cmd none = null;
+    List<QueryControl> controls; 
+  }
+{
+  ( start = <FIRST> {kind = '1';}
+  )
+  <LPAREN>
+  exp = CompactExp()
+  [
+    <NONE>
+    none = CompactExp()
+  ]
+  <BAR>
+  controls = QueryControls()
+  end = <RPAREN>
+  {
+    switch(kind) {
+      default: throw new RuntimeException("Internal error - QueryFirstlike borken!");
+      case '1': return QueryDesugarer.first(start, end, controls, exp, none, true);
+//      case '-': return QueryDesugarer.last(start, end, controls, exp, none);
+    }
+  }
+}//////////////////////QueryFirstlike
+
+QueryFirst /*&*/QueryIf():
+  {
+    Token start, end;
+    List<QueryControl> controls;
+    Cmd thenClause;
+    Cmd elseClause = null;    
+  }
+{
+  start = <QIF>
+  <LPAREN>
+  controls = QueryControls()
+  <RPAREN>
+  thenClause = Stmt("%if", null) {end = thenClause.end;}
+  [
+    // Another dangling-else problem.
+    LOOKAHEAD(1)
+    <ELSE>
+    elseClause = Stmt("%if", "else") {end = elseClause.end;}
+  ]
+  {return QueryDesugarer.first(start, end, controls, thenClause, elseClause, false);}
+}//////////////////////QueryIf
+
+QueryQuantifier /*&*/QueryQuantifier():
+  {
+    Token start, end;
+    char kind;
+    Cmd pred;
+    List<QueryControl> controls; 
+  }
+{
+  ( start = <COUNT> {kind='#';}
+  | start = <EVERY> {kind='*';}
+  | start = <SOME>  {kind='1';}
+  )
+  <LPAREN>
+  pred = CompactExp()
+  <BAR>
+  controls = QueryControls()
+  end = <RPAREN>
+  {
+   switch(kind) {
+     default: throw new RuntimeException("Internal doom in QueryQuantifier");
+     case '#': return QueryDesugarer.count(start, end, controls, pred);
+     case '*': return QueryDesugarer.every(start, end, controls, pred);
+     case '1': return QueryDesugarer.some(start, end, controls, pred);
+   }//select
+  }
+}//////////////////////QueryQuantifier
+
+QueryListComprehension /*&*/QueryListComprehension():
+  {
+    Token start, end;
+    boolean isAppended = false;
+    Cmd exp;
+    List<QueryControl> controls; 
+  }
+{
+  start = <QUERYLIST>
+  exp = CompactExp()
+  [ <ELLIPSIS> {isAppended = true;} ]
+  <BAR>
+  controls = QueryControls()          
+  end = <RBRACKET>
+  {return QueryDesugarer.listComprehension(start, end, controls, exp, isAppended);}
+}//////////////////////QueryListComprehension
+
+
+
+QueryTable /*&*/QueryTable():
+  {
+    Token start, end;
+    Token left;
+    IdWithOptInit key;
+    List<IdWithOptInit> keys = null;
+    boolean lparen, rparen;
+    TableFields item;
+    List<TableFields> items = Collections.EMPTY_LIST;
+    List<QueryControl> controls; 
+  }
+{
+  (
+    start = <QUERYTABLE> 
+  )
+  (     <LPAREN>
+        key = IdWithOptInit(ColAccess.KEY) {keys = list(key);}
+        (
+          <COMMA>
+          key = IdWithOptInit(ColAccess.KEY) {keys.add(key);}
+        )*
+     <RPAREN>
+     <LBRACE>
+        [
+          item = TableFields() {items = list(item);}
+          (item = TableFields() {items.add(item);}) *
+        ]
+     <BAR>
+     controls = QueryControls()     
+     end = RbraceOf("table")
+  )
+  {
+   return QueryDesugarer.table(start, end, controls, keys, items);
+  }
+}//////////////////////QueryTable
+
+
+QueryGroup /*&*/QueryGroup():
+  {
+    Token start, end;
+    QGKey key;
+    List<QGKey> keys = null;
+    QGAccum accum;
+    List<QGAccum> accums = null;
+    List<QueryControl> controls; 
+  }
+{
+  start = <QUERYGROUP>
+  <LPAREN>
+     key = QGKey() {keys = list(key);}
+     (
+       <COMMA>
+       key = QGKey() {keys.add(key);}
+     )*
+  <RPAREN>
+  <LBRACE>
+     accum = QGAccum() {accums = list(accum);}
+     (
+       accum = QGAccum() {accums.add(accum);}
+     )*
+  <BAR>
+     controls = QueryControls()
+  end = RbraceOf("group")
+  {
+    return QueryDesugarer.group(start,end,controls, keys, accums);
+  }
+}//////////////////////QueryGroup
+
+QGKey /*&*/QGKey():
+  {
+    Id id;
+    Cmd init;
+  }
+{
+  id = Id()
+  <EQUALS>
+  init = BiggishExp()
+  {return new QGKey(id.start, init.end, id, init);}
+}//////////////////////QGKey
+
+QGAccum /*&*/QGAccum():
+  {
+    Token start0=null, start1=null, start=null, end;
+    ColAccess ack = ColAccess.VAL;
+    ColSpecial spe = ColSpecial.NORMAL;
+    Id id;
+    QGAccum accum;
+  }
+{
+  // Vaguely Parallels code in TableFields
+  [start0 = <MAP> {spe = ColSpecial.MAP;}]
+  (
+     [start1 = <VAL>]
+     id = Id()
+     <EQUALS>
+     accum = QGAccumAfter(
+       firstNonNull(start0, start1, id.start),
+       ColAccess.VAL,
+       spe, id)
+     {return accum;}
+  |
+     start = <VAR>
+     id = Id()
+     <GETS>
+     accum = QGAccumAfter(
+       firstNonNull(start0, start1, id.start),
+       ColAccess.VAR,
+       spe, id)
+     {return accum;}
+  )
+}//////////////////////QGAccum
+
+QGAccum /*&*/QGAccumAfter(Token start, ColAccess ack, ColSpecial spe, Id id): 
+  {
+    Token end;
+    Cmd first, then, after = null; 
+    Cmd exp;    
+  }
+{
+  (
+    <FIRST>
+    first = BiggishExp()
+    <NONE> 
+    then = CompactExp()
+    {end = then.end;}
+    [
+      <QUERYAFTER>
+      after = CompactExp() 
+      {end = after.end;}
+    ]
+    [end = <SEMI>]
+    {return new QGAccum(start, end, ack, spe, id, first, then, after);}
+  | 
+    <QUERYLISTWORD>
+    exp = CompactExp()
+    {end = exp.end;}
+    [end = <SEMI>]
+    {return QueryDesugarer.qgaccumList(start, end, ack, spe, id, exp, 1);}
+  |
+    <QUERYREV>
+    exp = CompactExp()
+    {end = exp.end;}
+    [end = <SEMI>]
+    {return QueryDesugarer.qgaccumList(start, end, ack, spe, id, exp, -1);}
+  |
+    end = <COUNT>
+    [end = <SEMI>]
+    {return QueryDesugarer.qgaccumList(start, end, ack, spe, id, null, 0);}
+
+  )
+}//////////////////////QGAccumAFter
+
+QuerySort /*&*/QuerySort():
+  {
+    Token start, end;
+    Cmd exp;
+    SortKey key;
+    List<SortKey> keys = null;
+    List<QueryControl> controls; 
+  }
+{
+  start = <QUERYSORT>
+  // The bodies here are the same -- 
+  // we allow %sort(...) or %sort[...].
+  (
+    <LPAREN>
+    exp = CompactExp()
+    [
+      key = SortKey() {keys = list(key);}
+      (key = SortKey() { keys.add(key); })*
+    ]
+    {if (keys == null) keys = Collections.EMPTY_LIST;}
+    <BAR>
+    controls = QueryControls()   
+    end = <RPAREN>
+  |
+    <LBRACKET>
+    exp = CompactExp()
+    [
+      key = SortKey() {keys = list(key);}
+      (key = SortKey() { keys.add(key); })*
+    ]
+    {if (keys == null) keys = Collections.EMPTY_LIST;}
+    <BAR>
+    controls = QueryControls()   
+    end = <RBRACKET>
+  )
+  
+  {return QueryDesugarer.sort(start, end, controls, exp, keys);}
+}//////////////////////QuerySort
+
+SortKey /*&*/SortKey():
+  {
+    Token start;
+    SortOrder ord;
+    Cmd key;
+  }
+{
+  (start = <MOREL> {ord = SortOrder.DESCENDING;}
+  |start = <NONE>  {ord = SortOrder.ASCENDING;}
+  )
+  key = CompactExp()
+  {return new SortKey(start, key.end, ord, key);}
+}//////////////////////SortKey
+
+
+////////////////////////////////////////////////////////////////
+// Exp bits for patterns 
+////////////////////////////////////////////////////////////////
+
+ItExp /*&*/ItExp():
+  { Token it;
+  }
+{
+  it = <IT>
+  {return new ItExp(it, it);}
+}//////////////////////ItExp
+
+WildcardExp /*&*/WildcardExp():
+  { Token wi;
+  }
+{
+  wi = <WILD>
+  {return new WildcardExp(wi,wi);}
+}//////////////////////WildcardExp
+
+DotMethodCallExp /*&*/DotMethodCallExp():
+  {
+    Token start, end;
+    Id methodName;
+    Cmd arg = null;
+  }
+{
+  start = <DOT>
+  methodName = Id()
+  <LPAREN>
+  [
+    arg = CompactExp()
+  ]
+  end = <RPAREN>
+  {return new DotMethodCallExp(start,end, methodName, arg);}
+}//////////////////////DotMethodCallExp
+
+InterpolationExp /*&*/InterpolationExp():
+  {
+    Cmd e;
+    Token start, end;
+  }
+{
+  start = <DOLLARLPAREN>
+  e = BiggishExp()
+  end = <RPAREN>
+  {return new InterpolationExp(start, end, e);}
+}//////////////////////InterpolationExp
+
+////////////////////////////////////////////////////////////////
+// Stmt bits
+////////////////////////////////////////////////////////////////
+
+
+
+Valof /*&*/Valof():
+  {
+    List<Cmd> cmds = null;
+    Cmd cmd;
+    Token start, end;
+  }
+{
+  start = <VALOF>
+  <LBRACE>
+  {cmds = new ArrayList<Cmd>(2);}
+  (
+     cmd = Stmt(null,null) {cmds.add(cmd);}
+  )*
+  end = RbraceOf("valof")
+  {return new Valof(start, end, cmds, false);}
+}//////////////////////Valof
+
+Break /*&*/Break():
+  {
+    Token start, end;
+    Id id = null;
+  }
+{
+  start = <BREAK>
+  [ id = Id() ]
+  end = <SEMI>
+  {return new Break(start, end, id);}
+}//////////////////////Break
+
+Continue /*&*/Continue():
+  {
+    Token start, end;
+    Id id = null;
+  }
+{
+  start = <CONTINUE>
+  [ id = Id() ]
+  end = <SEMI>
+  {return new Continue(start, end, id);}
+}//////////////////////Continue
+
+ServeBlock /*&*/ServeBlock(String name, Token start):
+  {
+    Id a=null, b=null;
+    Cmd body;
+  }
+{
+     [
+       <LPAREN>
+       a = Id()
+       [
+         <COMMA>
+         b = Id()
+       ]
+       <RPAREN>
+     ]
+     body = SeqOf(name)
+  {return 
+   new ServeBlock(start, body.end, name, 
+     a == null ? Collections.EMPTY_LIST
+     : b == null ? list(a)
+     : list(a,b),
+    body);
+   }
+
+}//////////////////////ServeBlock
+
+Serve /*&*/Serve():
+  {
+    Token start, end, x;
+    Id msg, snd;
+    ServeBlock before=null, after=null;
+    Cmd beforeCmd, afterCmd, timeout = null, timeoutCmd = null;
+    List<Case> cases = Collections.EMPTY_LIST;
+  }
+{
+  start = <SERVE> {end = start;}
+  (
+     x = <BEFORE>
+     {if (before != null) throw error(start, x, "Can't have two before clauses in one serve.");}
+     before = ServeBlock("before", x)
+     {end = before.end;}
+  |
+     x = <AFTER>
+     {if (after != null) throw error(start, x, "Can't have two after clauses in one serve.");}
+     after = ServeBlock("after", x)
+     {end = after.end;}
+  | 
+     x = <CATCH>
+     {if (!cases.isEmpty()) throw error(start, x, "Can't have two catch clauses in one serve.");}
+     <LBRACE>
+     cases = Cases()
+     end = RbraceOf("catch")
+  | 
+     x = <TIMEOUT>
+    {if (timeout != null) throw error(start, x, "Can't have two timeout clauses in one serve.");}
+    <LPAREN>
+    timeout = CompactExp()
+    end = <RPAREN>
+    timeoutCmd = SeqOf("timeout")
+  )*
+  [end = <SEMI>]
+  {return new Serve(start, end, before, after, timeout, timeoutCmd, cases);}
+}//////////////////////Serve
+
+VarDecl /*&*/VarDecl():
+  {
+    Token start, end;
+    Id id;
+    Cmd init = null;
+    TypeConstraints tcs = null;
+  }
+{
+  start = <VAR>
+  id = Id()
+  tcs = TypeConstraints(start)
+  [
+    <GETS>
+    init = BiggishExp()
+  ]
+  end = <SEMI>
+  {return new VarDecl(start, end, id, init, tcs);}
+}//////////////////////VarDecl
+
+If /*&*/If():
+  { Token start, end;
+    Cmd test, thenarm, elsearm=null;
+    boolean reallyUnless = false;
+  }
+{
+  (start = <IF> {reallyUnless = false;} | start = <UNLESS> {reallyUnless = true;})
+  <LPAREN>
+  test = BiggishExp() 
+  <RPAREN>
+  thenarm = Stmt(start.image,null) {end = thenarm.end;}
+  [
+    // We've got a dangling-else problem here.
+    // JavaCC's default behavior is to do the right thing.  
+    // But it prints a warning because of the ambiguity.
+    // cf. https://javacc.dev.java.net/doc/lookahead.html
+    LOOKAHEAD(1) 
+    <ELSE>
+    elsearm = Stmt(start.image,"else")  {end = elsearm.end;}
+  ]
+  {
+    return new If(start, end, test, thenarm, elsearm, reallyUnless, false);
+  }
+}//////////////////////If
+
+
+
+Seq /*&*/Seq():
+  { Token start, end;
+    List<Cmd> cmds = null;
+    Cmd cmd;
+  }
+{
+  start = <LBRACE>
+  {cmds = new ArrayList<Cmd>(2);}
+  (
+     cmd = Stmt(null,null) {cmds.add(cmd);}
+  )*
+  end = Rbrace()
+  {return new Seq(start, end, cmds);}
+}//////////////////////Seq
+
+Cmd /*&*/SeqOf(String s):
+  { Token start, end;
+    List<Cmd> cmds = null;
+    Cmd cmd;
+  }
+{
+  start = <LBRACE>
+  {cmds = new ArrayList<Cmd>(2);}
+  (
+     cmd = Stmt(null,null) {cmds.add(cmd);}
+  )*
+  end = RbraceOf(s)
+
+  {return new Seq(start, end, cmds);}
+}//////////////////////Seq
+
+Cmd /*&*/SeqOf2(String s,String s2):
+  { Token start, end;
+    List<Cmd> cmds = null;
+    Cmd cmd;
+  }
+{
+  start = <LBRACE>
+  {cmds = new ArrayList<Cmd>(2);}
+  (
+     cmd = Stmt(null,null) {cmds.add(cmd);}
+  )*
+  end = RbraceOf2(s,s2)
+  {return new Seq(start, end, cmds);}
+}//////////////////////Seq
+
+Return /*&*/Return():
+  { 
+    Token start, end;
+    Cmd exp = null; 
+  }
+{
+  start = <RETURN>
+  [
+    exp = BiggishExp()
+  ]
+  end = <SEMI>
+  {return new Return(start, end, exp);}
+}//////////////////////Return
+
+While /*&*/While():
+  { Cmd test, body;
+    boolean isuntil;
+    Id label = null;
+    String lblName = null;
+    Token start, end;
+  }
+{
+  [label = Id() <COLON> {lblName = label.str();}]
+  (
+    (start = <WHILE> {isuntil = false;} | start = <UNTIL>{isuntil = true;})
+    {if (label != null) start = label.start;}
+    <LPAREN>
+    test = BiggishExp()
+    <RPAREN>
+    body = StmtWithOptSemi(isuntil ? "until" : "while", lblName)
+    {end = body.end;}
+    {return new While(start, end, label, test, body, isuntil, false);}
+  |
+    start = <DO>
+    {if (label != null) start = label.start;}
+    body = Stmt("do", lblName)
+    (<WHILE> {isuntil = false;} | <UNTIL>{isuntil = true;})
+    <LPAREN>
+    test = BiggishExp()
+    end = <RPAREN>
+    (
+      end = <SEMI>
+    )*
+    {return new While(start, end, label, test, body, isuntil, true);}
+  )
+}//////////////////////While
+
+For /*&*/For():
+  {
+    Id label = null;
+    String lblName = null;
+    Token start, end;
+    boolean inquisitive;
+    Cmd patcmd, list, body;
+  }
+{
+ [label = Id() <COLON> {lblName = label.str();}] 
+ start = <FOR>
+ {if (label != null) start = label.start;}
+ <LPAREN>
+ patcmd = CompactExp()
+  (<ITER_DEM> {inquisitive = false;}
+  |<ITER_INQ> {inquisitive = true;}
+  )
+ list = CompactExp()
+ <RPAREN>
+ body = Stmt("for", lblName)
+ {return new For(start, body.end,label,  pattern(patcmd), list, body, inquisitive);} 
+}//////////////////////For
+
+FunDecl /*&*/FunDecl():
+  {
+    Token start;
+    Id id;
+    FunBody funbody = null;
+  }
+{
+   start = <FUN> 
+   funbody = FunBody("fun", false)
+   {return new FunDecl(start, funbody.end, funbody.id(), funbody, funbody.isMarkedPure());}   
+}//////////////////////FunDecl
+
+FunBody /*&*/FunBody(String keyword, boolean withDist):
+  { MonoBody mb; 
+    List<MonoBody> mbs=null;
+    String funname;
+    boolean pure; 
+  }
+{
+  mb = MonoBodyStmt(keyword, null, withDist) {mbs = list(mb);}
+  {funname = mb.funname(); pure = mb.isMarkedPure();}
+  (<BAR> mb = MonoBodyStmt(keyword, funname, withDist) { mbs.add(mb); pure |= mb.isMarkedPure();})*
+  {return new FunBody(mbs.get(0).start, last(mbs).end, mbs, pure);}
+}//////////////////////FunBody
+
+MonoBody /*&*/MonoBodyStmt(String keyword, String funname, boolean withDist):
+  {
+    Formals formals = null;
+    Token a = null;
+    Token start = null;
+    Id id;
+    Token end;
+    Cmd e;
+    Cmd fromExp = null;
+    Cmd envelopeExp = null;
+    Pat fromPat = null;
+    Pat envelopePat = null;
+    boolean hasPrio = false;
+    int prio = 0;
+    Token prioToken = null;
+    boolean pure = false;
+  }
+{
+  id = MethodNameId() {start = id.start;}
+  {if (funname != null && !(funname.equals(id.str()))) {
+     throw error(id.start, id.end, 
+       "Currently defining function " + funname + ", but this clause "
+       + "is for " + id);
+    }
+  }
+  {funname = id.str();}
+  [formals = Formals()]
+  {if (formals == null) formals = new Formals(start,start, Collections.EMPTY_LIST);}
+  pure = Purity()
+  [
+    <FROM> 
+    fromExp = CompactExp()
+    {fromPat = pattern(fromExp);}
+    {if (! withDist) error(fromExp.start, fromExp.end, 
+        "This function cannot have a 'from' clause.");}
+  ]
+  [
+    <ENVELOPE> 
+    envelopeExp = CompactExp()
+    {envelopePat = pattern(envelopeExp);}
+    {if (! withDist) error(envelopeExp.start, envelopeExp.end, 
+        "This function cannot have an 'envelope' clause.");}
+  ]
+  [  <PRIO>
+     prioToken = <INT>
+     {hasPrio = true; prio = Integer.parseInt(prioToken.image);}
+     {if (! withDist) error (prioToken, prioToken, 
+         "This function cannot have a 'prio' clause.");}
+  ]
+  ( 
+    ( <EQUALS> )
+    (
+      e = CompactExp()  
+      end = <SEMI>
+    | 
+      e = SeqOf2(keyword, funname) {end = e.end;}
+    )
+  |
+    e = SeqOf2(keyword, funname) {end = e.end;}
+  )
+  {return new MonoBody(start, end, id, formals, fromPat, envelopePat, hasPrio, prio, e, pure);}
+}//////////////////////MonoBody
+
+////////////////////////////////////////////////////////////////
+// Case, Match, Try 
+////////////////////////////////////////////////////////////////
+
+Case /*&*/Case():
+  {
+    Cmd patexp;
+    Pat pat;
+    Token prioToken = null;
+    int prio = 0;
+    Cmd fromExp = null;
+    Pat from = null;
+    Cmd envelopeExp = null;
+    Pat envelope = null;
+    boolean hasPrio = false;
+    Cmd body = null;
+  }
+{
+  patexp = CompactExp()
+  [  <FROM>
+     fromExp = CompactExp()
+     {from = pattern(fromExp);}
+  ]
+  [  <ENVELOPE>
+     envelopeExp = CompactExp()
+     {envelope = pattern(envelopeExp);}
+  ]
+  [ <PRIO> 
+     {hasPrio = true;}
+     prioToken = <INT>
+     {prio = Integer.parseInt(prioToken.image);}
+     ]
+  ( <EQUALS> | <ARROW2R>)
+  body = ExpOrBlock()
+  {return new Case(patexp.start, body.end, pattern(patexp), from, envelope, hasPrio, prio, body);}
+}//////////////////////Case
+
+List<Case> /*&*/Cases():
+  {
+    Case c;
+    List<Case> cases = null;
+  }
+{
+  [ <BAR> ]
+    c = Case() {cases = list(c);}
+  (<BAR> c = Case() { cases.add(c); })*
+  {return cases;}
+}//////////////////////Cases
+
+Match /*&*/Match():
+  { 
+    Token start, end = null;
+    Cmd subject;
+    List<Case> cases = null;
+  }
+{
+  start = <MATCH>
+  subject = CompactExp()
+  <LBRACE>
+  cases = Cases()
+  end = RbraceOf("match")
+  {return new Match(start, end, subject, cases);}
+}//////////////////////Match
+
+
+Throw /*&*/Throw():
+  {
+    Token start, end;
+    Cmd exn;
+  }
+{
+  start = <THROW>
+  exn = BiggishExp()
+  end = <SEMI>
+  {return new Throw(start, end, exn);}
+}//////////////////////Throw
+
+Try /*&*/Try():
+  {Token start, end = null;
+   Cmd body;
+   Case c = null;
+   List<Case> cases = null;
+   Cmd fin = null;
+  }
+{
+  start = <TRY>
+  body = Seq()
+  [
+    <CATCH>
+    (
+      <LBRACE>
+      cases = Cases()
+      end = RbraceOf2("try", "catch")
+    )    
+  ]
+  [
+    <FINALLY>
+    fin = Seq()
+    {end = fin.end;}
+  ]
+  ( <SEMI> )*
+  {
+    if (cases == null && fin == null) {
+      error(start, body.end, 
+        "a 'try' must have a 'catch' or a 'finally' (or both)");
+    }
+    assert(end != null); 
+    if (cases == null) cases = Collections.EMPTY_LIST;
+    return new Try(start, end, body, cases, fin);
+  }
+}//////////////////////Try
+
+////////////////////////////////////////////////////////////////
+// Object and Class
+////////////////////////////////////////////////////////////////
+
+ClassMember /*&*/ClassMember():
+  {
+     MethDecl fd;
+     Cmd e = null, f=null;
+     Token start = null, end = null;
+     Id id = null;
+     Formals formals;
+     ClassMember mem;
+  }
+{
+  (
+    fd = MethDecl() {return fd;}
+  | mem = Bind(false) { return mem; }
+  | mem = ClsCtorDef() {return mem;}
+  | mem = VarDecl() {return mem;}
+//  | mem = ClsPatDef()  {return mem;}
+  | mem = ImportStmt() {return mem;}
+  )
+}//////////////////////ClassMember
+
+ObjectMember /*&*/ObjectMember():
+  { ObjectMember om;
+  }
+{
+  ( om = MethDecl() 
+  | om = Bind(true) 
+//  | om = ClsPatDef()
+  | om = VarDecl()
+  | om = ImportStmt()
+  )
+  {return om;}  
+}//////////////////////ObjectMember
+
+ClsCtorDef /*&*/ClsCtorDef():
+  { Token start, end;
+    Id id = null;
+    Formals formals;
+    Cmd e;
+    MonoBody monobody;
+    boolean pure;
+  }
+{
+    start = <NEW>
+    [
+      LOOKAHEAD(1)
+      id = Id()
+    ]
+    formals = Formals()
+    pure = Purity()
+    (
+      LOOKAHEAD(2)
+      [ <EQUALS> ]
+      e = SeqOf("new") {end = e.end;}
+      [ end = <SEMI> ]
+    |
+      <EQUALS>
+      e = CompactExp()
+      end = <SEMI>
+    )
+    {
+      monobody = new MonoBody(e.start, e.end, id, formals, null, null, false, 0, e, pure);
+      return new ClsCtorDef(start, end, id, monobody);
+    }
+}//////////////////////ClsCtorDef
+
+//snick//ClsVarFieldDecl /*&*/ClsVarFieldDecl():
+//snick//  { Token start, end;
+//snick//    Id id;
+//snick//    Cmd e = null;
+//snick//  }
+//snick//{
+//snick//    start = <VAR>
+//snick//    id = Id() 
+//snick//    [ 
+//snick//      (<EQUALS> | <GETS>)
+//snick//      e = Exp()
+//snick//    ]
+//snick//    end = <SEMI>
+//snick//    {return new ClsVarFieldDecl(start, end, id, e);}
+//snick//
+//snick//}//////////////////////ClsVarFieldDecl
+//snick//
+
+//snick//ClsValFieldDecl /*&*/ClsValFieldDecl():
+//snick//  {
+//snick//    Token start = null, end;
+//snick//    Cmd e, f = null;
+//snick//  }
+//snick//{
+//snick//    [start = <VAL>]
+//snick//    e = CompactExp()
+//snick//    {if (start == null) start = e.start;}
+//snick//    [
+//snick//      <EQUALS> f = Exp() 
+//snick//    ]
+//snick//    end = <SEMI>
+//snick//    {return new ClsValFieldDecl(start == null ? e.start : start, end, pattern(e), f);}    
+//snick//}//////////////////////ClsValFieldDecl
+//snick//
+
+MethDecl /*&*/MethDecl():
+  {
+    Token start;
+    Id id;
+    FunBody funbody = null;
+  }
+{
+   ( start = <METH> )
+   funbody = FunBody(start.image, false)
+   {return new MethDecl(start, funbody.end, funbody.id(), funbody, funbody.isMarkedPure());}   
+}//////////////////////MethDecl
+
+
+//PAT// ClsPatDef /*&*/ClsPatDef():
+//PAT//   {
+//PAT//     Token start, end;
+//PAT//     Id name;
+//PAT//     Id formal; 
+//PAT//     List<Id> formals = Collections.EMPTY_LIST;
+//PAT//     Cmd body;
+//PAT//   }
+//PAT// {
+//PAT//   start = <PAT>
+//PAT//   name = Id()
+//PAT//   <LPAREN>
+//PAT//   formals = Ids()
+//PAT// /*  [
+//PAT//     formal = Id() {formals = list(formal);}
+//PAT//     (<COMMA> formal = Id() { formals.add(formal); })*
+//PAT//   ]
+//PAT// */
+//PAT//   <RPAREN>
+//PAT//   [ <EQUALS> ] 
+//PAT//   body = SeqOf2("pat", name.str())
+//PAT//   {return new ClsPatDef(start, body.end, name, formals, body);}
+//PAT// 
+//PAT// }//////////////////////ClsPatDef
+
+List<ClassMember> /*&*/ClassMembers():
+  { ClassMember mem;
+    List<ClassMember> members = new ArrayList<ClassMember>(4);
+  }
+{
+  (
+    mem = ClassMember() {members.add(mem);}
+  )*
+  {return members;}
+}//////////////////////ClassMembers
+
+ClsExtends /*&*/ClsExtends1():
+  {
+     QualName qn;
+     List<Cmd> actuals = null;  
+     Token end = null;
+     Token[] ender;
+  }
+{
+  qn = QualName(1)
+  [
+     <LPAREN>
+     {ender = new Token[1];}
+     actuals =  ActualsPlusRparen(ender)
+     {end = ender[0];}
+  ]
+  {
+    if (actuals== null) {
+       actuals = Collections.EMPTY_LIST;
+       end = qn.end;
+    }
+  }
+  {return new ClsExtends(qn.start, end, qn, actuals);}
+}//////////////////////ClsExtends1
+
+
+List<ClsExtends> /*&*/ClsExtendsClause():
+  {
+     ClsExtends e;
+     List<ClsExtends> ext = null;
+  }
+{
+  [        
+     <EXTENDS>
+     e = ClsExtends1() {ext = list(e);}
+     (
+       <COMMA>
+       e = ClsExtends1() {ext.add(e);}
+     )*
+     {return ext;}
+  ]
+  {return Collections.EMPTY_LIST;}
+}
+//////////////////////ClsExtendsClause
+
+
+List<ObjectMember> /*&*/ObjectMembers():
+  { ObjectMember mem;
+    List<ObjectMember> members = new ArrayList<ObjectMember>(4);
+  }
+{
+  (
+    mem = ObjectMember() {members.add(mem);}
+  )*
+  {return members;}
+}//////////////////////ObjectMembers
+
+AnonObj /*&*/AnonObj():
+  {
+     Token start, end;
+     List<ClsExtends> ext = null;
+     List<ObjectMember> members = null;
+     boolean isMarkedPure = false;
+  }
+{
+   start = <OBJECT>
+   isMarkedPure = Purity()
+   ext = ClsExtendsClause()
+   <LBRACE>
+   members = ObjectMembers()
+   end = RbraceOf("object")
+   {
+     Cmd desugared = AnonObjDesugarer.of(start, end, ext, members, isMarkedPure);
+     return new AnonObj(start, end, ext, members, isMarkedPure, desugared);}
+}//////////////////////AnonObj
+
+ClassFormal /*&*/ClassFormal():
+  { Token start= null;
+    Id name;
+    boolean isVar = false;
+    TypeConstraints tc;
+  }
+{
+  [start = <VAR> {isVar = true;}]
+  name = Id()
+  tc = TypeConstraints(name.start)
+  {return new ClassFormal(isVar ? start : name.start, name.end, name, isVar, tc);}
+}//////////////////////ClassFormal
+
+List<ClassFormal> /*&*/ClassFormals():
+  {
+    ClassFormal cf; 
+    List<ClassFormal> p = null;
+  }
+{
+  [
+    <LPAREN>
+    [
+      cf = ClassFormal() {p = list(cf);}
+      (
+        <COMMA>
+        cf = ClassFormal() {p.add(cf);}  
+      )*
+    ]
+   <RPAREN>
+  ]
+  {return p;}
+}//////////////////////ClassFormals
+
+ClsDecl /*&*/ClsDecl():
+  {
+    boolean isMarkedPure = false;
+    Token start = null, cls, val, end;
+    Id name; 
+    List<ClassFormal> params = null;
+    boolean hasParams = false;
+    List<ClsExtends> ext = null;
+    List<ClassMember> members = null;
+  }
+{
+  cls = <CLASS> {start = cls;}
+  name = Id()
+  params = ClassFormals()
+  {if (params!=null) {
+     hasParams=true;
+     }
+   else {hasParams=false; params=Collections.EMPTY_LIST;}}
+  isMarkedPure = Purity()
+  ext = ClsExtendsClause()
+  (
+    <LBRACE>
+    members = ClassMembers()
+    end = RbraceOf2("class", name.str())
+    ( end = <SEMI> )*
+  |
+    end = <SEMI>
+    {members = list();}
+  )
+  {AddImplicitClassMembers.to(members, start, end, name, hasParams, params, ext, isMarkedPure);}
+  {return new ClsDecl(start, end, isMarkedPure, name, hasParams, params, ext, members);}
+}//////////////////////ClsDecl
+
+
+////////////////////////////////////////////////////////////////
+// import ; modules
+////////////////////////////////////////////////////////////////   
+
+ModArgBinding /*&*/ModArgBinding():
+  {
+    Id formal;
+    QualName actual;
+  }
+{
+   formal = Id()
+   <EQUALS>
+   actual = QualName(1)
+   {return new ModArgBinding(formal.start, actual.end, formal, actual);}         
+}//////////////////////ModArgBinding
+
+//OLD//   
+//OLD//   ImportStmt /*&*/ImportStmt():
+//OLD//     {
+//OLD//       boolean isOwn = false;
+//OLD//       QualName modName;
+//OLD//       ModArgBinding modArg;
+//OLD//       List<ModArgBinding> bindings = null;
+//OLD//       QualName as = null;
+//OLD//       Token start, end;
+//OLD//       boolean dotstar = false;
+//OLD//     }
+//OLD//   {
+//OLD//     start = <IMPORT>
+//OLD//     [ <OWN> {isOwn = true;}] 
+//OLD//     modName = QualName(1)
+//OLD//     [LOOKAHEAD(2)
+//OLD//       <DOTSTAR> {dotstar = true;}
+//OLD//     ]
+//OLD//     {bindings = Collections.EMPTY_LIST;}
+//OLD//     [
+//OLD//       <LPAREN>
+//OLD//       modArg = ModArgBinding() {bindings = list(modArg);}
+//OLD//       (<COMMA> modArg = ModArgBinding() { bindings.add(modArg); })*
+//OLD//       <RPAREN>
+//OLD//     ]
+//OLD//     [
+//OLD//       <AS>
+//OLD//       as = QualName(1)
+//OLD//     ]
+//OLD//     end = <SEMI>
+//OLD//     {return new ImportStmt(start, end, isOwn, modName, bindings, as, dotstar);}
+//OLD//   }//////////////////////ImportStmt
+//OLD//   
+
+ImportStmt /*&*/ImportStmt():
+  {
+    boolean isOwn = false;
+    QualName modName;
+    ModArgBinding modArg;
+    List<ModArgBinding> bindings = null;
+    Id as = null;
+    Token start, end;
+    boolean dotstar = false;
+  }
+{
+  start = <IMPORT>
+  [ <OWN> {isOwn = true;}] 
+  [LOOKAHEAD(3)
+   as = Id()
+   <EQUALS>
+  ]
+  modName = QualName(1)
+  [LOOKAHEAD(2)
+    <DOTSTAR> {dotstar = true;}
+  ]
+  {bindings = Collections.EMPTY_LIST;}
+  [
+    <LPAREN>
+    modArg = ModArgBinding() {bindings = list(modArg);}
+    (<COMMA> modArg = ModArgBinding() { bindings.add(modArg); })*
+    <RPAREN>
+  ]
+  end = <SEMI>
+  {return new ImportStmt(start, end, isOwn, modName, bindings, as, dotstar);}
+}//////////////////////ImportStmt
+
+
+Alias /*&*/Alias():
+  {
+    QualName oldname;
+    QualName newname;
+    Token start, end;
+  }
+{
+   start = <ALIAS>
+   oldname = QualName(1)
+   <EQUALS>
+   newname = QualName(1)
+   end = <SEMI>
+   {return new Alias(start, end, oldname, newname);}
+}//////////////////////Alias
+
+
+////////////////////////////////////////////////////////////////
+// Module File
+////////////////////////////////////////////////////////////////
+
+Module /*&*/Module():
+  {
+    boolean isVal = false;
+    Token start = null, modu, end;
+    QualName moduleName;
+    ModuleFileMember bit;
+    List<ModuleFileMember> bits = Collections.EMPTY_LIST;
+  }
+{
+  [ start = <VAL> {isVal = true;} ]         
+  modu = <MODULE> {if (start == null) start = modu; }
+  moduleName = QualName(1)
+  (
+    <LBRACE>
+    [
+    bit = ModuleFileMember() {bits = list(bit);}
+    ( bit = ModuleFileMember() { bits.add(bit); })*
+    ]
+    end = RbraceOf2("module" ,moduleName.last().str())
+  |
+    <SEMI>
+    [
+    bit = ModuleFileMember() {bits = list(bit);}
+    ( bit = ModuleFileMember() { bits.add(bit); })*
+    ]
+    end = <EOF>
+  )
+ {return new Module(start, end, isVal, moduleName, bits); }
+}//////////////////////Module
+
+ModuleFileMember /*&*/ModuleFileMember():
+  {
+    ModuleFileMember mb;
+  }
+{
+  (
+    mb = ModuleFileMemberStmt()
+  | mb = ModuleFileImport()
+  | mb = ModuleFileVisibility()
+  | mb = ModuleFileAlias() 
+  | mb = ClsDecl()
+  | mb = VarDecl()
+  | mb = FunDecl()
+  | mb = Bind(true)
+  | mb = Javaly()
+  | mb = ComponentDecl()
+  )
+  {return mb;}
+}//////////////////////ModuleFileMember
+
+
+Bind /*&*/Bind(boolean expRequired):
+  { Cmd p, exp = null;
+    Token start = null, end;
+    TypeConstraints tcs = null;
+    Pat pat;
+  }
+{
+   [start = <VAL>]
+   p = CompactExp()
+   {start = p.start;}
+   {pat = pattern(p);}
+   [
+     <EQUALS>
+     exp = BiggishExp()
+   ]
+   end = <SEMI>
+   {if (expRequired && exp==null) {
+     throw error(start, end, "Expression required in 'var' binding here.");
+   }}
+   {return new Bind(start, end, pat, exp);}
+}//////////////////////Bind
+
+ModuleFileMemberStmt /*&*/ModuleFileMemberStmt():
+  { 
+    Token start, end;
+    Token filename;
+  }
+{
+  start = <MEMBER>
+  (filename = <STRING1> | filename = <STRING2>)
+  end = <SEMI>
+  {return new ModuleFileMemberStmt(start, end, filename.image.substring(1, filename.image.length()-1));}
+}//////////////////////ModuleFileMemberStmt
+
+ModuleFileImport /*&*/ModuleFileImport():
+  {
+    ImportStmt is;
+  }
+{
+  is = ImportStmt()
+  {return new ModuleFileImport(is.start, is.end, is);}
+}//////////////////////ModuleFileImport
+
+ModuleFileAlias /*&*/ModuleFileAlias():
+  {
+     Alias ali;
+  }
+{
+   ali = Alias()
+   {return new ModuleFileAlias(ali.start, ali.end, ali);}
+}//////////////////////ModuleFileAlias
+
+ModuleFileVisibility /*&*/ModuleFileVisibility():
+  {
+     Token start, end;
+     Visibility vis;
+     Id id;
+  }
+{
+  (start = <PUBLIC> {vis = Visibility.PUB;}
+  |start = <PRIVATE>{vis = Visibility.PRIV;}
+  )
+  id = Id()
+  end = <SEMI>
+  {return new ModuleFileVisibility(start, end, vis, id);}
+}//////////////////////ModuleFileVisibility
+
+////////////////////////////////////////////////////////////////
+// Table
+////////////////////////////////////////////////////////////////
+
+TableMember /*&*/TableMember():
+  {
+    TableMember ti;
+  }
+{ 
+  (
+    ti = TableFields()
+//  | ti = MethDecl()
+  )
+  {return ti;}
+}//////////////////////TableMember
+
+IdWithOptInit /*&*/IdWithOptInit(ColAccess colac):
+  {
+    Id id;
+    Token assigner = null;
+    TypeConstraints typeConstraints = null;
+    Cmd init = null;
+    Token end;
+  }
+{
+  id = Id()
+  {end = id.end;}
+  typeConstraints = TypeConstraints(end)
+  [
+    (assigner = <EQUALS> | assigner = <GETS>)
+    init = CompactExp()
+    {requireEek(assigner, colac);}
+    {end = init.end;}
+  ]
+  {return new IdWithOptInit(id.start, end, id,  init, typeConstraints,colac);}
+}//////////////////////IdWithOptInit
+
+TableKey /*&*/TableKey():
+  {
+    Id name;
+    TypeConstraints tc;
+  }
+{
+  name = Id()
+  tc = TypeConstraints(name.end)
+  {return new TableKey(name.start, tc.end, name, tc);}
+}//////////////////////TableKey
+
+TableFields /*&*/TableFields():
+  {
+    Token start = null, start0=null, end;
+    ColAccess ack;
+    TableFields tf;
+    ColSpecial spe = ColSpecial.NORMAL;
+   }
+{
+  // Parallels code in QGAccum
+  [start0 = <MAP> {spe = ColSpecial.MAP;}]
+  (
+      ( start = <VAL> {ack = ColAccess.VAL;} 
+      | start = <VAR> {ack = ColAccess.VAR;}
+      )
+      tf = TableFieldsAfter(start0 == null ? start : start0, ack, spe)
+      {return tf;}
+  |
+      tf = TableFieldsAfter(start0, ColAccess.VAL, spe)
+      {return tf;}
+  )
+}//////////////////////TableField
+
+TableFields /*&*/TableFieldsAfter(Token start, ColAccess ack, ColSpecial spe):
+  {
+    Token end;
+    IdWithOptInit idi;
+    List<IdWithOptInit> ids = null;
+  }
+{
+  idi = IdWithOptInit(ack) 
+  {ids = list(idi); 
+   if (start == null) {
+     start = idi.start;
+     ack = ColAccess.VAL;
+   }
+  }
+  (<COMMA> idi = IdWithOptInit(ack) { ids.add(idi); })*
+  end = <SEMI>
+  {return new TableFields(start, end, ack, spe, ids);}
+}//////////////////////TableFieldsAfter
+
+//tablewide// TablewideField /*&*/TablewideField():
+//tablewide//   {
+//tablewide//     Token start, end;
+//tablewide//     ColAccess ack = null;
+//tablewide//     Id id;     
+//tablewide//     Cmd init;
+//tablewide//   }
+//tablewide// {
+//tablewide//   start = <TABLE>
+//tablewide//   (
+//tablewide//     <VAR> {ack = ColAccess.VAR;} id = Id() (<GETS>)
+//tablewide//   | <VAL> {ack = ColAccess.VAL;} id = Id() (<EQUALS>)  
+//tablewide//   )        
+//tablewide//   init = CompactExp()
+//tablewide//   end = <SEMI>
+//tablewide//   {return new TablewideField(start, end, ack, id, init);}
+//tablewide// }//////////////////////TablewideField
+//tablewide// 
+
+Table /*&*/Table():
+  {
+    Token start, end;
+    TableFields item;
+    List<TableKey> keys = null;
+    TableKey key;
+    List<TableFields> items = null;
+  }
+{
+  start = <TABLE>
+  <LPAREN>
+     key = TableKey() {keys = list(key);}
+     (
+       <COMMA>
+       key = TableKey() {keys.add(key);}
+     )*
+  <RPAREN>
+  <LBRACE>
+  [
+      item = TableFields() {items = list(item);}
+    ( item = TableFields() { items.add(item); })*
+  ]
+  {if (items == null) items = Collections.EMPTY_LIST;}
+  end = RbraceOf("table")
+  {return new Table(start, end, keys, items);}
+}//////////////////////Table
+
+
+Ord /*&*/Ord():
+  {
+    Token start, end;
+    TableFields fields; 
+    List<TableFields> fieldses = null;
+  }
+{
+   start = <ORD>
+   (
+      (
+         <LBRACE>
+           fields = TableFields() {fieldses = list(fields);}
+           (
+             fields = TableFields() {fieldses.add(fields);}
+           )*
+         end = <RBRACE>
+         {
+           return new Ord(start, end, fieldses); 
+         }
+     )
+     |
+     (
+       <LPAREN>
+       end = <RPAREN>
+       {
+         return fisher.syn.converters.OrdBuilder.simple(start, end);
+       }
+     )
+  )
+}//////////////////////Ord
+
+
+
+MapCtor /*&*/MapCtor():
+  {
+    Token start, end;
+  }
+{
+  start = <MAP>
+  (
+//map()    <LBRACE>
+//map()    end = <RBRACE>
+//map()  |
+    <LPAREN>
+    end = <RPAREN>
+  )
+  {
+     Cmd actualCode = DesugarMap.of(start, end);
+  }
+  {return new MapCtor(start, end, actualCode);}
+}//////////////////////MapCtor
+
+////////////////////////////////////////////////////////////////
+// Spawns 
+////////////////////////////////////////////////////////////////
+
+Cmd /*&*/Spawn():
+  {
+    ProcMember pm;
+    List<ProcMember> pms = Collections.EMPTY_LIST;
+    Id name = null;
+    Token start, end;
+    List<Cmd> actuals = null;
+    Token[] ender;
+  }
+{
+  start = <SPAWN>
+  (
+     LOOKAHEAD(2)
+     [
+       name = Id()
+     ]
+     <LBRACE>
+     [
+       pm = ProcMember() {pms = list(pm);}
+       (pm = ProcMember() { pms.add(pm); })*
+     ]
+     end = RbraceOf2("spawn", name == null ? null : name.str())
+     {return new Spawn(start, end, name, pms);}
+  |
+     name = Id()
+     <LPAREN>
+     {ender = new Token[1];}
+     actuals = ActualsPlusRparen(ender)
+     {end = ender[0];}
+     {
+       if (name == null) {
+          error(start, start, "Need a name or body of the component to spawn.");
+       }
+       end = name.end;
+       return new SpawnByComponentName(start, end, new VarExp(name.start, name.end, name), actuals);
+       
+     }
+  )
+}//////////////////////Spawn
+
+ComponentDecl /*&*/ComponentDecl():
+  {
+    Token start, end;
+    Id name;
+    Formals formals;
+    List<ProcMember> pms = Collections.EMPTY_LIST;
+    ProcMember pm;
+  }
+{
+  start = <COMPONENT>
+  name = Id()
+  formals = Formals()
+  <LBRACE>
+  [
+    pm = ProcMember() {pms = list(pm);}
+    (pm = ProcMember() { pms.add(pm); })*
+  ]
+  end = RbraceOf2("spawn", name == null ? null : name.str())
+  [end = <SEMI>]
+  {return new ComponentDecl(start, end, name, formals, pms, 
+     ComponentDeclDesugarer.of(start, end, name, formals, pms)
+     );}
+}//////////////////////ComponentDecl
+
+ProcMember /*&*/ProcMember():
+  {
+    ProcMember pm ; 
+  }
+{
+  ( pm = SyncDecl() 
+  | pm = AsyncDecl()
+  | pm = FunDecl() 
+  | pm = Bind(false)
+  | pm = VarDecl() 
+  | pm = ProcCode()
+  | pm = ImportStmt()
+  )
+  {return pm;}
+}//////////////////////ProcMember
+
+ProcMember /*&*/ProcCode():
+  {
+    Token start, end;
+    Cmd code;
+    char kind;
+  }
+{
+  (start = <INITIALLY> {kind = '1';}
+  |start = <BODY> {kind = 'b';}
+  )
+  code = SeqOf(start.image)
+  [<SEMI>]
+  {
+    switch(kind) {
+      case '1': return new ProcInit(start, code.end, code);
+      case 'b': return new ProcBody(start, code.end, code);
+      default: throw error(start, code.end, "Internal error -- what is kind=" + kind);
+      }
+  }
+}//////////////////////ProcCode
+
+SyncDecl /*&*/SyncDecl():
+  { Token start;
+    Id id;
+    FunBody funbody;
+  }
+{
+   start = <SYNC> 
+   funbody = FunBody("sync", true)
+   {return new SyncDecl(start, funbody.end, funbody.id(), funbody);}
+}//////////////////////RpcDecl
+
+
+AsyncDecl /*&*/AsyncDecl():
+  { Token start;
+    Id id;
+    FunBody funbody;
+  }
+{
+   start = <ASYNC> 
+   funbody = FunBody("async", true)
+   {return new AsyncDecl(start, funbody.end, funbody.id(), funbody);}
+}//////////////////////SignalDecl
+
+Recv /*&*/Recv():
+  {
+    Token start, end = null;
+    Cmd subject;
+    List<Case> cases = null;
+    Cmd timeoutLen = null, timeoutCmd = null;
+  }
+{
+  start = <RECV>
+  <LBRACE>
+  cases = Cases()
+  [ 
+    <TIMEOUT>
+    <LPAREN>
+    timeoutLen = BiggishExp()
+    <RPAREN>
+    timeoutCmd = ExpOrBlockOf("timeout")
+  ]
+  end = RbraceOf(start.image)
+  ( <SEMI> )*
+  {return new Recv(start, end,  cases, timeoutLen, timeoutCmd);}
+}//////////////////////Recv
+
+
+
+
+////////////////////////////////////////////////////////////////
+// Java
+////////////////////////////////////////////////////////////////
+
+ModuleFileMember /*&*/Javaly():
+  {
+    Token start, end;
+    Id name; 
+    List<Id> formals = null;
+    QualName qualname;
+    JavalyClassDecl jcl;
+  }
+{
+  start = <JAVALY>
+  (
+    <FUN>
+    name = Id()
+    <LPAREN>
+    formals = Ids()
+    <RPAREN>
+    <EQUALS>
+    qualname = QualName(2)
+    end = <SEMI>
+    {return new JavalyFun(start, end, name, formals, qualname);}
+  |
+    jcl = JavalyClassDecl(start)
+    {return jcl;}    
+  )
+   
+}//////////////////////Javaly
+
+JavalyMethodDecl /*&*/JavalyMethodDecl():
+  {
+    Token start, end;
+    Id name;
+    List<Id> formals = null;
+    Id impl = null;
+  }
+{
+  start = <METH>
+  name = Id()
+  <LPAREN>
+  formals = Ids()
+  <RPAREN>
+  <EQUALS> 
+  impl = Id()
+  end = <SEMI>
+  {return new JavalyMethodDecl(start, end, name, formals, impl);}
+}//////////////////////JavalyMethodDecl
+
+JavalyNewDecl /*&*/JavalyNewDecl():
+  {
+    Token start, end;
+    Id name;
+    List<Id> formals = null;
+  }
+{
+  start = <NEW>
+  name = Id()
+  <LPAREN>
+  formals = Ids()
+  <RPAREN>
+  end = <SEMI>
+  {return new JavalyNewDecl(start, end, name, formals);}
+}//////////////////////JavalyNewDecl
+
+JavalyClassDecl /*&*/JavalyClassDecl(Token start):
+  {
+     Token end;
+     Id name;
+     QualName impl;
+     JavalyMethodDecl meth;
+     List<JavalyMethodDecl> meths = list();
+     JavalyNewDecl nhw;
+     List<JavalyNewDecl> nhws = list();
+     List<Id> formals = Collections.EMPTY_LIST;
+  }
+{
+  <CLASS>
+  name = Id()
+  [
+    <LPAREN>
+    formals = Ids()
+    <RPAREN>
+  ]
+  <EQUALS>
+  impl = QualName(1)
+  <LBRACE>
+  (
+    meth = JavalyMethodDecl() {meths.add(meth);}
+  | nhw  = JavalyNewDecl()    {nhws.add(nhw);}
+  )*
+  end = RbraceOf2("class", name.str())
+  {return new JavalyClassDecl(start, end, name, impl, meths, nhws, formals);}
+}//////////////////////JavalyClassDecl
+
+
+
+////////////////////////////////////////////////////////////////
+// Reading constants into Thorn objects.
+////////////////////////////////////////////////////////////////
+
+Thing /*&*/ReadThing() throws FisherException:
+  {
+    Token a;
+    List<Thing> L = null;
+    Thing t;
+    RecordTh r = null; 
+    Id id;
+  }
+{
+(
+  a = <INT> {return IntTh.of(Long.parseLong(a.image));}
+| <MINUS> a = <INT> {return IntTh.of(-Long.parseLong(a.image));}
+| a = <FLOAT> {return FloatTh.of(Double.parseDouble(a.image));}
+| <TRUE> {return BoolTh.True;}
+| <FALSE> {return BoolTh.False;}
+| <NULL> {return null;}
+| a = <STRING1> {return QuoteStyle.Q1.deBackslash(a);}
+| a = <STRING2> {return QuoteStyle.Q2.deBackslash(a);}
+| a = <STRING3> {return QuoteStyle.QQQ1.deBackslash(a);}
+| a = <STRING4> {return QuoteStyle.QQQ2.deBackslash(a);}
+| 
+  <LBRACKET>
+  {L = list();}
+  [
+    t = ReadThing() {L.add(t);}
+    (
+      <COMMA>
+      t = ReadThing() {L.add(t);}  
+    )*
+  ]
+  <RBRACKET>
+  {return ListTh.fromJavaList(L);}
+| 
+  <LRECBRACE>
+  {r = RecordTh.unfinished();}
+  [
+     ReadThing_RecordField(r)
+     (
+        <COMMA>
+        ReadThing_RecordField(r)
+     )*   
+  ]
+  {r.finish();}
+  {return r;}
+  <RRECBRACE>
+)
+}//////////////////////ReadThing
+
+void /*&*/ReadThing_RecordField(RecordTh r) throws FisherException:
+  { Id id; Thing th; 
+  }
+{
+  id = Id()
+  <COLON>
+  th = ReadThing()
+  {r.setField(id.str(), th);}
+}//////////////////////ReadThing_RecordField
+
+////////////////////////////////////////////////////////////////
+// Testing Interface
+////////////////////////////////////////////////////////////////
+
+Cmd /*&*/TestExp(FisherSource source):
+  {
+    Cmd c;
+  }
+{
+  c = CommandlikeExp()
+  <EOF>
+  {c.setSourceOnFamily(source);}
+  {return c;}
+}//////////////////////TestExp   
+
+Cmd /*&*/TestStmt(FisherSource source):
+  {
+    Cmd c;
+  }
+{
+  c = Stmt(null,null)
+  <EOF>
+  {c.setSourceOnFamily(source);}
+  {return c;}
+}//////////////////////TestStmt   
+
+Pat /*&*/TestPat(FisherSource source):
+  {
+    Pat c;
+  }
+{
+  c = Pat()
+  <EOF>
+  {c.setSourceOnFamily(source);}
+  {return c;}
+}//////////////////////TestPat   
+
+ClsDecl /*&*/TestClsDecl(FisherSource source):
+  {
+    ClsDecl c;
+  }
+{
+  c = ClsDecl()
+  <EOF>
+  {c.setSourceOnFamily(source);}
+  {return c;}
+}//////////////////////TestClsDecl
+
+Module /*&*/TestModule(FisherSource source):
+  {
+     Module mf;
+  }
+{
+  mf = Module()
+  <EOF>
+  {mf.setSourceOnFamily(source);}
+  {return mf;}
+}//////////////////////TestModuleFile
+
+CmdsInAList /*&*/TestCmds(FisherSource source):
+  {
+     Cmd mf = null;
+     Token start, end;
+     List<Cmd> L = new ArrayList<Cmd>();
+  }
+{
+  (
+    mf = Stmt(null,null )
+    {mf.setSourceOnFamily(source);}
+    {L.add(mf);}
+  )*
+  end = <EOF>
+  {return new CmdsInAList(
+     L.isEmpty() ? end : L.get(0).start,
+     end,
+     L
+     );}
+}//////////////////////TestCmd
+
+
+Spawn /*&*/SpawnFile(FisherSource source):
+  {
+    Cmd cmd; Spawn sp;
+  }
+{
+  cmd = Spawn()
+  ( <SEMI> )*
+  <EOF>
+  {if (cmd instanceof Spawn) {
+    sp = (Spawn) cmd;
+    sp.setSourceOnFamily(source);
+    return sp;}
+   else {
+    
+   }}
+}//////////////////////SpawnFile
+
+Seq /*&*/SeqPossiblyOutsideBraces(FisherSource source):
+  { Seq s;
+    CmdsInAList cial; 
+  }
+{
+  cial = TestCmds(source) {
+    s = new Seq(cial.start, cial.end, cial.cmds);
+    return s;
+  }
+}//////////////////////SeqPossiblyOutsideBraces
+
+ModulesInAList /*&*/TestModules(FisherSource source):
+  {
+     Module mf = null;
+     Token start, end;
+     List<Module> L = new ArrayList<Module>();
+  }
+{
+  (
+    mf = Module()
+    {mf.setSourceOnFamily(source);}
+    {L.add(mf);}
+  )*
+  end = <EOF>
+  {return new ModulesInAList(
+     L.isEmpty() ? end : L.get(0).start,
+     end,
+     L
+     );}
+}//////////////////////TestModuleFile
+
+SyntaxInAList /*&*/SyntaxInAList(FisherSource source):
+  {
+    Syntax syn = null;
+    Token start, end;
+    List<Syntax> L = new ArrayList<Syntax>();
+  }
+{
+  (                    
+    (syn = Module() | syn = Stmt(null, null))
+    {syn.setSourceOnFamily(source);}
+    {L.add(syn);}
+  )*
+  end = <EOF>
+  {
+    return new SyntaxInAList(L.isEmpty() ? end : L.get(0).start,
+      end, L);
+  }
+}//////////////////////SyntaxInAList
+
+SyntaxInAList  /*&*/ModulesAndCmds(FisherSource source):
+  {
+    Syntax syn;
+    Syntax firstsyn = null, lastsyn = null;
+    List<Syntax> L = new ArrayList<Syntax>();
+    Token end;
+  }
+{
+(
+  (
+    syn = Module()
+/*
+  | syn = Spawn() [<SEMI>] | 
+    syn = Seq()
+*/
+    syn = Stmt(null,null) 
+  )
+  {lastsyn = syn;}
+  {if (firstsyn == null) firstsyn = syn;}
+  {syn.setSourceOnFamily(source);}
+  {L.add(syn);}
+)*
+end = <EOF>
+{return new SyntaxInAList(firstsyn.start, end, L);}
+
+}//////////////////////ModulesAndCmds
+
+
+Id /*&*/TestId(FisherSource source):
+  {
+     Id id;
+  }
+{
+  id = Id()
+  <EOF>
+  {id.setSourceOnFamily(source);}
+  {return id;}
+}//////////////////////TestId
+
+TypeConstraint /*&*/TypeConstraint():
+  {
+     Id id;
+  }
+{
+   id = Id()
+   {return new TypeConstraint(id.start, id.end, id);}
+}//////////////////////TypeConstraint
+
+TypeConstraints /*&*/TypeConstraints(Token near):
+  { TypeConstraint tc;
+    Token start=null, end=null;
+    List<TypeConstraint> tcs = null;
+  }
+{
+  [
+    start = <COLON>
+    {tcs = list();}
+    tc = TypeConstraint()  {tcs.add(tc); end = tc.end;}
+    (
+      <AMPERSAND>
+      tc = TypeConstraint()  {tcs.add(tc); end = tc.end;}  
+    )*
+  ]
+  {if (tcs == null) {
+     return new TypeConstraints(near, near, Collections.EMPTY_LIST);
+     }
+   else {
+     return new TypeConstraints(start, end, tcs);
+     }
+  }  
+}//////////////////////TypeConstraints

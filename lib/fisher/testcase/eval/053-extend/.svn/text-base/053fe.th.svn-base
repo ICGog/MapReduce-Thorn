@@ -1,0 +1,25 @@
+{
+  import ADAGE.*;
+  serializables = [
+    true,
+    123,
+    "wombat",
+    [1,2,3],
+    {:a:1, b:[]:}
+  ];
+  for(v <- serializables) {
+    reset();
+    s = crude_serialize(v);
+    v' = crude_deserialize(s);
+    ~!@eq(v, v') ;
+
+    f = tmp.file("seriality");
+    f.writeBytes(s);
+    s2 = f.readBytes();
+    ~!@eq(s,s2) ;
+    v2 = crude_deserialize(s2);
+    ~!@eq(v,v',v2)  ;
+
+  }
+  
+}  

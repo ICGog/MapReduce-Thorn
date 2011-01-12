@@ -1,0 +1,83 @@
+import unittest.*;
+import webrequest.*;
+
+println("webrequest test");
+
+/** Request */
+fun should_get_GET_query_args(){
+  r = Request({: 
+               method: 'GET',
+               query: 'lat=1&lon=1',
+               path: '/point/',
+               host: 'localhost:80'
+               :});
+
+  assertEquals(r.query, 'lat=1&lon=1');
+  assertEquals(r.path, '/point/');
+  
+  lat = r.GET.getone('lat');
+  lon = r.GET.getone('lon');
+  assertEquals(lat, "1");
+  assertEquals(lon, "1");
+}
+
+test(should_get_GET_query_args);
+
+fun should_get_POST_query_args(){
+  r = Request({: 
+               method: 'POST',
+               content: 'lat=1&lon=1',
+               headers: {: `content-type`:'application/x-www-form-urlencoded' :},
+               path: '/point/',
+               host: 'localhost:80'
+               :});
+  lat = r.POST.getone('lat');
+  lon = r.POST.getone('lon');
+  assertEquals(lat, "1");
+  assertEquals(lon, "1");
+}
+
+test(should_get_POST_query_args);
+
+fun should_get_POST_query_args_2(){
+  r = Request({: 
+               method: 'POST',
+               content: 'Name=fads&Password=&Bla=Bla+Bla',
+               headers: {: `content-type`:'application/x-www-form-urlencoded' :},
+               path: '/point/',
+               host: 'localhost:80'
+               :});
+
+  name = r.POST.getone('name');
+  password = r.POST.getone('password');
+  bla = r.POST.getone('bla');
+  assertEquals(name, "fads");
+  assertEquals(password, "");
+  assertEquals(bla, "Bla Bla", "Conversion of + to ' ' failed");
+
+}
+
+test(should_get_POST_query_args_2);
+
+// FIXME: the string content should be converted to bytes since this
+// is what the parser expected...
+
+// fun should_handle_POST_multipart_message(){
+//   content = [
+// 		"------WebKitFormBoundaryoJiu4foSUpIzOwTQ", 
+//     "Content-Disposition: form-data; name=\"avatar\"; filename=\"foo.txt\"", 
+//     "Content-Type: text/plain", 
+//     "",
+//     "foo", 
+// 		"------WebKitFormBoundaryoJiu4foSUpIzOwTQ--"];
+//   content_type = 'multipart/form-data; boundary=----WebKitFormBoundaryoJiu4foSUpIzOwTQ';
+//   r = Request({:
+//                method: 'POST',
+//                headers: {: `content-type`: content_type :},
+//                content: '\r\n'.join(content),
+//                path: ''
+//                :});
+//   assertEquals(r.POST.get('avatar').str(), 'foo');
+// }
+
+// test(should_handle_POST_multipart_message);

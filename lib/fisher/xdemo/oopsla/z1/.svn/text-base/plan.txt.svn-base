@@ -1,0 +1,12 @@
+This is a processing server.  We've got three kinds of components: 
+
+Server: Passive repository of data and formulas.
+
+Datist: Produces data.
+
+Querent: Asks questions concerning the data.
+
+
+------------------------------------------------------------------------------
+
+

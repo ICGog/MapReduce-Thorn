@@ -1,0 +1,7 @@
+module EX10 {
+  var n := 0;
+  fun poke() {
+     n := n + 1;
+     n;
+  }
+}

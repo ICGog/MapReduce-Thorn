@@ -1,0 +1,63 @@
+/* -*- mode: java; c-file-style: "ellemtel" -*- */ 
+module wcpages{
+  
+   import webhtml.*;
+   import wctemplates.*;
+   import wcformtemplates.*;
+
+   // FIXME: importing this will cause a stackoverflow???
+   //  import wccontrollers.*;
+
+   /** Concrete pages */
+   fun user_page(context:record){
+      return 
+         page_tpl(context, "Web Cheeper | Home", [
+            h2("Recent Cheeps"),
+            messages_tpl(context)]);
+   }
+
+   fun search_results_page(context:record){
+      return 
+         page_tpl(context, "Web Cheeper | Search", [
+            searchPageBottom(context)
+            ]);
+   }
+
+   fun user_home_page(context:record){
+      return 
+         page_tpl(context, "Web Cheeper | Home", [
+            cheep_form(context),
+            h2("Recent Cheeps"),
+            messages_tpl(context)
+            ]);
+   }
+
+   fun user_list_page(context:record){
+      return 
+         page_tpl(context, "Web Cheeper | Cheepers", 
+         users_tpl(context));
+   }
+
+
+   fun settings_page(context:record){
+      return page_tpl(context, "Web Cheeper | Settings", [
+         h2("Settings"),
+         settings_form(context)
+         ]);
+   }
+  
+   fun signin_page(){
+      return 
+         page_tpl({: :}, "Web Cheeper | Sign In", [
+            h2("Sign In"),
+            signin_form()]);
+   }
+
+   fun signup_page(){
+      return 
+         page_tpl({::}, "Web Cheeper | Sign Up", [
+            h2("Join Web Cheeper"),
+            signup_form()]);
+   }
+}
+

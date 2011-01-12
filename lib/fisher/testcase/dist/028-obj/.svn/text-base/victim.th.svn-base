@@ -1,0 +1,12 @@
+spawn victim {
+  initially{
+  }initially
+  body{
+     import PILL.*;
+     ~!@testStartLatch();
+     {: senderComp: sender, victimComp: victim :} = ~!@recOfPorts();
+     h = (recv{x => x timeout(1000) {"nope!";}});
+     ~!@phase(1, h.juxtapose());
+     sender <<< "done";
+  }body
+}victim;

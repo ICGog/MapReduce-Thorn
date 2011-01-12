@@ -1,0 +1,21 @@
+f(MapFun).
+f(ReduceFun).
+f(Id).
+
+MapFun = "fun strToBytes(s) { return %[s.char(i).num() | for i <- 0..(s.len()-1)].asBytes(); }\nfun mapFun([name, document]) {\nreturn %[[strToBytes(word), [1].asBytes()] | for word <- document.str().split(\" \")];\n}".
+
+
+
+
+ReduceFun = "fun reduceFun([word, values]) {\n    var count := 0;\n    for (value <- values) {\n        count += 1;\n    }\n    return [count].asBytes();\n}".
+
+{ok, Id} = smr_master:new_job(MapFun, ReduceFun, [{worker_lang, thorn}]).
+
+smr_master:add_input(Id, [{<<"abc">>, <<"this is a test this is test cool">>}]).
+smr_master:add_input(Id, [{<<"abcd">>, <<"this is yet another test which is also cool">>}]).
+smr_master:add_input(Id, [{<<"bcd">>, <<"this is not such a cool one, hello world">>}, {<<"bcde">>, <<"this actually works i think">>}]).
+
+smr_master:do_job(Id).
+
+smr_master:whole_result(Id).
+

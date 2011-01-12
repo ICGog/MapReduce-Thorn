@@ -1,0 +1,36 @@
+{
+  import UNITEST.*;
+  for ( (r && ‹n,cat, dird, f, blk›) <- detailed) {
+    c = n.char;
+    if (r ~ {:s:}) ~!@eq(c, s.char(0))  ;
+    ~!@eq(c.category, cat)  ;
+    if (dird ~ _:list) {
+      // Java has the directionality wrong (?)
+    }
+    else {
+      ~!@eq(c.directionality, dird)  ;
+    }
+    ~!@eq(c.digit?, f.contains?("d"))  ;
+    ~!@eqprint(c.identifierIgnorable?, f.contains?("í"), [r, n.strHex])  ;
+    ~!@eqprint(c.control?, f.contains?("c"), [r, n.strHex])  ;
+    ~!@eqprint(c.letter?, f.contains?("l"), [r, n.strHex])  ;
+    ~!@eqprint(c.letterOrDigit?, f.contains?("l") || f.contains?("d"), [r, n.strHex])  ;
+    ~!@eqprint(c.lower?, c.lowercase?, c.lowerCase?, f.contains?("ł"), [r, n.strHex])  ;
+    ~!@eqprint(c.mirrored?, f.contains?("m"), [r, n.strHex])  ;
+    ~!@eqprint(c.whitespace?, f.contains?("w"), [r, n.strHex])  ;
+    ~!@eqprint(c.title?, f.contains?("t"), [r, n.strHex])  ;
+    ~!@eqprint(c.unicodeIdentifierPart?, f.contains?("p"), [r, n.strHex])  ;
+    ~!@eqprint(c.unicodeIdentifierStart?, f.contains?("s"), [r, n.strHex])  ;
+    ~!@eqprint(c.upper?, c.upperCase?, c.uppercase?, f.contains?("u"), [r, n.strHex])  ;
+    if (r ~ ‹lower›) ~!@eqprint(c.lower, c.lowercase, c.lowerCase, lower, [r, n.strHex]);
+    else ~!@eqprint(c, c.lower, c.lowercase, c.lowerCase, [r,n.strHex])  ;
+    if (r ~ ‹upper›) ~!@eqprint(c.upper, c.uppercase, c.upperCase, upper, [r, n.strHex]);
+    else ~!@eqprint(c, c.upper, c.uppercase, c.upperCase, [r,n.strHex])  ;
+    if (r ~ ‹title›) ~!@eqprint(c.title, c.titlecase, c.titleCase, title, [r, n.strHex]);
+    else if (r ~‹upper›)~!@eqprint(c.title, c.titlecase, c.titleCase, upper, [r, n.strHex]);
+    else ~!@eqprint(c, c.title, c.titlecase, c.titleCase, [r,n.strHex])  ;
+    
+    ~!@eq(c.block, blk)  ;
+    
+  }
+}

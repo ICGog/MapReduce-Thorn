@@ -1,0 +1,48 @@
+{
+  ~!@eq([0,1].sublen(1,1), [1])@!~  ;
+
+
+  fun listInvariant(L) {
+    n = L.len;
+    for(i <- 0 .. (n-1)) { // valid indices only.
+       ~!@assert(L(i) in L)  ;
+       ~!@eq(L(-(i+1)), L(n-i-1))  ;
+       ~!@eqprint(L.left(i).len, i, {:L,i,left:L.left(i):})  ;
+       ~!@eq(L.butleft(i).len, n-i)  ;
+       ~!@eq(L.butright(i) @ L.right(i), L) ;
+       ~!@eq(L.butright(i).len, n-i)  ;
+       ~!@eq(L.right(i).len, i)  ;
+       ~!@eq(L.sub(0,i), L.left(i+1))  ;
+       ~!@eq(L.left(i), L.subx(0,i))  ;
+       ~!@eq(L.right(i), L.sub(n-i,n-1))  ;
+       ~!@eq(L.butleft(i), L.subx(i, n))  ;
+       ~!@eqprint(L.butright(i), L.subx(0,n-i), {:L,i,n:}) ;
+       ~!@eqprint(L.sub(i,n), L.right(n-i), {:i,n,L:})  ;
+       for(j <- i .. n-1) {
+          if (i>0) ~!@eqprint(L.sub(i,j), L.left(j+1).butleft(i), 
+             {:L,i,j, `L.left(j)`:L.left(j+1):})  ;
+          ~!@eqprint(L.subx(i,j), L.sub(i,j).butright(1),
+             {:L,i,j, `L.sub(i,j)`:L.sub(i,j):}
+             )  ;
+          ~!@eq(L.sub(i,j), L.subx(i,j) @ [L(j)])  ;
+       }
+    }
+    for (i <- 0 .. 4) {
+       ~!@eq(L.left(n+i), L.left(n))  ;
+       ~!@eq(L.butleft(n+i), L.butleft(n))  ;
+       ~!@eq(L.butleft(n+i), L.butleft(n))  ;
+       ~!@eq(L.butright(n+i), L.butright(n))  ;
+       ~!@eq(L.sublen(0,n+i), L)  ;
+    }
+
+  }
+  
+~!@eq([0].subx(0,1), [0])@!~  ;
+
+  listInvariant([]);
+  listInvariant([0]);
+  listInvariant([0,1]);
+  listInvariant([0,1,2]);
+  listInvariant([0,1,2,3]);
+  listInvariant([0,1,2,3,4]);
+}

@@ -1,0 +1,28 @@
+{
+  t = table(k){v;};
+  fun it's(l) {
+     st = %sort( r %< r.k | for r <- t );
+     ~!@eq(st, l)  ;
+  }
+ 
+  it's([]);
+  r1 = {: k:1, v: 11 :};
+  t .ins( r1);
+  it's([r1]);
+  r2 = {: k:2, v: 22 :};
+  t .ins( r2);
+  it's([r1, r2]);
+  r3 = {: k:3, v: 33 :};
+  t .ins( r3);
+  it's([r1, r2, r3]);
+  r1a = {: k:1, v: "by Confucius's mail program!" :};
+  t .ins( r1a);
+  it's([r1a, r2, r3]);
+  r1b = {: k:1, v: "by Mammon's ritzy futon!" :};
+  t .ins( r1b);
+  it's([r1b, r2, r3]);
+  r2a = {: k:2, v:"by Set's fishmonger!" :};
+  t .ins( r2a);
+  it's([r1b, r2a, r3]);
+
+}

@@ -1,0 +1,9 @@
+//FAIL:A val class cannot have a var field
+{
+  class Parentally {
+    val x;
+    var y;
+  }
+  class val Childly extends Parentally {
+  }
+}

@@ -1,0 +1,24 @@
+spawn delayer {
+  var alarmer; var patient; var delayer;
+  initially{
+    ~!@testStartLatch();
+    {: alarmerComp: a, patientComp: p, delayerComp: d :} = ~!@recOfPorts();
+    alarmer := a; patient := p; delayer := d;
+  }
+
+pdooop;
+  
+  fun waitabit() {
+     recv{_ from $(alarmer) => {}}
+     true;
+  }waitabit
+  
+  body{
+    recv{
+      x && (waitabit())? from $(patient) => {
+        ~!@hit()@!~ 1 ;
+      }
+    }recv
+  }body
+  
+}delayer;

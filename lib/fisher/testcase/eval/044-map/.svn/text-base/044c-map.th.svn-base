@@ -1,0 +1,28 @@
+{
+  m = map();
+  
+  var r := ‹k:1, v:11›;
+  m.ins( r );
+  ~!@eq(m(1), r)@!~  ;
+  
+  m[2] := 8;
+  ~!@eq(m(2), ‹k:2, v:8›)@!~  ;
+  m[2] := "ow";
+  ~!@eq(m(2), ‹k:2, v:"ow"›)@!~  ;
+
+  ~!@eq(m[3], null)@!~  ;
+  m.forbidInvalidMapAccess(true);
+  ~!@bad(m[3])@!~  ;
+  m.forbidInvalidMapAccess(false);
+  ~!@eq(m[3], null)@!~  ;
+  
+  m.forbidMapSet(true);
+  ~!@bad(({m[4] := true;}))@!~  ;
+  m.forbidMapSet(false);
+  m[4] := true;
+  ~!@eq(m[4], true)@!~  ;
+  
+  
+
+    
+}

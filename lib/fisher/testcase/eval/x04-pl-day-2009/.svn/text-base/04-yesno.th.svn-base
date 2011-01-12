@@ -1,0 +1,17 @@
+{
+  fun assoc(k, [[$(k), v],_...]) = +v;
+    | assoc(k, [])               = null;
+    | assoc(k, [wrong, rest...]) = assoc(k, rest);
+
+  clues = [ [1, true], [2, null], [3, "fish"] ];
+  
+  ~!@eq(assoc(1, clues), true)@!~  ;
+  ~!@eq(assoc(2, clues), +null)@!~  ;
+  ~!@eq(assoc(3, clues), "fish")@!~  ;
+  ~!@eq(assoc(4, clues), null)@!~  ;
+
+  if (assoc(2, clues) ~ +cl) { 
+    ~!@eq(cl, null)@!~  ;
+  }
+       
+}

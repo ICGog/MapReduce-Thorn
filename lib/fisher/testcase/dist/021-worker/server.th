@@ -1,0 +1,12 @@
+spawn server {
+   sync labor() envelope enve {
+     {: workerComp: worker :} = ~!@recOfPorts();
+     worker <-- doThis(enve);
+     throw splitSync();
+   }
+   body{
+    ~!@testStartLatch();
+    serve;
+   }
+}server;
+

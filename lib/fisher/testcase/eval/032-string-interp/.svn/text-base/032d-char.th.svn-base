@@ -1,0 +1,10 @@
+{
+//println("032d=start");
+  ~!@eq("".plusChar(97), "a")@!~  ;
+  var s := "";
+  for(i <- 1 .. 1000) {
+    s := s.plusChar(i);
+    ~!@eq(s.codePointAt(i-1), i)  ;
+  }
+//println("032d-=end");
+}

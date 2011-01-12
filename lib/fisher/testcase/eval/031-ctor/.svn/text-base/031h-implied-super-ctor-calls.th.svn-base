@@ -1,0 +1,18 @@
+{
+  class Restaurant {
+    val menu;
+    new Restaurant() {
+      menu = ["fries", "gazpacho", "steel cut oats", "insalata caprese garnished with brown rice"];
+    }
+  }
+  
+  r = Restaurant();
+  ~!@eq(r.menu.len(), 4)@!~  ;
+  
+  class Cafe extends Restaurant {
+  }
+  
+  c = Cafe();
+  ~!@eq(c.menu.len(), 4)@!~  ;
+
+}

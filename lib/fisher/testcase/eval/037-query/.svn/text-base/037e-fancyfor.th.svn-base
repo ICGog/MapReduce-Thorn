@@ -1,0 +1,19 @@
+{
+  L = [
+    {: a: 1	, b: 1	, c: "by Vimulha's cardboard cut-out"	 :},
+    {: a: 2	, b: 2	, c: "by Grome's pseudo-bracing jug"	 :},
+    {: a: 2	, b: 3	, c: "by Litequow-Sig's tablecloth"	 :},
+    {: a: 3	, b: 3	, c: "by Glaaki's historical sexual history"	 :},
+    {: a: 4	, b: 4	, c: "by Smerni's whirling revival"	 :}
+  ];
+  
+  // Two records with the same a and different b?
+  ~!@eq(
+    %some(true |
+      for {: a, b :} <~ L,
+      for {: a:$(a), b: ! $(b)  :} <~ L
+      )
+  )@!~  ;
+  
+  
+}

@@ -1,0 +1,182 @@
+import unittest.*;
+
+import webrequest.*;
+
+import wccontrollers.*;
+import wcfixture.*;
+import wcmodels.*;
+
+println("wccontrollers test");
+
+flushAll();
+addUsers();
+
+KLEENE_STAR = "([\\n]|[^\\n])*"; // eat anything, also newlines
+
+/** Following / Unfollowing */
+fun should_follow_user(){
+  request = Request({: 
+                     method: "POST",
+                     path: "/follow/",
+                     content: "follower=jakob&followee=john",
+                     headers: {: 
+                               `content-type`: "application/x-www-form-urlencoded",
+                               cookie: "userkey=jakob" :}
+                     :});
+
+  response = FollowUserHandler().handle(request, '');
+  assertEquals(response.status, 200);
+}
+
+test(should_follow_user);
+
+fun should_unfollow_user(){
+    request = Request({: 
+                     method: "POST",
+                     path: "/unfollow/",
+                     content: "unfollower=jakob&unfollowee=john",
+                     headers: {: 
+                               `content-type`: "application/x-www-form-urlencoded",
+                               cookie: "userkey=jakob" :}
+                     :});
+    
+    response = UnfollowUserHandler().handle(request, '');
+    assertEquals(response.status, 200);
+}
+
+test(should_unfollow_user);
+
+/** Sign in / sign out / sign up*/
+fun should_sign_user_in(){
+  request = Request({: 
+                     method: "POST",
+                     path: "",
+                     content: "username=jakob&password=jakob",
+                     headers: {: `content-type`: "application/x-www-form-urlencoded" :}
+                     :});
+  response = SignInHandler().handle(request, '');
+  assertEquals(response.status, 200, response.content);
+  assertEquals(response.content, "/jakob/");
+}
+
+test(should_sign_user_in);
+
+fun should_not_sign_user_in_on_invalid_password(){
+  request = Request({: 
+                     method: "POST",
+                     path: "",
+                     content: "username=jakob&password=wrong",
+                     headers: {: `content-type`: "application/x-www-form-urlencoded" :}
+                     :});
+  response = SignInHandler().handle(request, '');
+  assertEquals(response.status, 401, response.content);
+}
+
+test(should_not_sign_user_in_on_invalid_password);
+
+fun should_sign_user_up(){
+  request = Request({: 
+                     method: "POST",
+                     path: "",
+                     content: "username=foo&password=foo&twitterintegration=1",
+                     headers: {: `content-type`: "application/x-www-form-urlencoded" :}
+                     :});
+
+  response = UsersHandler().handle(request, '');
+  assertEquals(response.status, 200);
+  assertEquals(response.content, "/foo/");
+}
+
+test(should_sign_user_up);
+
+/** User page */
+fun should_get_user_page(){
+  request = Request({: 
+                     method: "GET",
+                     path: "",
+                     headers: {: cookie: "userkey=jakob" :}
+                     :});
+
+  response = UserHandler().handle(request, {: userkey: "jakob" :}.toMap());
+  assertEquals(response.status, 200);
+  // assertions about the content ...
+}
+
+test(should_get_user_page);
+
+/** Messages */
+fun post_to_messages_should_require_login(){
+    request = Request({: 
+                     method: "POST",
+                     path: "",
+                     content: "",
+                     headers: {: `content-type`: "application/x-www-form-urlencoded" :}
+                     :});
+    response = MessagesHandler().handle(request, '');
+    assertEquals(response.status, 303);
+    assertEquals(response.headers.get('location'), "/", "Should redirect to login page" );
+}
+
+test(post_to_messages_should_require_login);
+
+fun should_post_new_message(){
+  request = Request({: 
+                     method: "POST",
+                     path: "",
+                     content: "cheep=atestcheep&userkey=jakob&latest_version=0",
+                     headers: {: 
+                               `content-type`: "application/x-www-form-urlencoded",
+                               cookie: "userkey=jakob"
+                               :}
+                     :});
+    response = MessagesHandler().handle(request, '');
+    assertEquals(response.status, 200);
+    assertTrue(response.content.str().matchRE?(KLEENE_STAR + "atest" + KLEENE_STAR));
+}
+
+test(should_post_new_message);
+
+fun should_get_messages(){
+  request = Request({: 
+                     method: "GET",
+                     path: "",
+                     headers: {: cookie: "userkey=jakob" :}
+                     :});
+
+  response = UserHandler().handle(request, {: userkey: "jakob" :}.toMap());
+  assertEquals(response.status, 200);
+}
+
+test(should_get_messages);
+
+fun should_get_messages_by_tag(){
+  user = db.users.get('jakob');
+  db.messages.add_message(user, "#nyc");
+  db.messages.add_message(user, "#cali #nyc");
+
+  request = Request({: 
+                     method: "GET", 
+                     path: "", 
+                     query: "q=nyc", 
+                     headers: {: cookie: "userkey=jakob" :}
+                     :});
+
+  response = SearchHandler().handle(request, {: :});
+  assertEquals(response.status, 200, response.content);
+
+  request2 = Request({: 
+                      method: "GET", 
+                      path: "", 
+                      query: "q=nyc%20cali",
+                      headers: {: cookie: "userkey=jakob" :}
+                      :});
+  response2 = SearchHandler().handle(request2, {: :});
+
+  assertEquals(response2.status, 200, response2.content);
+
+  // COMMENT: StackOverflow??
+  // assertTrue(response2.content.str().matchRE?(KLEENE_STAR + "#nyc" + KLEENE_STAR));
+  // assertTrue(response2.content.str().matchRE?(KLEENE_STAR + "#cali" + KLEENE_STAR));
+}
+
+test(should_get_messages_by_tag);

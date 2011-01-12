@@ -1,0 +1,314 @@
+// FIXME: clean up this module
+
+/**
+ * Dictionaries from e key to a list of values. This happens in URI
+ * parameters a=a&a=b, http headers: Set-Cookie: ... Set-Cookie: ...
+ */
+module webdict{
+
+  import urilib.parse_query;
+  import urilib.parse_header;
+  import urilib.parse_header_value;
+  import urilib.parse_multipart;
+
+  /**
+   * A dictionary that maps from a key to a list of values.
+   */
+  class BaseDict() {
+    
+    val dict = map();
+
+    new BaseDict(){}
+    
+
+    /**
+     * Parses a key value string.
+     */
+    def parse(keyvaluestr){
+      throw "parse should be overwritten";
+    }
+
+    /**
+     * Add the value to ord identified by the key. A new ord is created if
+     * not present.
+     *
+     * Args:
+     *   key: key
+     *   value: value to add
+     */
+    def add(k, value){
+      kl = k.toLower();
+      if(dict[kl] ~ +l){
+        l @= value;
+      }
+      else{
+        values = ord();
+        values @= value;
+        dict[kl] := values;
+      }
+    }
+
+    /**
+     * Get the first value matching the key.
+     * Args:
+     *   k: key
+     * Returns:
+     *   the first matching value or null.
+     */
+    def getone(k){
+      if(dict[k.toLower()] ~ +l){
+        return l(0).v;
+      }
+      else{
+        return null;
+      }
+    }
+
+    def get(k) = this.getone(k);
+
+    /**
+     * Get all values.
+     *
+     * Args:
+     *   k: key
+     * Returns:
+     *   all matching values in a list.
+     */
+    def getall(k){
+      return dict[k.toLower()].lst();
+    }
+
+    def str(){
+      l = %[ (e.k + '=' + e.v.lst()) | for e <- dict ];
+      return "{ " + ", ".join(l) + " }";
+    }
+  }
+
+  class QueryDict extends BaseDict{
+    
+    new QueryDict(){}
+    
+    new QueryDict(keyvaluestr:string){
+      kvs = this.parse(keyvaluestr);
+      for(kv <- kvs){
+        this.add(kv.attribute.toLower(), kv.value);
+      }
+    }
+    
+    def parse(s){
+      return parse_query(s);
+    }
+
+    def str(){
+      result = ord(); 
+      for(e <- this.dict){
+        for(v <- e.v){
+          result @= e.k + '=' + v;
+        }
+      }
+      return "&".join(result);
+    }
+  }
+
+  class MultipartDict extends BaseDict{
+    
+    new MultipartDict(content_type:string, content:bytes){
+      parts = parse_multipart(content_type, content);
+
+      for(p <- parts){
+        this.add(p.attribute, p.content);
+      }
+    }
+
+    /**
+     * Add value potentially overwriting the previous value.
+     */
+    def add(k, value){
+      kl = k.toLower();
+      this.dict[kl] := value;
+    }
+
+    def get(k){
+      if(this.dict[k] ~ +content){
+        return content.value;
+      }
+      return null;
+    }
+
+    def headers(part_name){
+      if(this.dict[part_name] ~ content){
+        return content.headers;
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Ease interaction with values of a HTTP header,
+   * e.g., userkey=; path=/; max-age=0
+   */
+  class HeaderValueDict extends BaseDict{
+    
+    new HeaderValueDict(){}
+
+    new HeaderValueDict(keysvaluesstr:string){
+      kvs = this.parse(keysvaluesstr);
+      for(kv <- kvs){
+        this.add(kv.attribute, kv.value);
+      }
+    }
+    
+    def add(k, value){
+      kl = k.toLower();
+      this.dict[kl] := value;
+    }
+
+    def parse(s){
+      return parse_header_value(s);
+    }
+
+    def get(k){
+      return v.str() if this.dict[k] ~ +v else null;
+    }
+
+    def str(){
+      result = ord();
+      for(valuekey <- this.dict){
+        if(valuekey ~ {: k:+k, v:+v :}){
+          result @= k + "=" + v; 
+        }
+        else{
+          result @= valuekey.k;
+        }
+      }
+      return "; ".join(result);
+    }
+  }
+
+  /**
+   * Ease work with http headers.
+   *
+   * Map: headername -> list of headervalues 
+   *
+   * A list since HTTP messages
+   * can contain several headers of the same type.
+   */
+  class HttpHeadersDict extends BaseDict{
+    
+    new HttpHeadersDict(){}
+
+    /**
+     * Args:
+     *   A record of headers
+     */
+    new HttpHeadersDict(r:record){
+      for(kv <- r.toMap()){
+        this.add(kv.k, kv.v);
+      }
+    }
+
+    /**
+     * Args:
+     *   A HTTP header string where \r\n separates the headers.
+     */
+    new HttpHeadersDict(r:string){
+      for(header <- r.split('\r\n')){
+        parsed = parse_header(header);
+        this.add(parsed.k, parsed.v);
+      }
+    }
+
+    def add(headerstr, value){
+      header = headerstr.toLower();
+      if(this.dict[header] ~ !+_){
+        this.dict[header] := ord();
+      }
+      this.dict[header] @= value;
+    }
+
+    def list(){
+      headers = ord();
+      for(header <- this.dict){
+        for(value <- header.v){
+          headers @= {: header: header.k, value :};
+        }
+      }
+      return headers.lst();
+    }
+
+    def get_as_dict(header:string){
+      if(this.get(header) ~ +h){
+        return HeaderValueDict(h);
+      }
+      else{
+        return null;
+      }
+    }
+
+
+    def str(){
+      result = ord(); 
+      for(header <- this.dict){
+        header_key = header.k;
+        for(header_value <- header.v){
+          result @= '$header_key: $header_value';
+        }
+      }
+      return "\r\n".join(result);
+    }
+
+    def lst(){
+      result = ord();
+      for(e <- this.dict){
+        for(v <- e.v){
+          result @= {: header:e.k, value:v :};
+        }
+      }
+      return result.lst();
+    }
+
+  }
+
+  // FIXME: only supports a single cookie value at the moment!
+  class CookieDict extends BaseDict{
+
+    new CookieDict(){}
+
+    new CookieDict(cookie:string){
+      parsed = parse_header_value(cookie);
+      namevalue = parsed.head();
+      attributes = parsed.tail();
+      this.add(namevalue.attributes, namevalue.value, attributes);
+    }
+
+    def add(name, value){
+      this.dict[name] := {: value, attributes: HeaderValueDict() :};
+    }
+    
+    def add(name, value, attributes){
+      this.dict[name] := {: value, attributes: HeaderValueDict(attributes) :};
+    }
+
+    def list(){
+      cookies = ord();
+      for(cookie <- this.dict){
+        // key=value MUST BE first
+        var result := cookie.k + '=' + cookie.v.value;
+        // attributes
+        attrs = cookie.v.attributes.str();
+        if(attrs != ''){
+          result := result + "; " + attrs;
+        }
+        cookies @= {: header: 'set-cookie', value: result :};
+      }
+      return cookies.lst();
+    }
+
+    def str(){
+      cookies = %[r.header + ': ' + r.value | for r <- this.list()];
+      return "\r\n".join(cookies);
+    }
+  }
+
+}webdict
+

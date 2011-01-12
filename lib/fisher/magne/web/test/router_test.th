@@ -1,0 +1,58 @@
+import unittest.*;
+import webrouter.*;
+
+println("webrouter Test");
+
+/** Route */
+fun should_extract_regexp(){
+  p = Route("/notes/:year/:month/", "clsdummy");
+  re = p.extract_regexp();
+  assertEquals(re, "/notes/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)/");
+}
+
+test(should_extract_regexp);
+
+fun should_extract_group_names(){
+  p = Route("/notes/:year/:month/", "clsdummy");
+  group_names = p.extract_group_names();
+  assertEquals(group_names(0), "year");
+  assertEquals(group_names(1), "month");
+}
+
+test(should_extract_group_names);
+
+fun pattern_can_have_several_groupnames_within_slashes(){
+  p = Route("/weather/:lat,:lon/", "clsdummy");
+  group_names = p.extract_group_names();
+  assertEquals(group_names(0), "lat");
+  assertEquals(group_names(1), "lon");
+  assertEquals(p.regexp, "/weather/([a-zA-Z0-9_.-]+),([a-zA-Z0-9_.-]+)/");
+}
+
+test(pattern_can_have_several_groupnames_within_slashes);
+
+/** Router */
+fun should_connect_uri_pattern_with_handler(){
+  
+  class Handler(){}
+  router = Router();
+  pat = "/notes/:year/:month/";
+  router.connect(pat, Handler);
+  route = router.routes()(0);
+  assertEquals(route.regexp, "/notes/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)/");
+  assertEquals(route.handler, Handler);
+  assertEquals(route.group_names, ["year", "month"]);
+}
+
+test(should_connect_uri_pattern_with_handler);
+
+fun should_connect_uri_pattern_without_trailing_slash(){
+  class Handler(){}
+  router = Router();
+  pat = "/images/:key";
+  router.connect(pat, Handler);
+  assertEquals(router.routes()(0).group_names, ["key"]);
+}
+
+test(should_connect_uri_pattern_without_trailing_slash);
+

@@ -1,0 +1,13 @@
+{
+    import Capabilities.*;
+    
+    var capa := Capability();
+    var capb := Capability();
+    var keya := CapabilityKey(capa);
+    var keyb := CapabilityKey(capb);
+    
+    ~!@eq(capa.verify(keya), true)@!~;
+    ~!@eq(capa.verify(keyb), false)@!~;
+    ~!@eq(capb.verify(keya), false)@!~;
+    ~!@eq(capb.verify(keyb), true)@!~;
+}

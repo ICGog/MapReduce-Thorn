@@ -1,0 +1,16 @@
+spawn BIFfer {
+  /*
+    This is a bit randomly placed.  The first built-in 
+    functions I needed were thisSite() and thisComp(), 
+    so the test for them is in dist.
+  */
+  body{
+    ~!@testStartLatch();
+    ~!@eq(thisSite(), thisComp().site())@!~  ;
+    s = thisSite();
+    s' = site(s.host(), s.port());
+    ~!@eq(s,s')@!~  ;
+    ~!@checkphase(
+    )@!~  ;
+  }
+};

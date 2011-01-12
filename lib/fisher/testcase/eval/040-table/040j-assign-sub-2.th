@@ -1,0 +1,14 @@
+{
+  var t := table(x,y){ val z; };
+  fun it's(l) {
+     st = %sort( r %< r.x %< r.y | for r <- t );
+     ~!@eq(st, l)  ;
+     ~!@assert(t.tstCheckInvariant())  ;
+  }
+
+  t(1,1) := {: z: 111 :};
+  it's([ {: x:1, y:1, z:111 :} ]);
+  t .del( {: x:1, y:1 :} );
+  it's([]);
+
+}

@@ -1,0 +1,8 @@
+{
+  o = ord();
+  ~!@eq(o.len, 0)@!~  ;
+  o @= "a +5 Hopeful Jubilant Flamberge";
+  ~!@eq(o.len, 1)@!~  ;
+  o @= "Kynwan brand rose wine is brawny and fruity!";
+  ~!@eq(o.len, 2)@!~  ;
+}

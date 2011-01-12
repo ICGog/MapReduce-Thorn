@@ -1,0 +1,26 @@
+{
+  import IDEOLOGY.torpor;
+  fun delete(){
+     var pet := 3;
+     class Sister{
+        var rite := 4;
+        def curtail() {
+           var chief := 5;
+           fn(1) = 111
+            |(x) = {
+               chief := chief + x;
+               rite := rite + chief;
+               pet := pet + rite;
+               torpor := torpor + pet;
+               [torpor, pet, rite, chief, x];
+            };
+        }curtail
+     }Sister
+     Sister();
+  }delete
+  
+  penguin = delete();
+  ~!@eq(penguin.curtail()(1), 111)@!~;
+  ~!@eq(penguin.curtail()(6), [19, 18, 15, 11 , 6])@!~;
+  
+}

@@ -1,0 +1,11 @@
+spawn coordinator {
+body{
+  ~!@testStartLatch();        
+   {: furdComp:furd :} = ~!@recOfPorts();
+   recv {"furd ok" => {}};
+   recv {"glurd ok" => {}};
+   recv {"churd ok" => {}};
+   recv {"plurd ok" => {}};
+  ~!@checkphase()@!~  ;
+}body
+}coordinator;

@@ -1,0 +1,46 @@
+{
+  {
+    a = %count(true | for i <- 1 .. 5);
+    ~!@eq(a,5)@!~  ;
+  }
+  L = [
+    ‹a:1, b:1›,
+    ‹a:2, b:2›,
+    ‹a:3, b:3›,
+    ‹a:3, b:4›,
+    ‹a:4, b:4›,
+    ‹a:5, b:6›
+  ];
+  ~!@eq(
+    %count(a == b | for ‹a,b› <- L)
+    ,
+    4
+    )@!~  ;
+  ~!@eq(
+    %count(a == 8 | for ‹a,b› <- L, if a != b)
+    ,
+    0
+    )@!~  ;
+  ~!@eq(
+    %count(a == 3 | for ‹a,b› <- L, if a != b)
+    ,
+    1
+    )@!~  ;
+  import PRIME.*;
+  ~!@eq(
+    %count(prime?(n) | for n <- 2 .. 10)
+    ,
+    4
+    )@!~  ;
+
+  ~!@eq(
+    %count(
+      %some(b' != b | for ‹a:a', b:b'› <- L, if a == a')
+      |
+      a = 3, b = 3
+    )
+    ,
+    1
+    )@!~  ;
+  
+}

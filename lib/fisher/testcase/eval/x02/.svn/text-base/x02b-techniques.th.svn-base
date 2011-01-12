@@ -1,0 +1,30 @@
+{
+// 
+//   class Tool(name){}
+//   oven = Tool("oven");
+//   stove = Tool("stove");
+//   frying_pan = Tool("frying pan");
+//   
+//   class Technique(name, tools) {
+//     def invariant() = 
+//           (name ~ _:string)
+//        && (tools ~ _:list)
+//        && %every(t :? Tool % for t <- tools)
+//        ;
+//        
+//   }
+//   fun technique(name, tools) {
+//     t = Technique(name, tools);
+//     ~!@assert(t.invariant())  ;
+//     }
+//   
+//   fry = technique("fry", [frying_pan, stove]);
+//   sauté = technique("sauté", [frying_pan, stove]);
+//   bake = technique("bake", [oven]);
+//   roast = technique("roast", [oven]); 
+// 
+//   
+// 
+
+   import TECHNIQUES.*;  
+}

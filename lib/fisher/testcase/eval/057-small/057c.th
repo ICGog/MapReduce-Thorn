@@ -1,0 +1,20 @@
+{
+  class A {
+    ax = 1;
+    var ay := 2;
+  }
+  class B extends A {
+    bx = 3; 
+    var by := 4;
+  }
+  
+  a = A();
+  ~!@eq(a.ax, a.ax(), 1)@!~  ;
+  ~!@eq(a.ay, a.ay(), 2)@!~  ;
+  b = B();
+  ~!@eq(b.ax, b.ax(), 1)@!~  ;
+  ~!@eq(b.ay, b.ay(), 2)@!~  ;
+  ~!@eq(b.bx, b.bx(), 3)@!~  ;
+  ~!@eq(b.by, b.by(), 4)@!~  ;
+  
+}

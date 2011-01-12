@@ -1,0 +1,11 @@
+{
+  import JSON.*;
+  
+  v1 = [ object {}, 
+         object {a = 1;},
+         object {b = 2;} ];
+  fun jr(x) = asJson(x, jsonRecordize);
+  ~!@eq(jr(v1), [ {::}, {:a:1:}, {:b:2:} ] )@!~  ;         
+         
+  
+}

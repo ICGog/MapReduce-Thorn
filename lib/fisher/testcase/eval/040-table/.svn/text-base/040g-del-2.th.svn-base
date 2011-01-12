@@ -1,0 +1,60 @@
+{
+  var t := table(x,y){ val z; };
+  fun it's(l) {
+     st = %sort( r %< r.x %< r.y | for r <- t );
+     ~!@eq(st, l)  ;
+     ~!@assert(t.tstCheckInvariant())  ;
+  }
+
+  it's([]);
+  var a := {: x:1, y:11, z: "by Chegarra's drunk tree!" :}; 
+  var b := {: x:1, y:12, z: "by Chiteng's scroll!" :}; 
+  var c := {: x:2, y:11, z: "by Typhon's dysfunctional dead tuna!" :}; 
+  var d := {: x:2, y:22, z: "by Prodefeus's disclaimer!" :}; 
+  
+  fun slam() {
+  t := table(x,y){ val z; };
+  t .ins( a);
+  t .ins( b);
+  t .ins( c);
+  t .ins( d);
+  it's([a,b,c,d]);
+  }
+
+  slam();
+  t .del( a );
+  it's([b,c,d]);
+  t .del( b );
+  it's([c,d]);
+  t .del( c );  
+  it's([d]);
+  t .del( d );
+  it's([]);
+  
+  slam();
+  t .del( b );
+  it's([a,c,d]);
+  t .del( d );
+  it's([a,c]);
+  t .del( a );
+  it's([c]);
+  t .del( ‹x :1, y:1› );
+  it's([c]);
+  t .del( c );
+  it's([]);
+
+
+  slam();
+  t .del( a );
+  it's([b,c,d]);
+  a := {: x:1, y:11, z: "by Baalzebul's retribution!" :}; 
+  t .ins( a);
+  t .del( b );
+  it's([a, c,d]);
+  t .del( c );  
+  it's([a, d]);
+  t .del( d );
+  it's([a]);
+  
+
+}

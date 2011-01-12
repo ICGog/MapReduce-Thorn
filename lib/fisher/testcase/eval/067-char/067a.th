@@ -1,0 +1,11 @@
+{
+  import UNITEST.*  ;
+  for ({:n, s:} <- stuffs) {
+    cn = n.char();
+    cs = s.char(0);
+    ~!@eq(cn, cs)  ;
+    ~!@eq(cn.num(), n)  ;
+    ~!@eq(cn.str(), s)  ;
+  }for  
+  
+}

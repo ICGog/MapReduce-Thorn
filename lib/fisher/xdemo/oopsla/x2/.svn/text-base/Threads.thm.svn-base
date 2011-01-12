@@ -1,0 +1,19 @@
+module ROB {
+  component Rob(item) {
+    import HTTP.*;
+    import XML.*;
+    import CONFIG.*;  
+     var goon := true;
+     async rob(params, url, clue) from secretary {
+       println("rob: I am ready to steal!");
+       answer = "I steal your $item!";
+       secretary <<< {:clue, responseCode:OK, content:answer, headers:{::}:};
+     }rob
+     body{
+       while(goon) {
+          println("rob: I am here and lurky!");
+          serve;
+       }
+     }body
+  }Rob
+}

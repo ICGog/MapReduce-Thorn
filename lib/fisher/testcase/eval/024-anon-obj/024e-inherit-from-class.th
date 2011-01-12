@@ -1,0 +1,18 @@
+{
+  class A {
+    val v = 1;
+    def m() = [v];
+    def p() = [v+1];
+  }
+  
+  o = object extends A {
+         val w = 111;
+         def p() = [this.v+w, super@A.p()];
+      };
+
+  ~!@eq(o.v, 1)@!~  ;
+  ~!@eq(o.w, 111)@!~  ;
+  ~!@eq(o.m(), [1])@!~  ;
+  ~!@eq(o.p(), [112, [2]])@!~  ;
+  
+}

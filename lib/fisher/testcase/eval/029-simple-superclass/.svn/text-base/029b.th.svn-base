@@ -1,0 +1,8 @@
+{
+  import PET.*;
+  class Refractometer extends Pageant{
+    val evasion = 5;
+  }
+  r = Refractometer();
+  ~!@obj_local_struct(r, "evasion=5,sale=2,shield=1,")@!~;
+}

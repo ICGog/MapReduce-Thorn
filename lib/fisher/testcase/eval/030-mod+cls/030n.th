@@ -1,0 +1,10 @@
+{
+  import LIAR.*;
+  import VEX.*;
+  
+  fj = Fjord(1,2);
+  
+  f = Frog(1,2,3);
+  ~!@eq(f.improvise(), 4)@!~  ;
+
+}

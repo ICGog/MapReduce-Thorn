@@ -1,0 +1,30 @@
+spawn crient {
+  fun cry(swerver, crient, phid, L) { 
+     comp = spawn crier {
+       body{
+         swerver <-> start(phid);
+         for(l <- L) {
+           swerver <-> yip(l);
+         }for     
+         crient <<< "done";
+       }body
+     }crier;
+     {:comp, phid, L:};
+  }cry
+  body{
+    ~!@testStartLatch();
+    {:swerverComp: swerver:} = ~!@recOfPorts();
+    crient = thisComp();
+    cries = [
+      cry(swerver, crient, 111, %[ i + 100 | for i <- 1 .. 10]),
+      cry(swerver, crient, 222, %[ i | for i <- 1 .. 10]),
+      cry(swerver, crient, 333, %[true | for i <- 1 .. 20])      
+      ];
+    for(c <- cries) recv{"done" from $(c.comp) => {}}
+    swerver <-> plz·die();
+    ~!@checkphase(
+      %[ {: phase: phid , bag: [L]:} | for {:phid,L:} <- cries ]
+    )@!~  ;
+    
+  }body
+}crient;

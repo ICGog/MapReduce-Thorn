@@ -1,0 +1,33 @@
+{
+
+  t1 = table(k){val v;};
+  
+  ~!@eq(t1(1), t1.get({:k:1:}), null)@!~  ;
+  
+  var r;
+  r := {: k:1, v: "by Priapus's misfit" :};
+  t1 .ins( r);
+  ~!@eq(t1(1), t1.get({:k:1:}), r)@!~  ;
+  ~!@assert(t1.tstCheckInvariant())@!~  ;  
+
+  r := {: k:1, v: "by Mephistopeles's poet" :};
+  t1 .ins( r);
+  ~!@eq(t1(1), t1.get({:k:1:}), r)@!~  ;
+  ~!@assert(t1.tstCheckInvariant())@!~  ;  
+
+  t2 = table(k,l){val v;};
+  
+  ~!@eq(t2(1,1), t2.get({:k:1, l:1:}), null)@!~  ;
+  ~!@assert(t2.tstCheckInvariant())@!~  ;  
+  
+  r := {: k:1, l:1, v: "by Hephaestus's bloated machine gun" :};
+  t2 .ins( r);
+  ~!@eq(t2(1,1), t2.get({:k:1,l:1:}), r)@!~  ;
+
+  r := {: k:1, l:1, v: "by Wuru's lancet" :};
+  t2 .ins( r);
+  ~!@eq(t2(1,1), t2.get({:k:1, l:1:}), r)@!~  ;
+  ~!@assert(t2.tstCheckInvariant())@!~  ;  
+  
+
+}

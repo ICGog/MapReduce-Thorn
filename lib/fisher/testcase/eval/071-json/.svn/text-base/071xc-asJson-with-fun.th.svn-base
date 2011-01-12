@@ -1,0 +1,7 @@
+{
+  import JSON.* ;
+  fun o2ow(x) = "ow!";
+  o = object { };
+  ~!@eq(asJson(o, o2ow), "ow!")@!~  ;
+  ~!@eq(asJson([{: a:o, b:1 :}], o2ow), [{: a:"ow!", b:1 :}] )@!~  ;
+}

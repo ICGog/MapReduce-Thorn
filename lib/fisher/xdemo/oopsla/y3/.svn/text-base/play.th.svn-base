@@ -1,0 +1,42 @@
+spawn play {
+  var server;
+  var name;
+      
+  fun play(player, adv) {
+    println("$player hit you the ball $adv.");
+    reply = readln("How do you respond? ");
+    server <<< {: adv: reply :};
+  }play
+  
+  fun getName() {       
+    serverSite = site("localhost", argv().head.int); 
+    do {
+       name := readln("What name do you want? ");
+       serverSite <<< {: join: name :};
+       receive{
+          {: doom:msg :} => {name := null; println(msg);}
+       |  {: ok: msg  :} from serverCid => {
+             println(msg);
+             server := serverCid;
+          }            
+       }receive
+    } until (name != null)
+    println("$name, we are ready to rattle!");
+  }getName      
+      
+  body{
+    getName();
+        
+    var goon := true;
+    while (goon) {
+      receive {
+        {: player, adv :} from $(server) => play(player, adv)
+      | {: win :} => { println("WIN! $win"); goon := false;}
+      | {: lose :} => { println("LOSE! $lose"); goon := false; }
+      | {: msg :} => println(msg)
+      | other from who => println("What is $other from $who when server=$server?")
+      }receive
+    }while
+    
+  }body
+}play;

@@ -1,0 +1,70 @@
+module wcmodelmessages{
+
+  import webmodels.*;
+  
+  // It's unscalable to send all the keys back and forth.  For a more
+  // scalable approach: split this entity type into two (sharding): one
+  // with all the keys of senders and receivers and one with the
+  // message.
+
+  class MessagesModel extends Model{
+    
+    tableName = "messages";
+    properties = {:
+                  text: "",
+                  createdat:null,
+                  tags: [],
+                  senderkey: null,
+                  indexed: false,
+                  receiverkeys: [],
+                  saved: false
+                  :};
+
+    // FIXME: apply datastore side
+    def get_all_sort_by_createdat_desc(query){
+      return %sort[ m %> m['createdat'] | for m <- query.find_all()];
+    }
+
+    def get_user_messages(userkey:string){
+      q = this.query().filter('senderkey', '=', userkey);
+      return this.get_all_sort_by_createdat_desc(q);
+    }
+
+    def get_user_related_messages(userkey:string){
+      q = this.query().filter('receiverkeys', '=', userkey);
+      return this.get_all_sort_by_createdat_desc(q);
+    }
+
+    def get_messages_since(user, createdat){
+      q = this.query();
+      q.filter('receiverkeys', '=', user['key']);
+      q.filter('createdat', '>', createdat);
+      return %sort[ m %> m['createdat'] | for m <- this.find_all(q)];
+    }
+
+    def get_messages_by_tags(tags){
+      q = this.query();
+      for(t <- tags){
+        q.filter('tags', '=', t);
+      }
+      return this.find_all(q);
+    }
+
+    def add_message(sender, text){
+      import wcmodels.db;
+
+      cheepNumber = sender['cheeps'] + 1;
+      cheepKey = sender['key'] + '/' + cheepNumber; 
+      
+      message = this.new_instance();
+      message['senderkey'] := sender['key'];
+      message['receiverkeys'] := sender['followerkeys'];
+      message['key'] := cheepKey;
+      message['text'] := text;
+      sender['cheeps'] := cheepNumber;
+      db.users.put(sender);
+
+      return this.put(message);
+    }
+  }
+}

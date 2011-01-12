@@ -1,0 +1,35 @@
+module webappinfo{
+
+  javaly fun thisScript() = fisher.runtime.lib.MiscFunctions.thisScript;
+
+  fun dirname(aFile){
+    aFile.abs().butright(aFile.name().len());
+  }
+
+  fun getAppYaml(){
+    dirname_of_running_script = dirname(thisScript());
+    return (dirname_of_running_script + "app.yaml").file();
+  }
+
+  fun appYamlFileHandlers(text){
+    // .* doesn't match \n
+    DOTALL = "[[^\\n]|[\\n]]*";
+    re = "$`DOTALL`url:(.*)$`DOTALL`static_dir:(.*)$`DOTALL`";
+    handlers = text.split("-");
+   
+    static_file_handlers = ord();
+    for(h <- handlers){
+      if(h.matchRE(re) ~ +m){
+        // - url: /foo
+        //   static_dir: bar
+        url = m(1).text.trim();
+        path = m(2).text.trim();
+        static_file_handlers @= {: url, path :};
+      }
+    }
+    return static_file_handlers.lst();
+  }  
+  | appYamlFileHandlers(){
+    return appYamlFileHandlers(getAppYaml().contents());
+  }
+}

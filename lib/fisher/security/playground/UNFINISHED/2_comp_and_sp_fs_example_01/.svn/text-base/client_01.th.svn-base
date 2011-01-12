@@ -1,0 +1,20 @@
+spawn client_01 {
+  body {
+    A = spawn A {
+      body {
+        sp = "security provider";
+        B = "client_02";
+        sp <<< {: login2:"login" :};
+        recv {
+          k from y1 => {
+            message = "do something";
+            sp <<< {: make_token:"make_token", msg:message, capability: k :};
+            recv t from y2 => {
+              B <<< message security [t];
+            }recv
+          }
+        }recv
+      }body
+    }A;
+  }body
+}

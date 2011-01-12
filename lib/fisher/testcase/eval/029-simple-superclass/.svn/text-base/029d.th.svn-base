@@ -1,0 +1,8 @@
+{
+  import PET.*;
+  class A extends Neutrino {a=1;}
+  class B extends A {b=2;}
+  class C extends B {c=3;}
+  cc = C();
+  ~!@obj_local_struct(cc, "a=1,b=2,c=3,shield=1,")@!~;
+}

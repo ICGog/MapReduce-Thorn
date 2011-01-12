@@ -1,0 +1,11 @@
+//STMT
+{
+   fun square(x) = x*x;
+   fun twice(f,x) = {f(x); f(x);}
+   fun chant(msg, n) {
+      for(i <- 1..n) print(msg);
+   }chant
+   fun car [x,_...] = x;
+   fun cube x = x*square(x);
+   fun three() = "tri";
+}

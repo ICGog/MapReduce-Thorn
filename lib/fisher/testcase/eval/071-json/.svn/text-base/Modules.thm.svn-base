@@ -1,0 +1,9 @@
+module JSON {
+  javaly fun jsonParse(s) = fisher.runtime.lib.json.JSON.parse;
+  javaly fun json?(x) = fisher.runtime.lib.json.JSON.isJSON;
+  javaly fun asJson1(x) = fisher.runtime.lib.json.JSON.asJSON;
+  javaly fun asJson(x,conv) = fisher.runtime.lib.json.JSON.asJSON;
+  javaly fun jsonRecordize(x) = fisher.runtime.lib.json.JSON.jsonRecordize;
+  javaly fun jsonRecordizeWithClassName(x) = fisher.runtime.lib.json.JSON.jsonRecordizeWithClassName;
+    
+}

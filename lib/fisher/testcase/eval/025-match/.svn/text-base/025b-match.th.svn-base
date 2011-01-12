@@ -1,0 +1,20 @@
+{
+ fun misinform(x)  {
+   match (x) {
+     1     = 111
+   | []    = 222
+   | [y]   = 333+y
+   | [_,z] = [[z]]
+   }
+ }
+ 
+ ~!@eq(misinform(1), 111)@!~  ;
+ 
+ ~!@eq(misinform([]), 222)@!~  ;
+
+ ~!@eq(misinform([1]), 334)@!~  ;
+ 
+ ~!@eq(misinform(['yow', 'wig']), [['wig']])@!~  ;
+
+ ~!@bad(misinform('fihs'))@!~  ;
+}

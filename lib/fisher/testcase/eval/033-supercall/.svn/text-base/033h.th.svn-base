@@ -1,0 +1,52 @@
+{
+   import Ear = COS.Mildew; // Shared Mildew
+   ear = Ear();
+   ~!@eq(ear.lop(), 9)@!~  ;
+   ~!@eq(ear.lop(), 8)@!~  ;
+   
+   import own HANDCUFFS = COS;
+   import Chippy = HANDCUFFS.Mildew; // separate copy.
+   chippy = Chippy();
+   ~!@eq(chippy.lop(), 9)@!~  ;
+   ~!@eq(chippy.lop(), 8)@!~  ;
+   ~!@eq(chippy.lop(), 7)@!~  ;
+   
+   // So, we've got: 
+   ~!@eq(ear.notify(), 8)@!~  ;      // shared one
+   ~!@eq(chippy.notify(), 7)@!~  ;   // HANDCUFFS one.
+
+   class Earful extends Ear{
+      def lop() { super@Ear.lop(); super@Ear.lop(); }
+   }
+
+   earful = Earful();
+   ~!@eq(earful.lop(), 6)@!~  ;    // decrement shared one twice.
+   ~!@eq(ear.lop(), 5)@!~  ;
+   
+   class Chipster extends Chippy {
+      def lop() {super@Chippy.lop(); super@Chippy.lop(); }
+   }
+   chipster = Chipster();
+   ~!@eq(chipster.lop(), 5)@!~  ;
+   ~!@eq(chippy.lop(), 4)@!~  ;
+   ~!@eq(chippy.lop(), 3)@!~  ;
+   ~!@eq(chippy.lop(), 2)@!~  ;
+
+   ~!@eq(ear.notify(), earful.notify(), 5)@!~  ;
+   ~!@eq(chippy.notify(), chipster.notify(), 2)@!~  ;
+
+/* 
+   Inheriting thus from Ear and Chippy both should fail.
+   
+   class EarChip extends Ear, Chippy {
+     def lop() { 
+         super@Ear.lop();
+         super@Ear.lop();
+         super@Chippy.lop();
+         [super@Ear.notify(), super@Chippy.notify()];
+     }
+   }
+*/
+
+
+}

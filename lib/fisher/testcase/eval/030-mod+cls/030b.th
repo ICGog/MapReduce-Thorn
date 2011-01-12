@@ -1,0 +1,5 @@
+{
+  import PET.Canopy;
+  c = Canopy(100);
+  ~!@obj_local_struct(c, "ruse=100,")@!~;
+}

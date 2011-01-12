@@ -1,0 +1,128 @@
+spawn DiningPhil {
+body{
+  tester = thisComp();
+  nIter = 10;
+  
+  monitor = spawn monitor {
+    f = table(fork){map var phil;};
+    var done := false;
+    fun flis() = %["$i->$fi" | for i <- 0 .. 4, val fi = f[i]];
+    sync die() { done := true; }
+    sync has(phil, fork) { 
+// ff = flis();    
+// println("mon: has($phil, $fork) -- $ff");
+      f[fork] := phil;
+      false; }
+    sync eat(phil, f1, f2) {
+// ff = flis();
+// println("mon: eat($phil, $f1, $f2) -- $ff");
+      ~!@eq(f[f1], phil);
+      ~!@eq(f[f2], phil);
+      false;
+    }
+    body {
+      until(done) serve;
+    }
+  }monitor;
+  
+  component Fork(n) {
+    var holder := null;
+    var waiting := null;
+    var waitName := null;
+    var done := false;
+    fun taken(phil, pn) {
+//println("fork $n taken by $pn");
+      holder := phil;
+      monitor <-> has(pn, n);
+      phil <<< "taken";
+
+      }
+    body {
+      until(done) {
+         recv{
+           "die" => {
+//println("fork $n dying");           
+             done := true;
+             }
+         | {:take:pn:} from phil => {
+//println("fork $n requested by $pn");
+             if (holder == null) {
+                taken(phil, pn);
+             }
+             else {
+//println("fork $n busy; $pn must wait");
+                waiting := phil;
+                waitName := pn;
+             }
+           }//take
+         |
+           "drop" from phil => {
+//println("fork $n dropped");
+             monitor <-> has(null, n);
+             phil <<< "dropped";
+             if (waiting != null) {
+               taken(waiting, waitName);
+               waiting := null;
+             }
+             else {
+               holder := null;
+             }
+           }// drop
+         }
+      }
+//println("fork $n done!!!!");
+      tester <<< {:forkdone: n:};
+    }
+  }Fork;
+
+  forks = %[spawn Fork(i) | for i <- 0 .. 4];
+
+  component Phil(name, ln, rn)  {
+    body {
+      left = forks(ln);
+      right = forks(rn);      
+      for(i <- 1 .. nIter) {
+         // think
+//         println("$name thinks (#$i)");
+         // take 
+         left <<< {:take:name:};
+         recv{"taken" => {}};
+//println("$name has left fork $ln");
+         right <<< {:take:name:};
+         recv{"taken" => {}};
+//println("$name has right fork $rn");
+         // eat
+         monitor <-> eat(name, ln, rn);
+//         println("$name eats (#$i)");
+         // drop
+         right <<< "drop";
+         recv{"dropped" => {}};
+//println("$name dropped right fork");
+         left <<< "drop";
+         recv{"dropped" => {}}; 
+//println("$name dropped left fork");
+      }for
+      tester <<< {:phildone: name:};
+    }
+  }Phil;
+  
+
+  phils = [
+    spawn Phil("Aris.", (0), (1)),
+    spawn Phil("Berk.", (1), (2)),
+    spawn Phil("Chur.", (2), (3)),
+    spawn Phil("DesC.", (3), (4)),
+    spawn Phil("Emer.", (0), (4))];
+  
+  for(phil <- phils) {
+    recv{ {:phildone:_:} from $(phil) => {}};
+  }
+  for(fork <- forks) {
+    fork <<< "die" ;
+    recv{ {:forkdone:_:} from $(fork) => {}};
+  }
+  monitor <-> die();
+  
+  
+}body
+}DiningPhil;

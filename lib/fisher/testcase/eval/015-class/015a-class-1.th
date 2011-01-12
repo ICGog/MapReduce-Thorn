@@ -1,0 +1,24 @@
+{
+  class Restaurant {}
+  
+  ~!@eq(Restaurant, Restaurant)@!~;
+  ~!@ne(Restaurant, null)@!~;
+  
+  r = Restaurant();
+  
+  class Beer { var ghoul := 1;} 
+  ~!@eq(Beer, Beer)@!~;
+  ~!@ne(Beer, Restaurant)@!~;
+  
+  b = Beer();
+  ~!@obj_local_struct(b, "ghoul=1,")@!~;
+  ~!@eq(b.ghoul, 1)@!~;
+  b.ghoul := 2;
+  ~!@eq(b.ghoul, 2)@!~;
+  ~!@obj_local_struct(b, "ghoul=2,")@!~;
+  
+  class Fleece { var granule := 1; var leash;} 
+  f = Fleece();
+  ~!@eq(f.granule, 1)@!~;
+  ~!@obj_local_struct(f, "granule=1,leash=null,")@!~;
+}

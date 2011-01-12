@@ -1,0 +1,50 @@
+{
+  t = table(k,l){v;};
+  fun it's(l) {
+     st = %sort( r %< r.k %< r.l | for r <- t );
+     ~!@eq(st, l)  ;
+     ~!@assert(t.tstCheckInvariant())  ;
+  }
+
+  it's([]);
+  
+  r1 = {: k:1, l:1, v: "by Prospero's better obstruction!" :};
+  t .ins( r1);
+  it's([r1]);
+  r1a = {: k:1, l:1, v: "by Kronos's snot!" :};
+  t .ins( r1a);
+  it's([r1a]);
+  
+  r2 = {: k:1, l:2, v: "by Shannara's mesmeric hacienda!" :};
+  t .ins( r2);
+  it's([r1a, r2]);
+  r2a = {: k:1, l:2, v: "by the hobbit wizard's protoplasmic pill!" :};
+  t .ins( r2a);
+  it's([r1a, r2a]);
+    
+  r1b = {: k:1, l:1, v: "by Gaia's fanatical magnifying glass!" :};
+  t .ins( r1b);
+  it's([r1b, r2a]);
+  
+  r3 = {: k:2, l:1, v:"by Odysseus's accuser!" :};
+  t .ins( r3);
+  it's([r1b, r2a, r3]);
+  r1c = {: k:1, l:1, v: "by Iris's optimal Smokey the Bear's unspeakable romance!" :};
+  t .ins( r1c);
+  it's([r1c, r2a, r3]);
+  r3a = {: k:2, l:1, v:"by Pan's caffinated schoolboy!" :};
+  t .ins( r3a);
+  it's([r1c, r2a, r3a]);
+  
+  r4 = {: k:2, l:2, v:"by Kirnequ's savage cutlery!" :};
+  t .ins( r4);
+  it's([r1c, r2a, r3a, r4]);
+  r4a = {: k:2, l:2, v:"by Bahamut's tnoique!" :};
+  t .ins( r4a);
+  it's([r1c, r2a, r3a, r4a]);
+  r1d = {: k:1, l:1, v: "by Aorgo's well-meaning tadpole!" :};
+  t .ins( r1d);
+  it's([r1d, r2a, r3a, r4a]);
+
+
+}

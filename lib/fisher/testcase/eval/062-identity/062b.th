@@ -1,0 +1,10 @@
+{
+  import IDENTITY.*;
+  class A extends Identity;
+  class B extends Identity;
+  class AA extends A;
+  class AB extends A,B;
+  class A2 extends A;
+  ~!@ne(A(), B(), AA(), AB(), A2())@!~  ;
+  
+}

@@ -1,0 +1,10 @@
+Let's develop a MMORPG -- that's "Minimally Multiplayer Online Role-Playing
+Game"....
+
+ Adverbial Adversaries! Ping Pong 
+
+Two players play a round of ping-pong. 
+When the ball comes to you, you may: 
+  (a) type an adverb (e.g. "angrily") describing how you return the ball.
+  (b) type a blank line to miss the ball.
+

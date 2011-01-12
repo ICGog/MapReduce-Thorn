@@ -1,0 +1,16 @@
+{
+  // Try doing some manipulations with 20-bit characters
+  lots = "FFFF".intHex() + 1;
+  
+  // These are just oddly-named variables,  not the actual chars
+  
+  ł = (lots+100).char; Ł = ł.str;
+  ù = (lots+200).char; Ù = ù.str;
+  ń = (lots+300).char; Ń = ń.str;
+  A = "A";
+  B = "B";
+  C = "C";
+
+  
+
+}

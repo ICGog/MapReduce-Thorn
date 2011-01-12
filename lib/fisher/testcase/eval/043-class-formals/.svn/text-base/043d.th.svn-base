@@ -1,0 +1,53 @@
+{
+  class A(a){
+     def am(x) = ""+x+"-"+a;
+     def moo() = [a];
+  }A
+
+  a1 = A(1);
+  {
+  ~!@eq(a1.am(2), "2-1")@!~  ;
+  ~!@assert(a1 ~ A(1))@!~  ;
+  ~!@assert(a1 ~ A((it == 1)?) )@!~  ;
+  ~!@assert(a1 ~ A(x) && x==1)@!~  ;
+  ~!@eq(a1.moo(), [1])@!~  ;
+  }
+  
+  class B(a,b) extends A(a) {
+    def bm(x) = "!" + x + "-" + this.a;
+    def moo() = {:moo:super@A.moo(), oom: b:};
+  }
+
+  {
+    b1 = B(11,22);
+    ~!@eq(b1.am(2), "2-11")@!~  ;
+    ~!@assert(b1 ~ A(11))@!~  ;
+    ~!@assert(b1 ~ B(11,22))@!~  ;
+    ~!@eq(b1.moo(), {: moo: [11], oom: 22 :})@!~  ;
+  }
+
+  class C(c) {
+  }
+  
+  {
+    c1 = C(3);
+    ~!@assert(c1 ~ C(3))@!~  ;
+    c2 = C(a1);
+    ~!@assert(c2 ~ C(_))@!~  ;
+    ~!@assert(c2 ~ C(A(_)))@!~  ;
+    ~!@assert(c2 ~ C(A(1)))@!~  ;
+  }
+  
+  class D(a,b,c,d) extends B(a,b), C(c) {}
+  {
+    d1 = D(1,2,3,4);
+    ~!@assert(d1 ~ D(1,2,3,4))@!~  ;
+    d2 = D(A(1), B(1,2), C(3), 4);
+    ~!@assert(d2 ~ A(_))@!~  ;
+    ~!@assert(d2 ~ B(_,_))@!~  ;
+    ~!@assert(d2 ~ C(_))@!~  ;
+    ~!@assert(d2 ~ D(_,_,_,_))@!~  ;
+    
+  }
+  
+}

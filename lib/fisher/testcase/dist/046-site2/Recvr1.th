@@ -1,0 +1,20 @@
+spawn Recvr1 {
+body{
+  import NET.*;
+  protoy = object extends Protocol {
+     def encode(msg) = (throw "Not used";);
+     def decode("Yow! (.*)"/[msg]) = msg;
+     def input() = UseLINE;
+  };
+  sock = ListenOn(PORT+1,protoy); 
+
+  ~!@testStartLatch();
+  
+  s = (recv{x => x};);
+//println("Um, what what ploozer?");
+  ~!@eq(s, "Voon")@!~  ;
+  
+
+  
+}body
+}Recvr1;

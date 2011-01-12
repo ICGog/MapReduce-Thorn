@@ -1,0 +1,18 @@
+
+spawn thurd {
+import sny = ARDORÕ.refereeõ;
+body{
+  ~!@testStartLatch();        
+  {:coordinatorComp: coord :} = ~!@recOfPorts();
+
+  xc = thisComp();
+  q = spawn Qeefle {
+     body{
+       ~!@eq(sny, 2)@!~  ;
+     }body
+  };
+
+  coord <<< "thurd ok";
+
+}body
+}thurd;

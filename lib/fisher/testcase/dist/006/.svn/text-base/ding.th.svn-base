@@ -1,0 +1,9 @@
+spawn ding {
+ body{
+   ~!@testStartLatch();
+   p = ~!@recOfPorts();
+   //~!@assert(p ~ {: dingPort: 4385, dongPort: 4386  :} )@!~  ;
+   dongSite = site(thisSite().host(), p.dongPort);
+   dongSite <<< 123;
+ }body
+};

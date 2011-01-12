@@ -1,0 +1,15 @@
+{
+  import WHERE.*;
+  
+  ftmp = tmpfilename.file();
+  
+  ~!@assert(ftmp.dir?())@!~  ;
+  
+  ~!@eq(ftmp.asDir(), tmp)@!~  ;
+  
+  s = "glordumental.tmp";
+  f = tmp.file(s);
+  g = tmp.file(s);
+  ~!@eq(f, g)@!~  ;
+  
+}

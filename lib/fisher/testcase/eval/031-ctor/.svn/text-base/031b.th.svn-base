@@ -1,0 +1,22 @@
+{
+  import Dinosaur = REGION.Abdomen;
+  
+  class Suburb {
+     var madhouse; 
+     var cabinet;
+     new Suburb(c) {cabinet := c;}
+     def bunt(x) {
+        madhouse := Dinosaur(x, cabinet);
+        }bunt
+  }Suburb
+  
+  s = Suburb([]);
+  s.bunt(1);
+  ~!@eq(s.madhouse.donate(), [1,333,222])@!~  ;
+  
+  t = Suburb(444);
+  t.bunt(555);
+  ~!@eq(t.madhouse.donate(), [555,11,444])@!~  ;
+
+  
+}

@@ -1,0 +1,17 @@
+{
+  var L := [];
+  for (i <- 1 .. 5) {
+    var s := 0;
+    for (j <- 1 .. i) {
+       s := s + j;
+       ~!@hit()@!~15;
+       ~!@isdef(L,i,s,j);
+    }
+    L := [L..., s];
+    ~!@hit()@!~5;
+    ~!@undef(j);
+    ~!@isdef(i,s,L);
+  }for
+  ~!@undef(i,s,j);
+  ~!@eq(L, [1,3,6,10,15])@!~;
+}

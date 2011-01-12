@@ -1,0 +1,19 @@
+// A bunch of stuff that shouldn't produce bindings.
+
+{
+  // this does...
+  { if (1 ~ x) {~!@isdef(x)@!~  ;} }
+  // Logical negation doesn't.
+  { if (!(1 ~ [x])) {~!@undef(x)@!~  ;} }
+  // Pattern negation doesn't either.
+  { if ( 1 ~ ![x] ) {~!@undef(x)@!~  ;}}
+  // Disjunctions (expression) don't.
+  { if (1 ~ y || 2 ~ y) {~!@undef(y)@!~  ;} }
+  // Disjunctive patterns don't either: 
+  { if ( 1 ~ (y || z) ) { ~!@undef(y,z)@!~  ; }}
+  // Conjunctions do though: 
+  { if ( 1 ~ x && 2 ~ y ) {~!@eq(x,1)@!~; ~!@eq(y,2)@!~  ;} }
+  // Conjunctive patterns do too
+  { if (1 ~ (x && y)) {~!@eq(x,1)@!~  ; ~!@eq(y,1)@!~  ;}}
+
+}

@@ -1,0 +1,25 @@
+{
+
+two = %group(sum = i + j){
+       faces = %first [[i,j]] %then [[i,j], faces...];
+       freq =  %first 1 %then freq+1;
+       | for i <- 1..6, for j <- 1..6
+     };
+
+~!@eq(two(7), {: sum:7, faces: %[[7-k,k] | for k <- 1..6], freq: 6 :})@!~  ;
+
+~!@assert(
+  %every(
+    two(n) ~ {:  
+       sum : $(n),
+       faces:  $(faces),
+       freq: $(freq)
+    :}
+  | for n <- 2 .. 12,
+    val freq = (n.min(14-n)) - 1,
+    val faces = %[ [n-k, k] | for k <- 1 .. 6, if n-k in 1..6]
+  )
+)@!~  ;
+
+
+}

@@ -1,0 +1,8 @@
+{
+  t = map();
+  ~!@eq(t.has?(1), false)@!~  ;
+  t[1] := "My knee really appreciates your appreciation.";
+  ~!@eq(t.has?(1), true)@!~  ;
+  t(1) := null;
+  ~!@eq(t.has?(1), false)@!~  ;
+}

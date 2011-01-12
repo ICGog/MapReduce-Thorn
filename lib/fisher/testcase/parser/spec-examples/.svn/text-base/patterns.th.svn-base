@@ -1,0 +1,80 @@
+//STMT
+{
+// Id
+  1 ~ x; 
+
+// Literal
+  1 ~ 1;
+  1 ~ "one";
+
+// Interpolations -- TO DO
+//  S ~ $x;
+//  S ~ [$x, $(x+1), $(x+2)];
+
+// Wildcard: 
+   S ~ _;
+
+// Lists: 
+   S ~ [];
+   S ~ [a];
+   S ~ [a,b...];
+   S ~ [a...,b];
+   S ~ [1, 2, b...];
+   S ~ [a..., 1, b...]; // not necessarily implemented soon.
+   
+// Records: 
+   S ~ {: a:_ :}; 
+   S ~ {: a: [_..., 1, _...], b:_ :};
+
+// Non-null check: 
+
+   if (findly(collection, test) ~ +found) 
+       print("I found $found!");
+   else 
+       print("I couldn't find one.");
+  
+
+// Parentheses
+
+   S ~ ([]);
+
+// Conjunction: 
+
+   // 'as' usage: 
+   S ~ x && [car, cdr...];
+   // true conjunction
+   S ~ [_..., 1, _...] && [_..., 2, _...];
+   // replacing the 'where' clause: 
+   S ~ [x, y...] && (x > 0)?;
+
+// Disjunction: 
+   S ~ [x,y,z] || ([x] && null~y && null~z);
+
+// Negation: 
+
+   S ~ ![x];
+   S ~ [_...] && ![_] && ![];
+   S ~ !(int());
+
+// Expression evaluation: 
+
+   S ~ [ a,b,c ] && (a > b > c)?;
+   
+   // a list of positives: 
+   S ~ [ (it > 0)? ... ];
+
+// Internal patterns 
+   S ~ {: m:m, k:k :} && m(k) ~ [a,b,c];
+   
+   S ~ (it.asList() ~ [1...]); 
+
+// deconstructors
+
+   S ~ int();
+   S ~ Complex(x,y);
+   if (S ~ rgb( r && (r > 100)?, g && (g < 50)?, b && prime(b))) {
+      print("color ($r,$g,$b) is exquisite!");
+   }
+
+
+}

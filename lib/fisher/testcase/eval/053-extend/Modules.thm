@@ -1,0 +1,43 @@
+module ADAGE {
+  javaly fun dim() = fisher.runtime.builtInFun.SomeFunsForTestingJavalyFun.zero ;
+  javaly fun un(x) = fisher.runtime.builtInFun.SomeFunsForTestingJavalyFun.one ;
+  javaly fun dau(x,y) = fisher.runtime.builtInFun.SomeFunsForTestingJavalyFun.two ;
+  
+  javaly class Whatnot(a,b) = fisher.test.classes.Whatnot { 
+     def zero() = dim; 
+     def one(y) = un; 
+     new C(); 
+     new C(x,y);
+  }Whatnot
+  
+  javaly class File = fisher.runtime.lib.File {
+     new File(filename);
+     def abs() = abs;
+     def clear() = clear;
+     def contents() = contents;
+     def del() = del;
+     def dir?() = dirp;
+     def exists?() = exists;
+     def flush() = flush;
+     def parent() = parent;
+     def path() = path;
+     def rename(newname) = rename;
+     def writeln(obj) = writeln;
+     def writeBytes(obj) = writeBytes;
+     def readBytes() = readBytes;
+  }File
+  
+  
+  // At some point, update this to use Dir
+  tmpfilename = "/tmp/thorntest";
+  tmp = tmpfilename.dir();
+  fun reset() {
+     unless (tmp.exists?()){
+       tmp.mkdir();
+     }
+     for(f <- tmp.files()) {
+        f.del!();
+     }for
+  }reset
+
+}

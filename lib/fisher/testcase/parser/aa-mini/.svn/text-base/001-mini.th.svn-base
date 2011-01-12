@@ -1,0 +1,4 @@
+{
+  aouch = 3;
+  aouch := aouch(aouch);
+}

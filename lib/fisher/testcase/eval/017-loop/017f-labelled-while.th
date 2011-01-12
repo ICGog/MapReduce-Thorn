@@ -1,0 +1,11 @@
+{
+  var v := 0;
+  `I ordered a milk chocolate ice cream with peppermint chocolate sauce, they brought me a butterscotch torte, and so I ended up having a mocha cake, huh, you young mummy merciful king sexist?`
+  : 
+  while (v < 3) {
+    v := v + 1;
+    ~!@hit()@!~3;
+    ~!@isdef(`I ordered a milk chocolate ice cream with peppermint chocolate sauce, they brought me a butterscotch torte, and so I ended up having a mocha cake, huh, you young mummy merciful king sexist?`)@!~3;
+  }
+  ~!@undef(`I ordered a milk chocolate ice cream with peppermint chocolate sauce, they brought me a butterscotch torte, and so I ended up having a mocha cake, huh, you young mummy merciful king sexist?`)@!~;
+}

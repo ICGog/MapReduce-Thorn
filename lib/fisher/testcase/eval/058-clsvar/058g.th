@@ -1,0 +1,5 @@
+//FAIL:Forwarded class parameters cannot be 'var'
+{
+  class A(n:int, var o: int);
+  class B(var n, o) extends A(n,o);
+}

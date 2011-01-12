@@ -1,0 +1,14 @@
+{
+   class A(a){}
+   class B(b){
+      new B(x,y) {}
+      new B(){}
+   }
+   class C(c){
+      new C(){}
+   }
+   class CAB(x,y,z) extends A(x), B, C {
+   }
+   
+   cab = CAB(1,2,3);
+}

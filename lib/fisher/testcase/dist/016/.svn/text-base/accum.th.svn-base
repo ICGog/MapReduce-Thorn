@@ -1,0 +1,41 @@
+spawn accum {
+
+  acc = table(client){var n, sx, sx2;};
+  var goon := true;
+
+  sync register() from client {
+    if(acc(client) == null) {
+      acc(client) := {: n:0, sx: 0, sx2: 0 :};
+      true;
+    }
+    else {
+      false;
+    }
+  }register
+
+  sync here's(x) from client {
+    if(acc(client) ~ {: n, sx, sx2 :}) {
+       acc(client) := {: n: n+1, sx: sx+x, sx2: sx2 + x*x :};
+       true;
+    }
+    else {
+       false;
+    }
+  }here's
+  
+  sync gimme() from client {
+    if(acc(client) ~ {: n,sx,sx2  :}) {: n,sx,sx2  :}; else null;
+  }gimme
+  
+  async plzDie() {
+    goon := false;
+  }
+
+  initially{~!@testStartLatch();}
+  body{
+    while(goon) {
+      serve;
+    }
+  }body  
+
+}accum;

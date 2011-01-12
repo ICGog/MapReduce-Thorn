@@ -1,0 +1,10 @@
+spawn client {
+  body{
+    ~!@testStartLatch();
+    {: serverComp : server :} = ~!@recOfPorts();
+    nonce = newNonce();
+    server <<< {: `sync`:"normal_sync", args: [1,2], nonce: nonce:};
+    r = ({recv{ {:nonce: $(nonce), response: r:} => {r;} }});
+    ~!@eq(r, "normal_sync_body")@!~  ;
+  }body;
+}client;

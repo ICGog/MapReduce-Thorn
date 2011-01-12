@@ -1,0 +1,12 @@
+{
+  import own FAUCET = FRUITYBRUISE;
+  import FAUCET.*;
+  lemon := [];
+  ~!@bad(({lemon := 1;}))@!~  ;
+  ~!@bad(({FAUCET.lemon := 1;}))@!~  ;
+  icecream := 1;
+  ~!@bad(({ icecream := "blue"; }))@!~  ;
+  ~!@bad(({ icecream += "blue"; }))@!~  ;
+  ~!@bad(({ FAUCET.icecream := "blue"; }))@!~  ;
+  ~!@bad(({ FAUCET.icecream += "blue"; }))@!~  ;
+}

@@ -1,0 +1,102 @@
+#!/usr/bin/ruby
+# Programmer: Chris Bunch
+
+$VERBOSE = nil # to supress excessive SSL cert warnings
+
+require 'base64'
+require 'openssl'
+require 'soap/rpc/driver'
+require 'yaml'
+
+$:.unshift File.join(File.dirname(__FILE__), "..", "lib")
+require 'app_controller_client'
+require 'common_functions'
+require 'encryption_helper'
+require 'user_app_client'
+require 'vm_tools'
+
+AS_VERSION = "AppScale Tools, Version 1.3, http://appscale.cs.ucsb.edu"
+USAGE = <<END_OF_USAGE
+#{AS_VERSION}
+
+Usage: appscale-upload-app [OPTIONS]
+
+Examples:
+  appscale-upload-app --file app.tar.gz
+  appscale-upload-app --file app.tar.gz --keyname fooscale
+    
+Flags:
+  --file: The Google App Engine app to upload into AppScale. Must be tar'ed up via "tar -czf app.tar.gz ." in the directory containing the application's app.yaml file.
+  --keyname: The name of the SSH key to use for Eucalyptus. Two AppScale instances can be run concurrently in one cloud if they have unique names, and they can conflict if they have the same name.
+END_OF_USAGE
+
+DJINN_SERVER_PORT = 17443
+
+ALL_FLAGS = ["help", "h", "usage", "file", "version", "keyname", "test"]
+
+require 'parse_args'
+
+file_location = FILE_LOCATION
+keyname = KEYNAME
+
+if file_location.nil?
+  abort(USAGE)
+else
+  abort(FILE_FLAG_NOT_A_TAR_MSG) if file_location !~ TAR_REGEX
+  abort("The file you specified for upload, '#{file_location}', doesn't exist. Please specify a tar file that does exist and try again.") if !File.exists?(file_location)
+end
+  
+secret_key_location = File.expand_path("~/.appscale/#{keyname}.secret")
+secret_key = (File.open(secret_key_location) { |f| f.read }).chomp
+remote_secret_key_location = "/root/.appscale/secret.key"
+
+head_node_ip = CommonFunctions.get_load_balancer_ip(keyname)
+
+app_name, file_location, language = CommonFunctions.get_appname_from_tar(file_location)
+abort("App can't be called 'none'") if app_name == "none"
+abort("App name can only contain alphanumerics and .-@") if app_name =~ /[^[:alnum:].-@]/
+apps_to_start = [app_name]
+
+acc = AppControllerClient.new(head_node_ip, secret_key)
+userappserver_ip = acc.get_userappserver_ip
+acc.update(apps_to_start)
+
+if TEST
+  user = "a@a.a"
+else
+  user = CommonFunctions.get_email
+end
+
+uac = UserAppClient.new(userappserver_ip, secret_key)
+
+if !uac.does_user_exist?(user)
+  if TEST
+    pass = "aaaaaa"
+  else
+    pass = CommonFunctions.get_password
+  end
+
+  encrypted_pass = CommonFunctions.encrypt_password(user, pass)
+  uac.commit_new_user(user, encrypted_pass)
+end
+
+puts ""
+
+if file_location.nil?
+  puts "No app uploaded. Use appscale-upload-app to upload an app later."
+else
+  file_location = File.expand_path(file_location)
+  if uac.does_app_exist?(app_name)
+    abort("An app with the name you provided in app.yaml already exists. Please change the provided name in app.yaml and retry uploading your app. If you want to upload a new version of your application, use appscale-remove-app to remove the old version, then use this tool to upload the new version.")
+  end
+
+  puts "Uploading #{app_name}..."
+  uac.commit_new_app(user, app_name, language, file_location)
+  url_suffix = "/apps/#{app_name}"
+  puts "Please wait for your app to start up."
+  CommonFunctions.wait_until_redirect(head_node_ip, url_suffix)
+  url = "http://#{head_node_ip}#{url_suffix}"
+  puts "\nYour app can be reached at the following URL: #{url}"
+
+  CommonFunctions.clear_app(file_location)
+end

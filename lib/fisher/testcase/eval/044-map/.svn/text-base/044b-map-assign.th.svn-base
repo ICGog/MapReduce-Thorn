@@ -1,0 +1,23 @@
+{
+  m = table(a){map var b; var c;};
+  for(i <- 1..10) m(i) := ‹b:i*i, c:i*i*i›;
+  for(i <- 1..10) {
+    ~!@eq(m[i], i*i)@!~ 10  ;
+  }
+
+  m[3] := 'blue';
+  ~!@eq(m[3], 'blue')@!~  ;
+  ~!@eq(m(3), ‹a:3, b:'blue', c:27›)@!~  ;
+
+  s = 'bean';
+  m[s] := 123;
+  ~!@eq(m[s], 123)@!~  ;
+  ~!@eq(m(s).c, null)@!~  ;
+  
+  m.forbidMapSet(true);
+  ~!@bad(({m['wisdom'] := 'fire';}))@!~  ;
+  m.forbidMapSet(false);
+  m['wisdom'] := 'olives';
+  ~!@eq(m['wisdom'], 'olives')@!~  ;
+
+}

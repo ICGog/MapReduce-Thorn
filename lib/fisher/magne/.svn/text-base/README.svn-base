@@ -1,0 +1,38 @@
+Running demo app:
+=================
+To run the demo app cheeper:
+./rundb.sh
+./dev_appserver.sh cheeper
+
+Point a browser to localhost:8080
+
+Running Tests:
+==============
+Run the test suite:
+./test.sh
+
+Run a single test
+./test.sh cheeper/test/wcmodels_test.th
+
+Or run tests in cheeper
+./test.sh cheeper/test/*.th
+
+App Scale:
+============
+App Scale stuff is located in the dirs 
+appscale-helpers           - easing remote interaction with appscale.
+appscale-patch             - patches to the appscale installation.
+
+ip.yaml                    - Describes the IPs of VM instances.
+deploy-infrastructure.sh   - copies all files to appscale/AppServer_Thorn.
+
+
+deploy-publickey.sh        - appends your public key located in your ~/.ssh to
+                             the vm's specified in ip.yaml to the
+                             servers keys.
+log.sh                     - opens logs in xterms of most relavant stuff  .
+run-app.sh {appname}       - uploads and runs the app.
+stop.sh                    - stops the app.
+redeploy-app.sh {appname}  - redeployt without restarting appscale
+
+

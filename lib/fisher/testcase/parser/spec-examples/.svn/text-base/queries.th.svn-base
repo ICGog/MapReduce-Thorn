@@ -1,0 +1,33 @@
+//STMT
+{
+
+%( "one" %< "none" %> "many" | for x <- stuff() );
+
+%( x %< null %> ...x | for x <- stuff(), if nice(x));
+%( x %< null %> ...(x+1) | for x <- stuff(), if nice(x));
+
+%after(s | for x <- L, var s := 0 %< s+x);
+%after(n | for x <- L, var n := x %> max(n,x));
+
+
+%count(x>0 | for [x,y] <- L, if x mod y == 0);
+%every(x > y | for x <- Xs, for y <- Ys);
+%some(x.name == "Melyl" | for x <- people() );
+
+%first(p %< null | for p <- people(), if p.ssn() == 123456789);
+
+%after(sum | for p <- L, var sum := 0 %< sum+f(p));
+
+%table(a=i){ val sq = i*i; map var b := 0;
+  | for i <- 1 .. 1000 };
+
+
+%sort( x | for x <- L);
+
+%sort( x %< x.a() | for x <- L);
+
+%sort( x %< x.a() %> x.b() %> x.c() | for x <- L);
+
+%( "one" %none "none" %many "many" | for x <- stuff() );
+
+}

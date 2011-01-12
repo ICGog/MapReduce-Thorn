@@ -1,0 +1,45 @@
+{
+  // I haven't implemented ‚Äπ‚Ä∫ yet; it would be wise to redo this test with 
+  // ‚Äπ‚Ä∫ as well.
+
+  class C{
+    var a; 
+    var b; 
+    var c;
+  }C
+  
+  r = C();
+  r.a := 1;
+  r.b := [2,3];
+  r.c := C(); 
+  r.c.a := 111;
+  r.c.b := [222, 333];
+  r.c.c := null;  
+  
+  if (r ~ {::}) {~!@hit()@!~ 1 ;} else {~!@hit()@!~ 0 ;}
+
+  if (r ~ {: a :}) { ~!@eq(a, 1)@!~  1;} else {~!@hit()@!~ 0 ;}
+
+  if (r ~ {: a:1 :}) { ~!@undef(a)@!~  1;} else {~!@hit()@!~ 0 ;}
+
+  if (r ~ {: a:100 :}) {~!@hit()@!~ 0 ;} else {~!@hit()@!~ 1 ;}
+  
+  if (r ~ {: a, b :}) {~!@eq(a, 1)@!~; ~!@eq(b, [2,3])@!~  ; } else {~!@hit()@!~ 0 ;}
+  
+  if (r ~ {: a:1, b:[2,b3], c: {: a, b, c :} :})
+     {~!@eq(a, 111)@!~  ;
+      ~!@eq(b, [222, 333])@!~  ;
+      ~!@eq(c, null)@!~  ;
+      ~!@eq(b3, 3)@!~  ;
+     }
+     else {~!@hit()@!~ 0 ;}
+
+ if (r ~ {: a:1, b:[2,b3], c: {: a : (a && (a > 0)?), 
+                                 b : [bb, bbb], c :} :})
+     {~!@eq(a, 111)@!~  ;
+      ~!@eq(c, null)@!~  ;
+      ~!@eq(bb, 222)@!~  ;
+      ~!@eq(bbb, 333)@!~  ;
+     }
+     else {~!@hit()@!~ 0 ;}
+}

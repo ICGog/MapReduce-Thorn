@@ -1,0 +1,57 @@
+{
+  // argument count -- the Fisher code does a switch,
+  // so we need to check 0, 1, 2, 3, 4, 5+
+  
+  ~!@eq("nope".format(), "nope")@!~  ;
+  ~!@eq("%d".format(1), "1")@!~  ;
+  ~!@eq("%d,%d".format(1,2), "1,2")@!~  ;
+  ~!@eq("%d,%d".format(1,2,3), "1,2")@!~  ;
+  ~!@eq("%d,%d,%d".format(1,2,3), "1,2,3")@!~  ;
+  ~!@eq("%d,%d,%d,%d".format(1,2,3,4), "1,2,3,4")@!~  ;
+  ~!@eq("%d,%d,%d,%d,%d".format(1,2,3,4,5), "1,2,3,4,5")@!~  ;
+  ~!@eq("%d,%d,%d,%d,%d,%d".format(1,2,3,4,5,6), "1,2,3,4,5,6")@!~  ;
+  ~!@eq("%d,%d,%d,%d,%d,%b".format(1,2,3,4,5,true), "1,2,3,4,5,true")@!~  ;
+  ~!@eq("%d,%d,%d,%d,%d,%b,%o".format(1,2,3,4,5,true,12), "1,2,3,4,5,true,14")@!~  ;
+
+
+  // Individual format controls and basic types
+
+  ~!@eq("%b".format(true), "true")@!~  ;
+  ~!@eq("%b".format(false), "false")@!~  ;
+  ~!@eq("%b".format(null), "false")@!~  ;
+  ~!@eq("%b".format("truly!"), "true")@!~  ;
+  
+  // hash code format -- I dunno why.
+  ~!@eq("%h".format(255), "ff")@!~  ; 
+  ~!@eq("%H".format(255), "FF")@!~  ;
+  
+  // s -- converts anything to string.
+  
+  ~!@eq("%s".format("woop"), "woop")@!~  ;
+  ~!@eq("%s".format(null), "null")@!~  ;
+  ~!@eq("%s".format(1), "1")@!~  ;
+  ~!@eq("%s".format([1,2,3]), "[1, 2, 3]")@!~  ;
+  
+  ooblestr = "Öőøōºõ";
+  ooble = object{ def str()=ooblestr; };
+  ~!@eq("%s".format(ooble), ooblestr)@!~  ;
+
+  // Unicode chars...
+  ~!@eq("%c".format("Ű".char(0)), "Ű")@!~  ;
+  // And non-BMP Unicode
+  unicle = (0xffff + 1000).char;
+  ~!@eq("%c".format(unicle), unicle.str)@!~  ;
+
+  // decimal
+  
+  ~!@eq("%05d".format(3), "00003")@!~  ;
+
+  // o,x
+  ~!@eq("%03o".format(11), "013")@!~  ;
+  ~!@eq("%03x".format(19), "013")@!~  ;
+  
+  // e, f
+  ~!@eq("%1.0e".format(0.5), "5e-01")@!~  ;
+  ~!@eq("%1.1f".format(0.5), "0.5")@!~  ;
+
+}

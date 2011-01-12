@@ -1,0 +1,59 @@
+spawn WhyWhyWhy {
+/*
+  fun hlTrudge(rcvr, n, timN, timCmd) {
+    CnonceC = newNonce();
+    rcvr <<< {: `sync`: "trudge", args: [n], nonce: CnonceC :};
+    recv{ 
+       {: response: CxC, nonce: $(CnonceC) :} from $(rcvr) => CxC
+       timeout (timN) { timCmd(); }
+    };
+  }
+*/
+/*
+  fun hlWhack (rcvr, n) {rcvr <<< {: `async`:"whack" , args: [n] :};}
+*/
+
+  body{
+    ~!@testStartLatch();
+
+    {: xComp: xxx :} = ~!@recOfPorts();
+    
+    v0 = xxx <-> trudge(0); // hlTrudge(xxx, 0, null, skyp);
+    ~!@eq(v0, 0)@!~  ;
+    v1 = xxx <-> trudge(1); // hlTrudge(xxx, 1, null, skyp);
+    ~!@eq(v1, 1)@!~  ;
+    v2 = xxx <-> trudge(1); /// hlTrudge(xxx, 1, null, skyp);
+    ~!@eq(v2, 1)@!~  ;
+    
+    xxx <-- whack(10); // hlWhack(xxx, 10); // it is now 10
+    
+    v3 = xxx <-> trudge(1); // hlTrudge(xxx, 1, null, skyp);
+    ~!@eq(v3, 11)@!~  ;
+    
+    xxx <-- whack(11); /// hlWhack(xxx, 11); // it is now 21
+    
+    v4 = xxx <-> trudge(2); // hlTrudge(xxx, 2, null, skyp);
+    ~!@eq(v4, 23)@!~  ;
+
+    xxx <-- whack(79); // hlWhack(xxx, 79);  // it is now 100, and has gone to the second loop.
+    
+    v5 = xxx <-> trudge(7); // hlTrudge(xxx, 7, null, skyp);
+    // the before does ~!@phase(100,100); k := 101;
+    // The body returns 101+7
+    // the after does  ~!@phase(101,101); k := 110;
+    ~!@eq(v5, 108)@!~  ;
+
+    xxx <-- whack(10000); // hlWhack(xxx, 10000); // a huge number to stop xxx.
+    // the before does ~!@phase(110,110);
+    
+    recv{"done" => {}};
+    ~!@checkphase(
+    {: phase:100 , bag: [100]:},
+    {: phase:101 , bag: [101]:},
+    {: phase:110 , bag: [110]:},
+    {: phase:10111 , bag: [10111]:}
+    )@!~  ;
+
+  }body
+
+}WhyWhyWhy;

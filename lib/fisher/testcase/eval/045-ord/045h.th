@@ -1,0 +1,24 @@
+{
+  ot = ord{map var a;};
+  
+  ot.add(‹a:1›);
+  
+  ot[0] := 2;
+  ~!@eq(ot[0], 2)@!~  ;
+  
+  ot.forbidMapSet(true);
+  ~!@bad(
+    valof{ot[0] := 3;}
+  )@!~  ;
+  ~!@bad(
+    ot @= 3
+  )@!~  ;
+  ~!@eq(ot[0], 2)@!~  ;
+
+  ot.forbidMapSet(false);
+  ot[0] := 4;
+  ~!@eq(ot[0], 4)@!~  ;
+  ot @= 5;
+  ~!@eq(ot.lst(), [4,5])@!~  ;
+
+}

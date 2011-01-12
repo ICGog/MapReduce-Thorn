@@ -1,0 +1,6 @@
+module CHEEPER {
+  class Chirp(text, phil, n):pure{
+    def str = '($n) "$text" -- $phil';
+    def hashCode = text.hashCode;
+  }
+}module

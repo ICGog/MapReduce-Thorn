@@ -1,0 +1,3 @@
+module FLASHLIGHT {
+   val harmless = [1,2] ~ (it.num() == 2)?;
+} 

@@ -1,0 +1,30 @@
+spawn PrioTest{
+  body{
+    outer = thisComp();
+    inner = spawn Inner {
+      body{
+        recv{"ready" = {}};
+        ~!@eq(~!@mailbox(), [11, 22, 33])@!~  ;
+        for(i <- 1..3) {
+          recv{
+            11 prio 1 = {~!@phase(3,11)  ;}
+          | 22 prio 2 = {~!@phase(2,22)  ;}
+          | 33 prio 3 = {~!@phase(1,33)  ;}
+          }
+        }for
+        outer <<< "done";
+      }body
+    }Inner;
+    inner <<< 11;
+    inner <<< 22;
+    inner <<< 33;
+    inner <<< "ready";
+    recv{"done" = {}};
+    ~!@checkphase(
+    {: phase: 1, bag: [33]:},
+    {: phase: 2, bag: [22]:},
+    {: phase: 3, bag: [11]:}
+    )@!~  ;
+  }body
+}PrioTest
+;

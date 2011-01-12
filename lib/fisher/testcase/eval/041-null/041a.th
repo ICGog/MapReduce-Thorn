@@ -1,0 +1,8 @@
+{
+  ~!@assert(null ~ !+_)@!~  ;
+  ~!@assert(+null ~ +_)@!~  ;
+  ~!@assert(++null != +null)@!~  ;
+  ~!@assert(+null != null)@!~  ;
+  ~!@assert(++null != null)@!~  ;
+  ~!@assert(+++null != ++null)@!~  ;
+}

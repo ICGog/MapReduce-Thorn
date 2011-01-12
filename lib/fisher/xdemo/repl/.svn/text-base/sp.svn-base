@@ -1,0 +1,15 @@
+fun f(name, other) = spawn {
+  async poke(n) from sender {
+     println("$name - poke $n");
+     if (n > 0) {
+       sender <-- poke(n-1);
+     }
+  }poke
+  body{
+    if (other != null) other<-- poke(4);
+    while(true) serve;
+  }body
+  }spawn;
+
+a = f("A", null);
+b = f("B", a);

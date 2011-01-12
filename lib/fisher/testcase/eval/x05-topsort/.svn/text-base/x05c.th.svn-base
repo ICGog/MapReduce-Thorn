@@ -1,0 +1,75 @@
+// Second version of the algorithm, keeping track of the number of predecessors.
+{
+  import TOP_TEST.*;
+  fun topsort3(g : Graph) {
+     topics = ord();
+     numpre = table(node){map var numPre; }; 
+     follows = table(fr,to){};
+     yes = {::};
+     order = ord();
+
+     for(n <- g.nodes) {
+        // topics.add({:node: n, numPre: 0:});
+        topics @= n;
+        numpre[n] := 0;
+        }
+     for({:fr,to:} <- g.edges) {
+        follows(fr,to) := yes;
+//        topics(topics.index(to)).numPre += 1;
+          numpre[to] += 1;
+     }
+     
+     fun findNodeWithoutPreds() = 
+       %find(node | for {:node, numPre:0 :} <~ numpre);
+       
+     while( findNodeWithoutPreds() ~ +next) {
+       topics.remove(next);
+       numpre(next) := null;
+       order @= next;
+       for({:fr:$(next), to:} <~ g.edges) {
+          numpre[to] -= 1;
+       }
+     }while
+     if (topics.num() != 0) {
+         return null;
+         }
+      else {
+         return order.lst();
+         }
+
+  }topsort3
+  testTopSort(topsort3);
+  
+  
+  fun topsort4(g : Graph) {
+     order = ord();
+     numpre = table(node){map var n;};
+     for (n <- g.nodes) {
+       numpre[n] := 0;
+     }
+     for ({:fr, to:} <- g.edges) {
+       numpre[to] += 1;
+     }
+     nopre = %table(node=node){| for {:node, n:0:} <~ numpre};
+     yes = {::};
+     while (nopre.num() > 0) {
+       next = nopre.anyRow().node;
+       nopre(next) := null;
+       order @= next;
+       for ( {:fr: $(next), to: a:} <~ g.edges) {
+         numpre[a] -= 1;
+         if (numpre[a] == 0) {
+            nopre(a) := yes;
+         }
+       }
+     }while
+     if (%exists(numpre[a] > 0 | for a <- g.nodes)) {
+        return null;
+     }
+     else return order.lst();
+  }topsort4
+
+  testTopSort(topsort4);  
+  
+  
+}

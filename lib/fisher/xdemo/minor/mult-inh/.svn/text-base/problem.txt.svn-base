@@ -1,0 +1,14 @@
+So I didn't turn up a brilliant use of multiple inheritance.  Here's
+something.  
+
+Named: Named objects 
+  (a) have a name field that is supposed to uniquely identify them.
+  (b) are registered in the "named" table.
+
+Tree - it's a tree.  The plant kind.
+
+Pear <: Tree
+
+Mutant - a Mutant has a 'power' method.
+
+MutantPearTree - 

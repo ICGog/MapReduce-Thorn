@@ -1,0 +1,44 @@
+
+------------------------------------------------------------------------------
+
+No automatic super-constructor call, nor a check that one is missed: 
+
+  class A {
+    val aw;
+    new A() { aw = "good"; }
+  }
+  class B {
+    new B() { }
+  }
+
+B().aw == null
+
+
+------------------------------------------------------------------------------
+
+Approximate comparisons for integers 
+  Not because I need them for integers, but because I want to be able to use
+  integers in float-some contexts.
+The following is a typical awkwardness: 
+         (number == other.number if number :? int 
+           else number.within?(other.number,0.05) );
+
+
+------------------------------------------------------------------------------
+
+ceil, floor, round
+
+
+------------------------------------------------------------------------------
+
+"$this" doesn't work.
+
+
+------------------------------------------------------------------------------
+
+(throw X) ought to work like (if (E) X else Y)
+
+
+------------------------------------------------------------------------------
+
+List.tails() 

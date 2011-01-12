@@ -1,0 +1,26 @@
+spawn slerver2 {
+  import HTTP.*;
+  import FILE.*;
+  body{
+    sock = HTTPSocketeer(4321);
+    var goon := true;
+    println("Unslafe Slerver slarting....");
+    while(goon) {
+      recv{
+        req && HTTPRequest("GET", resource) => {
+           f = File(resource);
+           if (f.exists?()) {
+             req.respond(OK, f.contents(), {: :});
+           }
+           else {
+             req.respond(HTTP_404, "Not there, spogger.", {: :});
+           }
+        }
+      | other => {
+          println("WTF is $other?");
+        }
+      }
+    }while
+    println("Unslafe Slerver slouching off....");
+  }body
+}slerver2;

@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title>Test Fisher Terminal Page</title>
+        <script type="text/javascript" src="js/term.js"></script>
+        <link rel="stylesheet" type="text/css" href="term.css" />
+    </head>
+    
+    <body class="body">
+        <h1 class="center">Online Fisher Demo</h1>
+        <div id="thornspace">
+            <div id="emptytop"></div>
+            <div id="termout"></div>
+            <label>
+                <div id="inputmsg"><font color=#CC3300><b><i>Loading Fisher Demo</i></b></font></div>
+                <textarea id="termin" onmousedown="onMouseDown (event)" disabled="true">
+                </textarea>
+            </label><br />
+            <button id="evalButton" type="button" onclick="evalClicked (event)" disabled="true">Evaluate</button>
+        </div>
+    </body>
+</html>

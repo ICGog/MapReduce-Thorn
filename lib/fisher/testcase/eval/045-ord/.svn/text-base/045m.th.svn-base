@@ -1,0 +1,16 @@
+{
+  class A(x);
+  class C(y);
+  class B(x,y) extends A(x), C(y);
+  class D(x,y) extends A(x), C(y);
+  o = ord{map a:A;};
+  o @= A(1);
+  o @= B(1,2);
+  ~!@bad(({ o @= 1; }))@!~  ;
+
+  p = ord{map a: A & C;};
+  ~!@bad(({ p @= A(1); }))@!~  ;
+  ~!@bad(({ p @= C(1); }))@!~  ;
+  p @= B(1,2);
+  p @= D(3,4);
+}

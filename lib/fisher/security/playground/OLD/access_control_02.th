@@ -1,0 +1,66 @@
+module SECURITYPROVIDER {
+  javaly fun make_token(x, y, z, w) = fisher.runtime.`security`.SecurityProviderModule.makeToken;
+  javaly fun grant(x, y, z) = fisher.runtime.`security`.SecurityProviderModule.grantCapability;
+  javaly fun init_sp(x) = fisher.runtime.`security`.SecurityProviderModule.initSecurityProvider;
+}module
+
+spawn access_control {
+
+  body{
+   println("Testing a simple implementation of access control");
+   sp = spawn sp {
+     body {
+      import SECURITYPROVIDER.*;
+      init_sp(thisComp());
+      try {
+       while (true) {
+	        recv {
+	          {: login:"login" :} from y => {
+	            k = "cap1";
+	            grant(k, y, thisComp());
+	            y <<< k;
+	          }
+	          | {: make_token:"make_token", msg, capability :} from y => {
+	             println("$y says $msg");
+	             make_token(msg, capability, y, thisComp());
+	             //write to FS
+	          }
+	          | x from y envelope e && it.securityInfo ~ +si checked => {
+	            for (st <- si) {
+	              t = st.k;
+	              if (t == "cap1") {
+	                println("going to write $x");
+	              }
+	            }
+	          }
+	        }recv
+	      }while
+      }try
+      catch {
+        Z => {println("no! $Z!");}
+      }catch
+     }body
+   }sp;
+   
+   B = spawn B {
+     body{
+       sp <<< {: login:"login" :};
+       var cap;
+       recv {
+         x from y => {
+           cap := x;
+         }
+       }
+       sp <<< {: make_token:"make_token", msg:"message1", capability:cap :};
+       recv {
+         x from y => {
+           println("$y says $x");
+           sp <<< "message1" security [x];
+           //sp <<< "message1";
+         }
+       }
+     }
+   }B;
+   
+  }body
+};

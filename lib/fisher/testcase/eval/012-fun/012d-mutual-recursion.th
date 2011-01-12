@@ -1,0 +1,18 @@
+{
+  fun f(x) = 1+g(x);
+  fun g(x) = 10;
+  ~!@eq(f(1), 11)@!~  ;
+  
+  fun h(x) = 1 + i(x);
+  sentry = 2;
+  fun i(x) = sentry * x;
+  ~!@eq(h(10), 21)@!~  ;
+  
+  fun j(x) = 1 + k(x);
+  fun k(x) = 12*x;
+  barrier = j(3);
+  ~!@eq(j(4), 1+12*4)@!~  ;
+  ~!@eq(barrier, 1+12*3)@!~  ;
+  
+
+}

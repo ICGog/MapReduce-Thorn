@@ -1,0 +1,44 @@
+spawn init_db {
+  import CLIENT.*;
+  cmds = [
+
+    {: register: {:username : "Sythyry", password: "lizard" :}:},
+    {: chirp: "Never go to a party that requires seconds":},
+
+    {: register: {:username : "Frodo", password: "ring" :}:},
+    {: chirp: "I like volcanoes.":},
+    {: chirp: "I like lembas.":},
+    {: follow: "Sythyry":},
+
+    {: register: {:username : "Quentin", password: "dust" :}:},
+    {: chirp: "There is no reason to dust.":},
+    {: follow: "Frodo":}, 
+
+    {: register: {:username : "Londo", password: "shadow" :}:},
+    {: chirp: "Ignorance and Arrogance FTW.":},
+
+    {: done: true :}
+  ];
+body{
+  var me;
+  server = cheeperServer();
+  for( cmd <- cmds ){
+     match(cmd) {
+       {:register: me':} => {
+          me := me';
+          println("$cmd: " + (server <-> register(me, null)));
+          }
+     | {:follow: who:} => {
+          println("$cmd: " + (server <-> follow(me, who, true)));
+          }
+     | {:chirp: ch:} => {
+          println("$cmd: " + (server <-> chirp(ch, me)));
+          }
+     | {:done:_:} => {}
+     | _ => {
+          println("DOOD< WHATF IS $cmd?");
+         }
+     }match
+  }for
+}body
+}init_db;

@@ -1,0 +1,22 @@
+module IDEOLOGY {
+  var torpor := 1;
+  class Objection{
+     var theme := 2;
+     def nestle(){
+        torpor := torpor + theme; 
+     }
+  }Objection
+  fun startle(x) = [x];
+  
+  class Fork {
+    var obje := Objection();
+  }
+  
+}IDEOLOGY
+
+
+module RHETORIC {
+  import IDEOLOGY.Objection;
+  class Speaker extends Objection {
+  }
+}

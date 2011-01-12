@@ -1,0 +1,31 @@
+{
+  if ("aaaabbb" ~ "(a*)(b*)" / [a's, b's]) {
+    ~!@eq(a's, "aaaa")@!~  ;
+    ~!@eq(b's, "bbb")@!~  ;
+  }
+  else { ~!@hit()@!~ 0 ; }
+  
+  if ("/queen" ~ "/q"/_) {
+    { ~!@hit()@!~ 0 ; }
+  }  
+  
+  
+  if ("/queen" ~ "/q.*"/_) {
+    { ~!@hit()@!~ 1 ; }
+  }  
+  
+  class Moon(x,y) {
+    def `match/`(z) = {:x,y,z:};
+  }
+  
+  moon = Moon("Artemis", "full");
+  if (moon ~ ["shiny"] / {:x,y,z:}) {
+     ~!@eq(x, "Artemis")@!~  ;
+     ~!@eq(y, "full")@!~  ;
+     ~!@eq(z, ["shiny"])@!~  ;
+  }
+  else {
+    { ~!@hit()@!~ 0 ; }
+  }
+  
+}

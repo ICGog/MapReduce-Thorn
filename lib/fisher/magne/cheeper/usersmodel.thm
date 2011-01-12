@@ -1,0 +1,87 @@
+module wcmodelusers{
+
+  import webmodels.*;
+
+  class UsersModel extends Model{
+    
+    tableName = "users";
+    properties = {: 
+                  username:"",
+                  password: null,
+                  avatar:'/static/img/avatar.png',
+                  cheeps: 0,
+                  twitterintegration: "no",
+                  twitterusername: "",
+                  twitterpassword: "",
+                  twittercheeperlogin: "true",
+                  followerkeys: [], 
+                  followingkeys: [],
+                  followers: 0,
+                  followees: 0,
+                  saved: false
+                  :};
+
+    /**
+     * Remove unwanted properties when transfering objects to
+     * clients.
+     */
+    def sanitize(users){
+      for(u <- users){
+        u.del({: k: 'password' :});
+        u.del({: k: 'followingkeys' :});
+        u.del({: k: 'followerkeys' :});
+      }
+    }
+
+    /**
+     * Set a user to follow another one.
+     * Args:
+     *   followee:rec : user to follow
+     *   follower:rec : user who wants to follow
+     */
+    def follow(follower, followee){
+      followee['followerkeys'] := follower['key'] :: followee['followerkeys'];
+      follower['followingkeys'] := followee['key'] :: follower['followingkeys'];
+      followee['followers'] := followee['followers'] + 1;
+      follower['followees'] := follower['followees'] + 1;
+      this.put(followee);
+      this.put(follower);
+    }
+
+    def unfollow(follower, userToUnfollow){
+      userToUnfollow['followerkeys'] := userToUnfollow['followerkeys'].minus([follower['key']]);
+      userToUnfollow['followers'] := userToUnfollow['followers'] - 1;
+
+      follower['followingkeys'] := follower['followingkeys'].minus([userToUnfollow['key']]);
+      follower['followees'] := follower['followees'] - 1;
+
+      this.put(userToUnfollow);
+      this.put(follower);
+    }
+
+    def cheep(userkey, text){
+      import wcmodels.*;
+      user = this.get(userkey);
+      message_key = db.messages.add_message(user, text);
+      return db.messages.get(message_key);
+    }
+
+    def messages(user){
+      import wcmodels.*;
+      return db.messages.get_user_related_messages(user['key']);
+    }
+
+    def own_messages(user){
+      import wcmodels.*;
+      return db.messages.get_user_message(user['key']);
+    }
+
+    def put(entity){
+      if(entity['saved'] ~ +e){
+        entity['followerkeys'] := entity['key'] :: entity['followerkeys'];
+        entity['followingkeys'] := entity['key'] :: entity['followingkeys'];
+      }
+      return super@Model.put(entity);
+    }
+  }
+}

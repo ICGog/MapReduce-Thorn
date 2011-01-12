@@ -1,0 +1,45 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{textcomp}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{refcount}
+\usepackage[pdftex, colorlinks, linkcolor=blue]{hyperref}
+
+\lstdefinelanguage{choicelang}[]{Java}{%
+    morekeywords={def, val, var, module, fun, pure, table, first, count, find, all, exists, none, after, sort, by, inc, increasing, dec, decreasing, yb, list, rev, then, group, body, spawn, component, sync, seed, recv, match, timeout, init, checked, from, envelope, prio, own, cnt}
+}
+\lstset{basicstyle=\small\sffamily,
+keywordstyle=\bfseries,
+%commentstyle=\color{gray},
+%        stringstyle=\color{strings},
+        identifierstyle=\color{black},
+% numbers=left, numberstyle=\tiny,
+% numbersep=5pt,
+columns=fullflexible, language={choicelang}}
+\lstset{mathescape=true,escapeinside={(*}{*)}}
+\newcommand{\kw}[1]{\lstinline{#1}}
+
+\setlength{\columnsep}{3em}
+
+\title{Proposed Changes to Thorn}
+\date{August 10, 2010}
+\author{Bard Bloom, Julian Dolby, \\ John Field, and Emina Torlak \\ IBM Research \and Nate Nystrom \\ University of Lugano \and Jan Vitek \\ Purdue University }
+
+\begin{document}
+\maketitle 
+
+This document collates recently proposed updates to the Thorn language, both semantic and syntactic.  It summarizes the contents of the various discussions posted to the Thorn mailing list, from May through August 2010.
+
+\tableofcontents
+
+\input{proposed-syntax-changes}
+\newpage
+\input{proposed-serialization-changes}
+\newpage
+\input{proposed-database-integration}
+\newpage
+\input{resolved-syntax-changes}
+
+\end{document}

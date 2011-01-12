@@ -1,0 +1,9 @@
+{
+  import IDENTITY.*;
+  class A extends Identity;
+  a1 = A();
+  a2 = A();
+  ~!@ne(a1,a2)@!~  ;
+  ~!@eq(a1,a1)@!~  ;
+  ~!@eq(a2,a2)@!~  ;
+}

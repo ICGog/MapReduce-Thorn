@@ -1,0 +1,9 @@
+module ID {
+  // A crude form of object identity, but at least it's easy to program.
+  var counter := 0;
+  class Identity {
+    id = ({counter += 1; counter;});
+    def `==`(other) = (other ~ {: id: $(id) :}:Identity);
+    def hashCode() = id;      
+  }Identity
+}

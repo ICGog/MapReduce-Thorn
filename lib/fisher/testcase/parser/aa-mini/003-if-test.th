@@ -1,0 +1,5 @@
+//STMT
+{
+  if (x) {y;}
+  fun f(y) { match(y) { [] = 1 | [a] = a | [a,b...] = b } }
+}

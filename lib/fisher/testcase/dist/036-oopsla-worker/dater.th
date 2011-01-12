@@ -1,0 +1,44 @@
+spawn DateService {
+  import PROFILE.Profile;
+  var db;
+  var goon := true;
+  async stop() { goon := false; }
+  var worker;
+
+  sync register(name, profile) from sender {
+     entry = db <-> info(name);
+     if (entry == null) {
+          db <-> setInfo({:source:sender, name, profile, 
+            picked: [name]:}); 
+       "$name, welcome to DateService!";
+       }       
+     else {
+       "We're sorry, but $name is taken. Please choose another.";
+       }
+     }register  
+
+  sync makeMeAMatch(name) envelope enve {
+     entry = db <-> info(name);
+     if (entry ~ +r) {
+        worker <-- findMatchFor(r, enve);
+        throw splitSync();
+        }
+     else {: fail: "Please register first!" :};
+   }makeMeAMatch
+
+
+
+   body{
+     # Regrettable startup code to be commented out in paper
+     ~!@testStartLatch();
+     {: serverComp : server, datebaseComp :} = ~!@recOfPorts();
+     db := datebaseComp;
+     import WORKER.Worker;
+     worker := spawn Worker();
+     worker <-> have_a_DB(db);
+     server <-> registerDateSvc(thisComp());
+     while(goon) serve;
+     db <-- quit();
+     worker <-- quit();
+   }body
+}DateService;

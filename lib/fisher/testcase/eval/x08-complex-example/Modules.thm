@@ -1,0 +1,9 @@
+module CPLX {
+  javaly class Cplx = fisher.extras.Complex  {
+    def `+`(z) = add;
+//    def `*`(z) = multiply;
+    new Cplx(x,y);
+  }
+
+  javaly fun sqrtNeg(x) = fisher.extras.Complex.sqrtNeg; 
+}

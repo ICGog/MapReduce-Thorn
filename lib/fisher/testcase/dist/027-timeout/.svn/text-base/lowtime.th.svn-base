@@ -1,0 +1,46 @@
+spawn lowtime {
+  initially{
+  }initially
+  body{
+    low = thisComp();
+    time = spawn time {
+      body{
+        recv{"ready" from $(low) => {}};
+        low <<< "ready2";
+        recv{x => {
+                    ~!@println("Enigmatically, got $x");
+                    ~!@hit()@!~ 0 ;
+                  }
+             timeout(1) {
+               ~!@hit()@!~ 1 ;
+             }timeout
+          }recv
+         recv{"wakey" => {~!@hit()@!~ 1 ;}};
+      }body
+    }time;
+    time <<< "ready";
+    recv{"ready2" from $(time) => {}};
+    ~!@sleep(100);
+    time <<< "wakey";
+
+    
+    // Now, do the same thing with a remote component.
+    
+    {: sagaComp : saga :} = ~!@recOfPorts();
+
+    ~!@testStartLatch();
+    saga <<< "readyio";
+
+    recv{"okidoki" from $(saga) => {}
+    }recv;
+    
+
+    ~!@sleep(100);
+    saga <<< "wakie!";
+
+
+    ~!@checkphase(
+    {: phase: 1, bag: ["good"]:}
+    )@!~  ;
+  }body
+}lowtime;

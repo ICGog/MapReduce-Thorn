@@ -1,0 +1,41 @@
+{
+  var a := 0;
+  ~!@eq(a, 0)@!~  ;
+  a += 1;
+  ~!@eq(a, 1)@!~  ;
+  a += 2;
+  ~!@eq(a, 3)@!~  ;
+  a += 3;
+  ~!@eq(a, 6)@!~  ;
+  a -= 4;
+  ~!@eq(a, 2)@!~  ;
+  a *= 12;
+  ~!@eq(a, 24)@!~  ;
+  a /= 8;
+  ~!@eq(a, 3.0)@!~  ;
+  
+  // And, for objects.
+
+  class Salamander {
+    var bandanna := 0;
+  }
+
+  amulet = Salamander();
+   
+  ~!@eq(amulet.bandanna, 0)@!~  ;
+  amulet.bandanna += 1;
+  ~!@eq(amulet.bandanna, 1)@!~  ;
+  amulet.bandanna += 2;
+  ~!@eq(amulet.bandanna, 3)@!~  ;
+  amulet.bandanna += 3;
+  ~!@eq(amulet.bandanna, 6)@!~  ;
+  amulet.bandanna -= 4;
+  ~!@eq(amulet.bandanna, 2)@!~  ;
+  amulet.bandanna *= 12;
+  ~!@eq(amulet.bandanna, 24)@!~  ;
+  amulet.bandanna /= 8;
+  ~!@eq(amulet.bandanna, 3.0)@!~  ;
+  
+
+
+}

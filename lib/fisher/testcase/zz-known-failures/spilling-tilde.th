@@ -1,0 +1,5 @@
+{
+  fun flurd(x) = x;
+  x = flurd("no!" ~ [[y]]);
+  ~!@bad(y)@!~;
+}

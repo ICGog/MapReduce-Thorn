@@ -1,0 +1,9 @@
+//STMT
+{
+  import ThePlaceWeKeepTheImportantData = a;
+  import own b.c.d;
+  import Minnow(Weapon = Trebuchet, Philosopher=Plato);
+  import Mercury = Hermes;
+  alias C = Hermes.Caduceus;
+  alias M = a;
+}

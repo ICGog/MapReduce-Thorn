@@ -1,0 +1,58 @@
+/* Checking out the 'serve' translation */
+spawn XXX {
+  var k := 0;
+  /*
+    sync trudge(n) = n+k;
+    async whack(n) { k += n; }
+  */
+  fun CserveC(beefore, aafter, timN, timCmd) {
+    recv {
+       msg && {: `sync`: "trudge", args: [n], nonce :} from sender => {
+          if (beefore != null) beefore(msg, sender);
+          CresponsePacketC = CtrudgeC(sender, msg, nonce, n);
+          if (aafter != null) aafter(msg, sender);
+          sender <<< CresponsePacketC;
+          }
+       |
+       msg && {: `async`: "whack", args: [n] :} from sender => {
+          if (beefore != null) beefore(msg, sender);
+          CwhackC(sender, msg, n);
+          if (aafter != null) aafter(msg, sender);
+          }
+       timeout (timN) { timCmd(); }
+    }
+  }CserveC
+
+  fun CtrudgeC(sender, msg, nonce, n) {
+    CresponseC = ({n+k;});
+    {: response: CresponseC, nonce: nonce :};
+  }CtrudgeC
+  
+  fun CwhackC(sender, msg, n) {
+    k += n;
+  }
+  
+  body{
+  ~!@testStartLatch();
+  {: yComp: y  :} = ~!@recOfPorts();
+
+   while(k<100) {
+     CserveC( fn (_,_) = null, // no before
+              fn (_,_) = null, // no after
+              null,         // no timeout
+              fn () = null  // no timeout body
+            );
+   }while
+   
+   while(k < 1000){
+     CserveC( fn(msg, sender) { ~!@phase(k, k); k += 1; }, // before
+              fn(msg, sender) { ~!@phase(k, k); k += 9; }, // after
+              null,
+              fn () = null
+              );
+   }while
+   
+   y <<< "done";
+    
+  }body
+}XXX;

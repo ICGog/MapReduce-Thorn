@@ -1,0 +1,8 @@
+{
+  class A {
+    var m := 1;
+    def m() = m;
+  }
+  a = A();
+  ~!@eq(a.m, a.m(), 1)@!~  ;
+}

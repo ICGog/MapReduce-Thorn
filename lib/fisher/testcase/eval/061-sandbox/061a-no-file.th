@@ -1,0 +1,7 @@
+{
+  import SAND.*;
+  f1 = "fone".file();
+  d1 = f1.asDir();
+  sandbox();
+  ~!@bad("fone".file())@!~  ;  
+}

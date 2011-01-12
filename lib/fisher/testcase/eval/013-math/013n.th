@@ -1,0 +1,22 @@
+{
+  t = table(a){map var b; var c; }; 
+  t.ins({: a:true, b:1, c:2 :});
+  ~!@eq(t(true).b, 1)@!~  ;
+  t(true).b += 3;
+  ~!@eq(t(true).b, 4)@!~  ;
+  
+  o = object{ var b := 0; };
+  fun f(x) = o;
+  
+  ~!@eq(f(1).b, o.b, 0)@!~  ;
+  f(1).b += 12;
+  ~!@eq(f(1).b, o.b, 12)@!~  ;
+  
+  d = ord{map var n;};
+  d @= 0;
+  ~!@eq(d(0).n, d[0], 0)@!~  ;
+  d[0] += 1;
+  ~!@eq(d(0).n, d[0], 1)@!~  ;
+  d(0).n += 3;
+  ~!@eq(d(0).n, d[0], 4)@!~  ;
+}

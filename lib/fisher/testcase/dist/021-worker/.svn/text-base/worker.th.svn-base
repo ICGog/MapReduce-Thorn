@@ -1,0 +1,8 @@
+spawn worker{
+  async doThis(enve) {
+     syncReply(enve, "polka");
+  }
+  body{
+    serve;
+  }  
+}worker;

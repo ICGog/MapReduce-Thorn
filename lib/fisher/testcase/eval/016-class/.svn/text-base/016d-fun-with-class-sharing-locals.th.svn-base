@@ -1,0 +1,48 @@
+{
+  var mushy:=0;
+  fun limit(){
+    var milkshake:=1;
+    var malicious:=false;
+    var sedentary:=false;
+    class Marimba{
+       var turkey:=2;
+       def pander(){milkshake := milkshake + turkey;}
+       def compact()=[mushy, milkshake, malicious.turkey, sedentary.turkey]; 
+       def pity(){mushy := mushy + milkshake;}
+       def mal() = malicious;
+       def sed() = sedentary;
+    }Marimba
+    malicious := Marimba();
+    sedentary := Marimba();
+    Marimba();
+  }
+  // Sharing of stuff from one frame...
+  prone = limit();
+  malic = prone.mal();
+  seden = prone.sed();
+  ~!@eq(malic.compact(), [0,1,2,2])@!~;
+  ~!@eq(seden.compact(), [0,1,2,2])@!~;
+  malic.turkey := 3;
+  ~!@eq(malic.compact(), [0,1,3,2])@!~;
+  seden.pander();
+  ~!@eq(malic.compact(), [0,3,3,2])@!~;
+  malic.sed().turkey := 4;
+  ~!@eq(malic.compact(), [0,3,3,4])@!~;
+  seden.pander();
+  ~!@eq(malic.compact(), [0,7,3,4])@!~;
+  seden.pity();
+  ~!@eq(malic.compact(), [7,7,3,4])@!~;
+  // Now, introduce a second frame.  No sharing.
+  spongy = limit();
+  malici = spongy.mal();
+  sedent = spongy.sed();
+  ~!@eq(malic.compact(), [7,7,3,4])@!~;  ~!@eq(malici.compact(), [7,1,2,2])@!~;
+  malici.pander();
+  ~!@eq(malic.compact(), [7,7,3,4])@!~;  ~!@eq(malici.compact(), [7,3,2,2])@!~;
+  malic.pander();
+  ~!@eq(malic.compact(), [7,10,3,4])@!~; ~!@eq(malici.compact(), [7,3,2,2])@!~;
+  malic.pity();
+  ~!@eq(malic.compact(), [17,10,3,4])@!~; ~!@eq(malici.compact(), [17,3,2,2])@!~;
+  sedent.pander();
+  ~!@eq(malic.compact(), [17,10,3,4])@!~; ~!@eq(malici.compact(), [17,5,2,2])@!~;
+}  

@@ -1,0 +1,24 @@
+{
+  m = table(a){map b; c;};
+  for(i <- 1..10)   m(i) := ‹b: i*i , c: i*i*i›;
+  for(i <- 1..10) {
+    ~!@eq(m[i], i*i)@!~ 10  ;
+  }
+  // Valid access returning null
+  m(null) := ‹b:null, c:null›;
+  ~!@eq(m[null], null)@!~  ;
+  ~!@assert(m(null) ~ +_)@!~  ;
+  
+  // Invalid access -- returns null by default.
+  ~!@eq(m['nope!'], null)@!~  ;
+  
+  // And now, forbid it.
+  
+  m.forbidInvalidMapAccess(true);
+  ~!@bad(m['nope!'])@!~  ;
+  
+  // And re-enable it.
+  m.forbidInvalidMapAccess(false);
+  ~!@eq(m['nope!'], null)@!~  ;
+
+}

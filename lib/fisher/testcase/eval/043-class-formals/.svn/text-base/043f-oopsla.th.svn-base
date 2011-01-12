@@ -1,0 +1,16 @@
+{
+
+class Point(x, var y) {
+  var color := "blue";
+  def `y:=`(y') {throw "Nope!";}
+  def shove! {y += 1;}
+}
+
+p = Point(1,3);
+~!@assert(p.x + p.y == p.color.len)@!~  ;
+p.color := "green";
+p.shove!;
+~!@assert(p.x + p.y == p.color.len)@!~  ;
+~!@bad(({p.y := 8;}))@!~  ;
+
+}

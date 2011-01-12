@@ -1,0 +1,24 @@
+module cheepindexer{
+
+  component cheepindexer(){
+    
+    import web.*;
+    
+    import cheepindexerhelpers.get_unindexed_messages;
+    import cheepindexerhelpers.index;
+    
+    import wcmodels.db;
+        
+    var datastore := site(settings().datastoreaddress);
+  
+    body{
+      println("Cheep Indexer running");
+      while(true){
+        messages = get_unindexed_messages();
+        indexed = %[index(m) | for m <- messages];
+        db.messages.put(indexed);
+        sleep(4000);
+      }
+    }
+  }
+}

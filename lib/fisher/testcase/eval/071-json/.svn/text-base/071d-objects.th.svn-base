@@ -1,0 +1,36 @@
+{
+  import JSON.*;
+/*
+  ~!@eq(
+    jsonParse('{}'),
+               {: :}
+  )@!~  ;
+*/
+
+  ~!@eq(
+    jsonParse('{"a": 1}'),
+               {: a:1 :}
+  )@!~  ;
+
+  ~!@eq(
+    jsonParse('{}'),
+               {: :}
+  )@!~  ;
+
+  ~!@eq(
+    jsonParse('{"ab" : [], "cd": "ow ow"}'),
+               {: ab:[],  cd: "ow ow" :}
+  )@!~  ;
+
+  ~!@eq(
+    jsonParse('{ "the fish": {"scale" : []}, "incubus": 1 }'),
+               {: `the fish` : {:scale: []:}, incubus : 1 :}
+  )@!~  ;
+  
+  
+ ~!@eq(
+    jsonParse('[{}, {"a":"arfle"}]'),
+               [{: :}, {:a:"arfle":}]
+  )@!~  ;
+
+}

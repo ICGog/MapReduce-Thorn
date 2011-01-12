@@ -1,0 +1,28 @@
+spawn server {
+  body{
+    import HTTP.*;
+    sock = HTTPSocketeer(4321);
+    var goon := true;
+    var n := 1;
+    ~!@testStartLatch();
+    while(goon) {
+      recv{
+         req && HTTPRequest("GET", resource) => {
+            ~!@phase(n, resource);
+            n += 2;
+            req.respond(HTTP_404, "No $resource for you.", {::});
+         }
+      |
+         req && HTTPRequest("BYEBYE",_) => {
+            goon := false;
+         }
+     
+      }
+    }while
+    ~!@checkphase(
+      {: phase:1 , bag: ["pie"]:},
+      {: phase:2 , bag: ["HTTP/not.really 404 Not Found"]:}
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}server;

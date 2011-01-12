@@ -1,0 +1,39 @@
+module cheepindexerhelpers{
+  
+  import wcmodels.*;
+
+  /** Replaces #... with <a href="...">#...</a> */
+  fun replace_tags(message:string, tags:list){
+    var result := message;
+    for(t <- tags){
+      result := result.replace('#$t', '<a href="/search/?q=$t">#$t</a>');
+    }
+    return result;
+  }
+
+  /** Extracts strings prefix with # */
+  fun extract_tags(message){
+    splitted = message.split('#');
+    tags = ord();
+    for(m <- splitted.tail()){
+      tags @= m.trim().split(' ').head();
+    }
+    return tags.lst();
+  }
+
+  fun get_unindexed_messages(){
+    return db.messages.query()
+      .filter('indexed', '=', false)
+      .limit(100)
+      .find_all();
+  }
+
+  fun index(message){
+    text = message['text'];
+    message['tags'] := extract_tags(text);
+    message['text'] := replace_tags(text, message['tags']);
+    message['indexed'] := true;
+    println("Indexing message: $text adding tags:" + message['tags']);
+    return message;
+  }
+}

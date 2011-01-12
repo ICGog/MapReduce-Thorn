@@ -1,0 +1,6 @@
+spawn registry {
+  var datesvc;
+  sync dateServicePlz() = datesvc;
+  sync registerDateSvc(datesvc') { datesvc := datesvc';  }
+  body { while (true) serve; }
+};

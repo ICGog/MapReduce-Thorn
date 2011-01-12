@@ -1,0 +1,8 @@
+{
+  import ADAGE.*;
+  w = Whatnot(1,[2]);
+  ~!@assert(w ~ Whatnot(_,[_]))@!~  ;
+  ~!@eq(w.a, 1)@!~  ;
+  ~!@eq(w.b, [2])@!~  ;
+  ~!@assert(w ~ Whatnot(1, [2]))@!~  ;
+}

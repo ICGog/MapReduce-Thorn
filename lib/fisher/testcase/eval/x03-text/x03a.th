@@ -1,0 +1,21 @@
+{
+  corpus = "Aren't you brightly afraid of radon gas? Eat Roughage Pellets -- the gold colored cereal that tastes like bone!! Now with more wrist watches! the dry wine goes best with the bananas. You must have eaten eggplant for breakfast, and I profoundly mean it.";
+
+//  ~!@println("CORPUS = $corpus");
+  
+  Words = corpus.split("[^A-Za-z']+");
+
+//  ~!@println(Words);
+  
+  words = %[w.toLower() | for w <- Words];
+  
+//  ~!@println(words);
+  
+  counts = %group(word=w){n=%count; | for w <- words};
+
+  scounts = %sort(r %> n %< word | for r && {: n, word :} <- counts);
+  
+  for (r <- scounts) {
+//    ~!@println(r);
+  }
+}

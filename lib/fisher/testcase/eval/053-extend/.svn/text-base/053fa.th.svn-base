@@ -1,0 +1,14 @@
+{
+  import ADAGE.*;
+  
+  reset();
+  ~!@eq(tmp.files(), [])@!~  ;
+  
+  f = tmp.file("blurd.tmp");
+  f.writeln("meeple");
+  ~!@eq(tmp.files().num(), 1)@!~  ;  
+  reset();
+  ~!@eq(tmp.files(), [])@!~  ;
+
+  
+}

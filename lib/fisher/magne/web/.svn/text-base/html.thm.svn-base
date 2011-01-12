@@ -1,0 +1,234 @@
+/**
+ * Provides functions (for each html element) to build an html document.
+ */
+module webhtml{
+
+  DOCTYPE = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n';
+  
+  enforce_validness = true;
+  var xhtmlchecker := null;
+  
+  javaly class XHTMLChecker = magne.XHTMLChecker{
+    new XHTMLChecker(schema);
+    def validate(html) = validate;
+    def message() = message;
+  }
+  
+  class Attributes(attrs){
+
+    def put(k,v){
+      attrs[k] := v;  
+    }
+
+    def pop(k){
+      value = this.get(k);
+      if(value != null){
+        attrs(k) := null;
+      }
+      return value;
+    }
+
+    def get(k){
+      return v if attrs[k] ~ +v else null;
+    }
+
+    def str(){
+      l = %[ (e.k + '="' + e.v + '"') | for e <- attrs ];
+      return " ".join(l);
+    }
+    
+    def keys(){
+      return %[r.k | for r <- attrs.keys()];
+    }
+
+    def len(){
+      return attrs.len();
+    }
+  }
+
+  class Element{
+    
+    var content : list;
+    val attributes;
+    val type;
+
+    new Element(args, content_, htmltype){
+      content := c if content_ ~ c:list else [content_];
+      // if check html do check name of args
+      attributes = Attributes(args.toMap());
+      type = htmltype;
+    }
+
+    new Element(content_){
+      Element({: :}, content_);
+    }
+    
+    def get_attr(k){
+      return attributes.get(k);
+    }
+
+    def content(){
+      "".join(%[ "$e" | for e <- content ]);
+    }
+
+    def str(){
+      // the difference is a ' '
+      starttag = "<$type $attributes>" if attributes.len() > 0 else "<$type>";
+      endtag = "</$type>";
+      return "$starttag" + this.content() + "$endtag";
+    }
+  }
+
+  class EmptyElement extends Element{
+    
+    new EmptyElement(args, content_, htmltype){
+      new@Element(args, content_, htmltype);
+    }
+
+    def str(){
+      type = this.type;
+      attributes = this.attributes;
+      return "<$type $attributes />" if attributes.len() > 0 else "<$type />";
+    }
+  }
+
+  /**
+   * The root html element. This element enforces xhtml1strict validness
+   * of the html tree.
+   */
+  class ElementHtml extends Element{
+    
+    new ElementHtml(args, content_){
+      new@Element(args, content_, "html");
+    }
+
+    def str(){
+      htmlstr = super@Element.str();
+      if(enforce_validness){
+        if(xhtmlchecker == null){
+          import webschemas.xhtml1strict;
+          xhtmlchecker := XHTMLChecker(xhtml1strict);
+        }
+        result = xhtmlchecker.validate(htmlstr);
+        if(!result){
+          // maybe throw exception
+          return DOCTYPE + xhtmlchecker.message() + htmlstr;
+        }
+      }
+      return DOCTYPE + htmlstr;
+    }
+  }
+  
+  // 1-1 of html elements. Not all are here yet.
+  fun html(args, content) = ElementHtml(args, content);
+  |   html(content)       = ElementHtml({: xmlns: 'http://www.w3.org/1999/xhtml' :}, content);
+  
+  /** HTML header stuff */
+  fun head(args, content) = Element(args, content, "head");
+  |   head(content)       = Element({: :}, content, "head");
+
+  fun title(args, content) = Element(args, content, "title");
+  |   title(content)       = Element({: :}, content, "title");
+
+  fun meta(args, content) = Element(args, content, "meta");
+  |   meta(content)       = Element({: :}, content, "meta");
+
+  fun link(args, content) = Element(args, content, "link");
+  |   link(content)       = Element({: :}, content, "link");
+
+  fun body_(args, content) = Element(args, content, "body");
+  |   body_(content)       = Element({: :}, content, "body");
+
+  /** HTML table and subtypes */
+  
+  fun table_(args, content) = Element(args, content, "table");
+  | table_(content) = Element({::}, content, "table");
+  
+  fun tbody(args, content) = Element(args, content, "tbody");
+  | tbody(content) = Element({::}, content, "tbody");
+  
+  fun tr(args, content) = Element(args, content, "tr");
+  | tr(content) = Element({::}, content, "tr");
+
+  fun td(args, content) = Element(args, content, "td");
+  | td(content) = Element({::}, content, "td");
+
+
+  fun form(args, content) = Element(args, content, "form");
+  
+  /** Lists */
+  fun ul(args, content) = Element(args, content, "ul");
+  |   ul(content)       = Element({: :}, content, "ul");
+
+  fun ol(args, content) = Element(args, content, "ol");
+  |   ol(content)       = Element({: :}, content, "ol");
+
+  fun li(args, content) = Element(args, content, "li");
+  |   li(content)       = Element({: :}, content, "li");
+
+  fun dl(args, content) = Element(args, content, "dl");
+  | dl(content) = Element({: :}, content, "dl");
+
+  fun dt(args, content) = Element(args, content, "dt");
+  | dt(content) = Element({: :}, content, "dt");
+
+  fun dd(args, content) = Element(args, content, "dd");
+  | dd(content) = Element({: :}, content, "dd");
+
+  /** Headings */
+  fun h1(args, content) = Element(args, content, "h1");
+  |   h1(content)       = Element({: :}, content, "h1");
+
+  fun h2(args, content) = Element(args, content, "h2");
+  |   h2(content)       = Element({: :}, content, "h2");
+
+  fun h3(args, content) = Element(args, content, "h3");
+  |   h3(content)       = Element({: :}, content, "h3");
+
+  /** others */
+  fun a(args, content) = Element(args, content, "a");
+  |   a(content)       = Element({: :}, content, "a");
+  
+  fun span(args, content) = Element(args, content, "span");
+  |   span(content)       = Element({: :}, content, "span");
+
+  fun img(args, content) = Element(args, content, "img");
+  |   img(args)       = Element(args, "", "img");
+
+  fun p(args, content) = Element(args, content, "p");
+  |   p(content)       = Element({: :}, content, "p");
+
+  fun label(args, content) = Element(args, content, "label");
+  |   label(content)       = Element({: :}, content, "label");
+
+
+  // COMMENT: div reserved???
+  fun div_(args, content_) = Element(args, content_, "div");
+  |   div_(content_) = Element({: :}, content_, "div");
+  
+  fun script(args, content_) = Element(args, content_, "script");
+  | script(args) = Element(args, "", "script");
+
+  /** HTML Input types */
+  fun abstractinput(userargs, type){
+    aMap = userargs.toMap();
+    aMap['type'] := type;
+    return EmptyElement(aMap.toRecord(), "", "input");
+  }
+  
+  fun textinput(args) = abstractinput(args, "text");
+  fun checkboxinput(args) = abstractinput(args, "checkbox");
+  fun radioinput(args) = abstractinput(args, "radio");
+  fun passwordinput(args) = abstractinput(args, "password");
+  fun submitinput(args) = abstractinput(args, "submit");
+  fun hiddeninput(args) = abstractinput(args, "hidden");
+  fun fileinput(args) = abstractinput(args, "file");
+  
+  /** Inputs elements are different from textareas
+      <input value="aValue"></input>
+      <textarea>aValue</textarea> 
+  */
+  fun textarea(args, value) = Element(args, value, "textarea");
+  | textarea(args) = Element(args, "", "textarea");
+
+}webhtml

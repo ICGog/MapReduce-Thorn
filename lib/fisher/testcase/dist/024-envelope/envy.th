@@ -1,0 +1,16 @@
+spawn envy {
+  body{
+    me = thisComp();
+    me <<< "zip";
+    receive{
+      m from $(me) envelope e1 => {
+        ~!@eq(e1.sender(), me)@!~  ;
+      }
+    }receive
+    
+    
+    ~!@checkphase(
+//     {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}envy;

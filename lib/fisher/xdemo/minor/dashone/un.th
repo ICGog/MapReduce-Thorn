@@ -1,0 +1,10 @@
+module MOO {
+  cow = true;
+}
+
+spawn woc {
+body{
+  import MOO.*;
+  println("cow = $cow");
+}body
+}woc;

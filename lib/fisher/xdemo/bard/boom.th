@@ -1,0 +1,15 @@
+spawn  {
+  sync ow(x) {
+    println("I got $x.");
+    [x];
+  }
+
+body{
+  try {
+   serve;
+  }
+  catch {
+    x => {println("I caught $x");}
+  }
+}body
+};

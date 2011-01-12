@@ -1,0 +1,46 @@
+{
+  class A {
+    var a;
+    new A(a') { a := a'; }
+  }
+  
+  {
+    x = A(21);
+    ~!@eq(x.a, x.a(), 21 )@!~  ;
+    x.a := 81;
+    ~!@eq(x.a, x.a(), 81 )@!~  ;
+  }
+  
+  class B extends A {
+    def a() = [super.a()];
+    def a'a() = [this.a, this.a];
+    new B(a') { new@A(a'); }
+  }
+
+  {
+    x = B(212);
+    ~!@eq(x.a, x.a(), [212] )@!~  ;
+    ~!@eq(x.a'a, x.a'a(), [ [212], [212] ])@!~  ;
+    x.a := 81;
+    ~!@eq(x.a, x.a(), [81] )@!~  ;
+    ~!@eq(x.a'a, x.a'a(), [ [81], [81] ])@!~  ;
+  }
+  
+  class C extends B {
+    def a() = {: a: super.a() :};
+    new C(a') { new@B(a'); }
+    def `a:=`(x) { super.`a:=`([[x]]); }
+  }
+  
+
+  {
+    x = C(21);
+    ~!@eq(x.a, x.a(), {: a : [21] :} )@!~  ;
+    ~!@eq(x.a'a, x.a'a(), [ {:a:[21]:}, {:a:[21]:} ])@!~  ;
+    x.a := 81;
+    ~!@eq(x.a, x.a(), {: a : [[[81]]] :} )@!~  ;
+    ~!@eq(x.a'a, x.a'a(), [x.a, x.a])@!~  ;
+
+  }
+  
+}

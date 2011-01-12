@@ -1,0 +1,35 @@
+{
+  t = table(a:bool){map var b : int; c: string;};
+  t(true) := {: b:3, c:"the Despairing Wizardly Plate":};
+  ~!@bad(({ t(1) :=  {: b:3, c:"the Despairing Wizardly Plate":};  }))@!~  ;
+  ~!@bad(({ t(false) :=  {: b:true, c:"the Despairing Wizardly Plate":};  }))@!~  ;
+  ~!@bad(({ t(false) :=  {: b:3, c:1 :};  }))@!~  ;
+  
+  t(false) := null; // 
+  t(false) := null; // 
+  t(1) := null; 
+  ~!@eq(t(1), null)@!~  ;
+  ~!@eq(t(2), null)@!~  ;
+  ~!@eq(t(false), null)@!~  ;
+
+  t[false] := 43;
+
+  u = table(a:int){map var b:string;};
+  u(0) := {: b:"a +5 Telekenetic Cube" :};  
+  u[1] := "the Enchanted Flaming Bracer";
+  u(1) := {: b:"by Hecate's terra-cotta scalpel!" :};
+  u(1).b := "by Athena's abusive accountant!";
+  u.ins( {:a:2, b:"by Lemminkainen's forgery!" :});
+  ~!@bad(({ u(2) := {: b: false :}; }))@!~  ;    
+  ~!@bad(({ u[3] := false; }))@!~  ;    
+  ~!@bad(({ u(1).b := false; }))@!~  ;    
+  ~!@bad(({ u.ins( {:a: 4, b:false :}); }))@!~  ;    
+  ~!@bad(({ u.ins( {:a: false, b:"by Bahamut's vengeful kangaroo" :}); }))@!~  ;
+  u(1);
+  u(true);
+  
+  ~!@bad(({ u.insNew({:a:5, b: false:});  }))@!~  ;    
+  ~!@bad(({ u.insNew({:a:"  ", b:"by Blackbeard's beast":}); }))@!~  ;    
+
+
+}

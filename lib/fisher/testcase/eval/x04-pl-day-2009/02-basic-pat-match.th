@@ -1,0 +1,18 @@
+{
+ fun div?(n, d) = n mod d == 0;
+ fun compos?(n) = 
+   %some(div?(n, f) | for f <- 2..n, while f*f<=n);
+ fun prime?(n) = !compos?(n);
+ nums = [17, 19, 21, 23, 25];
+ 
+ ~!@eq(
+   %[n | for n <- nums, if prime?(n)],
+   [17, 19, 23]  
+ )@!~  ;
+
+ ~!@eq(
+   %[ i | for i <- 2..7, if compos?(i)],
+   [4,6]
+ )@!~  ;
+
+} 

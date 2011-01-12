@@ -1,0 +1,17 @@
+{
+  import UNICODE.*;
+  import UNITEST.*;
+  for ({:n:} <- stuffs) {
+    c = n.char;
+    ~!@assert(c.defined?)  ;
+  }
+
+  for (n <- undefineds) {
+    ~!@assert(! n.char.defined? )@!~  ;
+  }
+  
+  ~!@bad( (-1).char  )@!~  ;
+
+  ~!@bad((MAX_UNICODE + 1).char)@!~  ;
+  
+}

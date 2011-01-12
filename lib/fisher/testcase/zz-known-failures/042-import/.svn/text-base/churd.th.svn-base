@@ -1,0 +1,17 @@
+
+spawn furd {
+import ARDORÕ.*;
+body{
+  ~!@testStartLatch();        
+  {:coordinatorComp: coord :} = ~!@recOfPorts();
+  xc = thisComp();
+  q = spawn Qeefle {
+     body{
+       ~!@eq(refereeõ, 2)@!~  ;
+     }body
+  };
+
+  coord <<< "churd ok";
+
+}body
+}furd;

@@ -1,0 +1,24 @@
+import MAPREDUCE.*;
+
+fun strToBytes(s) { 
+    return %[s.char(i).num() | for i <- 0..(s.len()-1)].asBytes();
+}
+
+var mapFun := "fun strToBytes(s) { return %[s.char(i).num() | for i <- 0..(s.len()-1)].asBytes(); }\nfun mapFun([name, document]) {\nreturn %[[strToBytes(word), [1].asBytes()] | for word <- document.str().split(\" \")];\n}";
+
+var reduceFun := "fun reduceFun([word, values]) {\n    var count := 0;\n    for (value <- values) {\n        count += 1;\n    }\n    return [count].asBytes();\n}";
+
+var id := newJob(mapFun, reduceFun, "TQVNYQSBMPUYPPYFLTVR", "smr_master@icg-laptop");
+
+emit(id, [strToBytes("buni"), strToBytes("Bomba Ana are mere mere are bomboane")]);
+emit(id, [strToBytes("marioara"), strToBytes("Bomba atomica rase mere Iraqu")]);
+
+println(doJob(id));
+
+var result := retrieve(id);
+while (result != "end_of_result") {
+    [word, count] = result;
+    println([word, count.lst()]);
+    result := retrieve(id);
+}
+

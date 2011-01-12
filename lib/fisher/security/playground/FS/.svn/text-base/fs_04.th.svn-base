@@ -1,0 +1,91 @@
+// This example shows 1 FS component, 1 security provider component, 1 good user of the FS, and 1 malicious user of the FS.
+// The malicious user asks the SP for the capability to do the write, but since the request isn't coming from the FS, which
+// has this capability, the request is denied.
+
+// This could lead to a DOS attack
+
+
+module SECURITYPROVIDER {
+  javaly fun make_token(msg, k, c) = fisher.runtime.`security`.SecurityProviderModule.makeToken;
+  javaly fun init_sp() = fisher.runtime.`security`.SecurityProviderModule.initSecurityProvider;
+  javaly fun gen_new_cap(granter) = fisher.runtime.`security`.SecurityProviderModule.generateNewCapability;
+  javaly fun gen_and_grant(granter, c) = fisher.runtime.`security`.SecurityProviderModule.generateAndGrantNewCapability;
+  javaly fun grant(granter, k, c) = fisher.runtime.`security`.SecurityProviderModule.grantCapability;
+  javaly fun grantIfOwned(granter, k, c) = fisher.runtime.`security`.SecurityProviderModule.grantCapabilityOnlyIfOwned;
+  javaly fun trust(spRef) = fisher.runtime.`security`.SecurityProviderModule.trust;
+}module
+
+spawn full_security_provider_01 {
+  body {    
+    FS = spawn FS {
+      body {
+        import SECURITYPROVIDER.*;
+        init_sp();
+        var write_cap := "";
+        while (true) {
+          try {
+            recv {
+              {: login:"login", action:a, user:u, pass:p, compID:cID :} from y => {
+                //check the user cred
+                //check the component cred
+                //if they are both good for action a, then grant the capability
+                grantedCap = gen_and_grant(thisComp(), y);
+                y <<< {: capability:"capability", k:grantedCap :};
+                write_cap := grantedCap;
+              }
+              | {: make_token:"make_token", msg, capability :} from y => {
+	             t = make_token(msg, capability, y);
+	             if (capability == write_cap) {
+	               println("going to write: $msg");
+	             } 
+	          }
+            }recv
+          } catch {
+            z => { 
+              println("security violation: $z");
+            }
+          }
+        }while
+      }body
+    }FS;
+    
+    A = spawn A {
+      body {
+        import SECURITYPROVIDER.*;
+        trustedSPs = [FS];
+        for (sp <- trustedSPs) {
+          trust(sp);
+        }
+        FS <<< {: login:"login", action:"write to a.txt", user:"bob", pass:"pass", compID:thisComp() :};
+        recv {
+          {: capability:"capability", k:k :} from y => {
+            if (y in trustedSPs) {
+              message = "do something";
+              y <<< {: make_token:"make_token", msg:{: msg:message :}, capability:k :};
+            }
+          }
+        }recv
+      }body
+    }A;
+    
+    C = spawn C {
+      body {
+        import SECURITYPROVIDER.*;
+        trust(FS);
+        FS <<< "do something evil";
+        FS <<< {: grant:"grant", c: thisComp() :};
+        recv {
+          {: capability:"capability", k:k :} from y => {
+            message = "do something more evil";
+            y <<< {: make_token:"make_token", msg:{: msg:message:}, capability:k :};
+            recv {
+              {: token: t :} from y2 => {
+                FS <<< {: msg:message :} security [t];
+              }
+            }recv
+          }
+        }recv
+      }body
+    }C;
+  }body
+};

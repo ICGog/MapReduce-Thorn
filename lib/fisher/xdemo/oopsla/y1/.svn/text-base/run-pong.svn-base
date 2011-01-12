@@ -1,0 +1,3 @@
+#!/bin/bash 
+source ~/.bashrc
+th -m Modules.thm -s ping.th -p 4261 -- Pong 4260

@@ -1,0 +1,17 @@
+{
+  m = map();
+  ~!@eq(m.toRecord(), {::})@!~  ;
+  m["a"] := 1;
+  m["b"] := 1;
+  m["c"] := 2;
+  
+  ~!@eq(m.toRecord(), {:a:1, b:1, c:2:})@!~  ;
+  
+  m["11"]  := 1111;
+  m[ 11 ]  := 2222;
+  
+  // Bad, because two keys have the same string rep.
+  ~!@bad(m.toRecord())@!~  ; 
+  m(11) := null;
+  ~!@eq(m.toRecord(), {:a:1, b:1, c:2, `11`: 1111:} )@!~  ;  
+}

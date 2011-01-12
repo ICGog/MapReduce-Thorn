@@ -1,0 +1,6 @@
+{
+   import CHEEP.*;
+   import TIME.*;
+
+   c = Chirp("wr", "te", 123);
+}

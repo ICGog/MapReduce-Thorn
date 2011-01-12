@@ -1,0 +1,3 @@
+class A(x);
+class B(x,y) extends A(x);
+bb = B(1,2);

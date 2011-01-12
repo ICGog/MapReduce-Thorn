@@ -1,0 +1,37 @@
+spawn bit {
+  var a := 0;
+  initially{ ~!@testStartLatch(); }
+  body{
+     {: bitPort: bitport, batPort: batport, botPort: botport  :} = ~!@recOfPorts();
+     host = thisSite().host();
+     bitURI = "thorn://$host:$bitport";
+     //bit = site(host, bitport);
+     bit = site(bitURI);
+     bat = site(host, batport);
+     bot = site(host, botport);
+     sites = {:bit, bat, bot:};
+     bat <<< sites;
+     bot <<< sites;
+     
+     // phase 1
+     
+     // phase 2     
+     recv{x => {~!@phase(2, x)  ;}};
+     
+     // phase 3 and 4
+     
+     for(i <- 1..5) { bat <<< i; }
+     bat <<< "go3";
+
+     
+     // finishing
+     recv{"donebat" => {}};
+     recv{"donebot" => {}};
+     ~!@checkphase(
+       {: phase: 1, bag: ["hao"]:},
+       {: phase: 2, bag: ["jao", "jai"]:}
+       ,{: phase: 3 , bag: [3,3]:}
+       ,{: phase: 4 , bag: [1,1,2,2,4,4,5,5]:}
+      )@!~  ;
+  }body
+}bit;

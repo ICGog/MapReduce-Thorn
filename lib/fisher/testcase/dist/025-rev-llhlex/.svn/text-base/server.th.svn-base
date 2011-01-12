@@ -1,0 +1,80 @@
+spawn server {
+
+   sync normal_sync(a,b) from FROM envelope ENVE prio 1 = "normal_sync_body";
+  /*
+   sync split_sync(c,d) from FROM envelope ENVE prio 2 {
+     worker <-- do_split_sync(c,d,ENVE);
+     throw splitSync();
+   }
+  */
+
+   async an_async(e,f) from FROM envelope ENVE prio 3 = "normal_async_body";
+
+  
+  fun s_normal_sync(FROM, /*cut:Cmsg,*/ nonce, [a,b], ENVE) = "normal_sync_body";
+  
+  fun s_split_sync(FROM, nonce, [c,d], ENVE) {
+     worker <-- do_split_sync(c,d,ENVE);
+     throw splitSync();
+   }
+   
+   fun a_async(FROM, [e,f], ENVE) {
+      "normal_sync_body";
+   }
+   
+   fun Cserve(Cbefore, Cafter, CtimeoutN, CtimeoutCmd) {
+     CsplitSync = splitSync();
+     recv {
+     {: `sync`:"normal_sync", args: Cargs, nonce: Cnonce:}
+     from Csender
+     envelope Cenvelope 
+     prio 1
+     => {
+          var Cresult := null;
+          if(Cbefore != null) Cbefore();
+          try {
+            Cresult := +(s_normal_sync(Csender, Cnonce, Cargs, Cenvelope)); // note plussing.
+          }
+          catch {
+            $(CsplitSync) => {}
+          }
+          finally {
+            if(Cafter != null) Cafter();
+          }
+          if (Cresult ~ +CcallSucceeded) {
+             syncReply(Cenvelope, CcallSucceeded);
+          }
+        }
+     |
+     {:`async`:"an_async", args: Cargs :}
+     from Csender
+     envelope Cenvelope
+     prio 3
+     => {
+          if(Cbefore != null) Cbefore();
+          try {
+            (s_normal_sync(Csender, Cargs, Cenvelope)); 
+          }
+          finally {
+            if(Cafter != null) Cafter();
+          }
+        }
+     
+     timeout(CtimeoutN) {
+       if (CtimeoutCmd != null) CtimeoutCmd();
+       }
+     }recv
+   }
+  
+  var worker;
+  initially{
+    ~!@testStartLatch();
+    {: workerComp: worker' :} = ~!@recOfPorts();
+    worker := worker';
+  }initially
+  body{
+    // serve;
+    //Cserve(null, null, null, null);
+    serve;
+  }body
+}server;

@@ -1,0 +1,32 @@
+spawn Sendie {
+  body{
+   ~!@testStartLatch();
+    sendie = thisComp();
+    r = spawn Receivie{
+          body{
+            recv{
+               "not tim" = {
+               }
+               timeout(100) {
+                  ~!@phase(1, "tim")@!~  ;
+               }timeout
+            }recv
+            
+            recv{
+               x = {
+                  ~!@phase(2, x)@!~  ;
+               }
+               timeout(3000) {
+               }
+            }recv
+            sendie <<< "Oh food";
+          }body
+        }Receivie;
+    r <<< "woot!";
+    recv{_={}}
+    ~!@checkphase(
+      {: phase: 1 , bag: ["tim"]:},
+      {: phase: 2 , bag: ["woot!"]:}
+      )@!~  ;
+  }body      
+}spawn;

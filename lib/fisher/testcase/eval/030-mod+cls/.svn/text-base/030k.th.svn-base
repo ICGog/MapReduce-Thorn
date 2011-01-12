@@ -1,0 +1,6 @@
+{
+  import PAIN;
+  ~!@eq(PAIN.toy, 1)@!~  ;
+  PAIN.toy := 2;
+  ~!@eq(PAIN.toy, 2)@!~  ;
+}

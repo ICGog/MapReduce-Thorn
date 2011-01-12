@@ -1,0 +1,17 @@
+{
+  class Lynx {
+    var scorpion := 0;
+    def curb(n) {
+      a = scorpion;
+      ~!@eq(a, scorpion, this.scorpion)  ;
+      scorpion += 1;
+      ~!@eq(a+1, scorpion, this.scorpion)  ;
+
+      
+    }curb
+  }Lynx
+  
+  Lynx().curb(1);
+  
+  
+}

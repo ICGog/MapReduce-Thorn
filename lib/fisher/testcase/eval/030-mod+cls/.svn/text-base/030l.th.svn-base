@@ -1,0 +1,8 @@
+{
+  import PET = NURSE; // Note that PET already exists
+  s =  "the Flamboyant Hidden Sword Of Bast";
+  ~!@eq(PET.psychic, s)@!~  ;
+  import PET.*; // should get NURSE.*, not pet members.
+  ~!@eq(psychic, s, PET.psychic)@!~  ;
+  ~!@undef(castle)@!~  ;  // from the module PET, but not from the alias.
+}  

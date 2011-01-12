@@ -1,0 +1,35 @@
+spawn swerver {
+  t = table(client){var stream; val phaseId;};
+  
+  var goon := true;
+  
+  sync start(phaseId) from client {
+    t(client) := {: stream : ord(), phaseId :};
+    true;
+  }    
+
+  sync yip(x) from client {
+    if (t(client) ~ {: stream  :}) {
+      t(client).stream @= x;
+    }
+    else {
+       ~!@hit()@!~ 0 ;
+    }
+    "OK";
+  }yip
+  
+  sync plz·die() {
+    goon := false;
+    for( {:phaseId, stream:} <- t) {
+      ~!@phase(phaseId, stream.lst());
+    }
+    "died!";
+  }plz·die
+
+  body{
+    while(goon){
+      serve;
+    }
+  }body
+  
+}swerver;

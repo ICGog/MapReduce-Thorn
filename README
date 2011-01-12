@@ -27,5 +27,35 @@ smr_master:add_input(Id, [{def, "MapReduce achieves reliability by parceling out
 ok = smr_master:do_job(Id).
 Result = smr_master:whole_result(Id).
 
-
 lists:foreach(fun ({Word, Count}) -> io:format("~s -> ~p~n", [Word, Count]) end, Result).
+
+
+------------------------------- Thorn Integration ------------------------------
+
+In order to use the adapted interpreter do the following:
+
+- create fisher.jar using the makefile in lib/fisher
+- copy the fisher.jar over classes/fisher.jar in your local Thorn interpreter
+- add REPOSITORY_PATH/lib/fisher/jinterface-1.5.3.jar to your THORNJARS
+environment variable. You can do this by typing:
+
+    export THORNJARS=$THORNJARS:REPOSITORY_PATH/lib/fisher/jinterface-1.5.3.jar
+    
+where REPOSITORY_PATH is the location of the repository on your machine.
+        
+After this point you can test if you are using the modified interpretor by
+running the example program:
+    th -f src/thorn/integration.th -m src/thorn/MAPREDUCE.thm
+    
+In order for this to work you must have an erlang node running the erlang test
+module on your machine with the same name and cookie as the one specified in:
+    REPOSITORY_PATH/lib/fisher/src/fisher/runtime/mapreduce/MapReduce.java
+    
+This is just a proof of concept. It will be extended and implemented properly in
+future commits.
+
+
+In order to add functionality to the interpretor one has to edit the 
+MapReduce.java file, the src/thorn/MAPREDUCE.thm file and subsequently to
+recompile fisher.jar.
+

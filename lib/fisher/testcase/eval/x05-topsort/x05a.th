@@ -1,0 +1,10 @@
+{
+  import TOP_TEST.*;
+  ~!@assert(g1.nodes.setEq([aa,bb,cc,dd,ee]))@!~  ;
+  ~!@eq(g1.edges, edges_1)@!~  ;
+  ~!@assert(g1.sortedBy?( [aa,bb,cc,dd,ee] ))@!~  ;  
+  ~!@assert(g1.sortedBy?( [ee,aa,bb,cc,dd] ))@!~  ;  
+  ~!@assert(g1.sortedBy?( [ee,aa,cc,bb,dd] ))@!~  ;  
+  ~!@assert(g2.sortedBy?( [aa,bb,cc,dd,ee,ff,gg,hh,ii] ))@!~  ;
+  
+}

@@ -1,0 +1,6 @@
+{
+  ~!@eq(true, not false)@!~;
+  ~!@eq(true, !false)@!~;
+  ~!@eq(false, !true)@!~;
+  ~!@eq(false, not true)@!~;
+}

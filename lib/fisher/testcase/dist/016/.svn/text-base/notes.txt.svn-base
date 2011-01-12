@@ -1,0 +1,24 @@
+Accumulator server.  
+
+Unlike 015, this server can handle conversations with many clients at once. 
+It provides the service of accumulating n, x, and x^2.  
+
+* register() -- sign up to get an accumulator.
+
+* here's(x) -- add x into the accumulator.  Returns true if you were
+  registered; false (and no accumulation) if you weren't.
+  
+* gimme() -- returns your totals {: n, sx, sx2 :}
+
+* plzDie() -- kills the accumulator service.
+
+Serfs (spawned by the baron) have a little language.
+ * ‚Äπreg: _, res:b‚Ä∫ attempts to register and wants to get result b.
+ * ‚Äπh: v, res:b‚Ä∫ -- send "here's v" and get result b.
+ * ‚Äπg: s‚Ä∫ -- send "gimme()" and expect result s.
+ * ‚Äπw: n‚Ä∫ -- wait for the baron to send n.  
+ * ‚Äπb: n‚Ä∫ -- send n to the baron.
+
+The test case includes a couple ‚Äπw‚Ä∫'s to make all the serfs wait a bit to get
+into the middle of their lists of commands, thereby ensuring that the server
+is dealing with many of them at once.

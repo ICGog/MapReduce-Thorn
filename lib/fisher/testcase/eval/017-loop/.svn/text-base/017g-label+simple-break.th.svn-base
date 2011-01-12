@@ -1,0 +1,12 @@
+{
+  var v := 1;
+  `Peter Pan sold his soul for soy milk casseroles, you pseudo-sheep.`
+  : 
+  do {
+     ~!@hit()@!~ 1; 
+     break; 
+     ~!@hit()@!~ 0;
+  } while(true)
+  ~!@hit()@!~ 1;
+
+}

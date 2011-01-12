@@ -1,0 +1,55 @@
+spawn sec {
+import HTTP.*;
+import XML.*;
+import CONFIG.*; 
+import ROB.*; 
+threads = table(name){var thread;};
+pending = table(clue){map var req;};
+var cluecounter := 0;
+
+fun pend(req) {
+  cluecounter += 1;
+  pending[cluecounter] := req;
+  cluecounter;
+}
+
+fun dealWith(req, params, url) {
+  match(url) {
+    "/([^/]+)/rob" / [robber] => {
+       if (threads(robber) ~ {: thread :} ){
+         thread <-- rob(params, url, pend(req));
+       }
+       else {
+         println("Nobody here named $robber");
+         req.respond(HTTP_404, "Nobody here named $robber.", {::});
+       }
+    }
+  | _ => {
+           println("I'll deal with $url later!");
+         }
+  }match
+}dealWith
+
+body{
+  threads("rob") := {: thread: spawn Rob("+1 Fay Vicious Jar Of Menacing Dust") :};
+  var goon := true;
+  HTTPSocketeer(4385);
+  println("sec: starting!");
+  while(goon) {
+     recv{
+        req && HTTPRequest("GET", params, url) => {
+           println("sec: GET($params, $url)");
+           dealWith(req, params, url);
+        }
+     | {:clue, responseCode, content, headers:} => {
+       req = pending[clue];
+       pending(clue) := null;
+       req.respond(responseCode, content, headers);
+       }
+     | other => {
+        println("sec: WTF is $other?");
+        }
+     }recv
+  }while
+}body
+}sec;

@@ -1,0 +1,12 @@
+{
+  var C_counter := 0;
+
+  class C{
+    which_C = ({ C_counter += 1; });
+    var someNum := 18;
+    val x;
+    new C(x') { x = x'; }
+  }C
+
+
+}

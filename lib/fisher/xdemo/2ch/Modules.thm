@@ -1,0 +1,41 @@
+module TIME {
+  var now := 0;
+  fun tick() {now += 1;}
+}
+
+
+module CHEEP {
+   import TIME.*;
+   class Chirp(writer, text, time){
+      var plusVotes := 0;
+      var minusVotes := 0;
+      var modTime := now;
+      def str() = 
+         "($time) $text [from $writer, mod $modTime, +$plusVotes/-$minusVotes]";
+      def vote(up?) {
+         if (up?) {
+           plusVotes += 1;
+         } else {
+           minusVotes += 1;
+         }
+         modTime := tick();
+      }vote
+      def love() = plusVotes - minusVotes;
+      def modTime() = modTime;
+   }Chirp
+}
+
+
+module CLIENT {
+  fun dealWithCnf() {
+    // For this demo, the configuration file "cheep.cnf" consists 
+    // entirely of the Cheeper port number.
+     "cheep.cnf".file().contents().trim().int();
+  }
+
+  fun cheeperServer() {
+    args = command_line_args();
+    host = x if args ~ [x] else "localhost";
+    site(host, dealWithCnf());
+  }
+}

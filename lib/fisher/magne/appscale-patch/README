@@ -1,0 +1,29 @@
+Adding a Thorn as a language option to AppScale demanded changing the
+two code files present in this dir.
+
+* common_functions.rb (get_app_info method in appscale-tools)
+* helperfunctions.rb (run_app method in appscale/AppController)
+
+Existing solution:
+
+A new application is uploaded to appscale with
+appscale-tools/bin/appscale-upload-app. In this process AppScale also
+uploads the language of the application. The value of language is set by
+probing for the existence of two files: app.yaml and
+appengine-web.xml. The concrete method that probes is get_app_info in
+appscale-tools/lib/common_functions.rb.
+
+When starting the web application AppScale decides
+which runtime system to use based on the language initially retrieved in
+get_app_info. The switch on runtime language is performed in
+AppController/helperfunctions.rb.
+
+
+Patched: 
+
+Instead of probing for existence, the runtime language set
+based on the value in app.yaml. That file is expected to be in the app
+directory of thorn apps.
+
+AppScale runs the thorn interpreter with different arguments, on the
+main.th in the app dir.

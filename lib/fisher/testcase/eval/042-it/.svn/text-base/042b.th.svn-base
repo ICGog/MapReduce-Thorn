@@ -1,0 +1,12 @@
+{
+  class Silence {
+     val unaccountable = ([] ~ (it == [])?);
+  } 
+  
+  ~!@assert(Silence().unaccountable)@!~  ;
+  
+  o = object{
+     val jazzy= ([1,2] ~ [ (it > 0)?, (it > 1)? ]);
+     };
+  ~!@assert(o.jazzy)@!~  ;
+}

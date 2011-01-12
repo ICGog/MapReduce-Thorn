@@ -1,0 +1,10 @@
+//FAIL: Must override multiply-inherited def
+{
+  class A{
+    def m() = 1;
+  }
+  class B{
+    def m() = 2;
+  }
+  class C extends A, B{}
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+   <project name="fisher.makejar" default="makejar" basedir=".">
+   
+      <target name ="makejar" description="Create a jar for the Fisher version of Thorn">
+         <echo message="Gronk"/>
+         <jar jarfile="fisher.jar" includes="**/*.class" basedir="./classes"/>
+         
+      </target>
+      
+</project>

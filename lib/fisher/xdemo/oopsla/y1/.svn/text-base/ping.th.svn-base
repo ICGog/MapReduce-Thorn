@@ -1,0 +1,37 @@
+spawn ping {
+  body{ 
+    // Argv = [name, otherPort]
+    // Convention: lower port number starts.
+    [name, otherPort] = argv();
+    otherSite = site("localhost", otherPort.int);
+    var done := false;
+    
+    fun play(hit) {
+       advly = readln("How do you wish to $hit the ball? (blank line to miss): ");
+       done := advly == "";
+       if (done) {
+         println("You have lost!");
+         otherSite <<< null;
+         }
+       else {
+         otherSite <<< "$name $`hit`s the ball $advly.";
+         }
+    }play
+    
+    start = thisSite().port < otherSite.port;
+    if (start) play("serve");
+    do {
+       receive{
+           msg:string => {
+            println(msg);
+            play("return");
+            }
+        | null => {
+            println("You have won!");
+            done := true;
+            }
+       }receive
+    } until(done);
+
+  }body
+}ping;

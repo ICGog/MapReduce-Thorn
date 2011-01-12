@@ -1,0 +1,15 @@
+spawn sender {
+  import PILL.*;
+  initially{
+  }initially
+  body{
+     ~!@testStartLatch();
+     {: senderComp: sender, victimComp: victim :} = ~!@recOfPorts();
+     h = Heartache(1,2);
+     victim <<< h;
+     recv{ "done" => {}}
+     ~!@checkphase(
+    {: phase: 1, bag: [h.juxtapose()]:}
+    )@!~  ;     
+  }body
+}sender;

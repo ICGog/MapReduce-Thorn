@@ -1,0 +1,24 @@
+{
+  ~!@eq("abc".replace("a", "x"), "xbc")@!~  ;
+  ~!@eq("abc".replace("x", "x"), "abc")@!~  ;
+  ~!@eq("abc".replace("", "x"), "xaxbxcx")@!~  ;
+  
+  fun f(x) = x.replaceRE("[^ ]", ".");
+  ~!@eq(
+     f("Do me a favor, you kamikaze sheet, and admit that you are gauche."),
+       ".. .. . ...... ... ........ ...... ... ..... .... ... ... ......."
+     );
+   ~!@eq(
+     "a +5 Proverbial Venomous Comforter Of The Hypnotic Ogre ".
+        replaceRE("[A-Z][a-z]*\\b", "_")
+     ,
+     "a +5 _ _ _ _ _ _ _ "     
+    )@!~  ;
+    
+    ~!@eq(
+       "a +1 Supreme Hermetic Lute Of Thoth".replace1RE("e(.)", "E\$1\$1\$1"),
+       "a +1 SuprEmmme Hermetic Lute Of Thoth"
+      )@!~  ;
+     
+  
+}

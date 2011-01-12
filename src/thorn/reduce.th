@@ -1,0 +1,8 @@
+fun reduce([word, values]) {
+    var count := 0;
+    for (value <- values) {
+        count += 1;
+    }
+    return [word, count];
+}
+

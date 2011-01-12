@@ -1,0 +1,19 @@
+{
+  import Husk = EXAMPLE.Broker;
+  
+  h = Husk(1);
+  ~!@eq(h.secretion, 1)@!~  ;
+  
+  class Phoenix extends Husk {
+    val ahead;
+    new Phoenix(a, s) {
+       new@Husk(s);
+       ahead = a;
+       }
+  }
+
+  p = Phoenix(1,2);
+  ~!@eq(p.ahead, 1)@!~  ;
+  ~!@eq(p.secretion, 2)@!~  ;
+
+}

@@ -1,0 +1,11 @@
+{fun zip(a, b) {
+  if (a ~ [ha, ta...] && b ~ [hb, tb...]) {
+    # ha, ta, hb, tb are bound here
+    [ [ha, hb],  zip(ta,tb)... ];
+  } else {
+    []; # They're not bound here.
+  }
+}
+
+~!@eq(zip([1,2,3],[4,5]), [ [1,4], [2,5] ])@!~  ;
+}

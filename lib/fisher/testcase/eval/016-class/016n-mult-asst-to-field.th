@@ -1,0 +1,22 @@
+{
+  class C {
+     var v := 0;
+     def m(a,b,c) {
+       var L := [v];
+       v := a; // store directly
+       L := [L..., v];
+       this.v := b; // store as ref.
+       L := [L..., v];
+       v := c;
+       L := [L..., v];
+       L;
+       }
+  }C
+  
+  c = C();
+  ~!@eq(c.v, 0)@!~  ;
+  L = c.m(1,2,3);
+  ~!@eq(L, [0,1,2,3])@!~  ;
+  ~!@eq(c.v, 3)@!~  ;
+ 
+}

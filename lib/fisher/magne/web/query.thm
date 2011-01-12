@@ -1,0 +1,51 @@
+/**
+ * Helps creating queries (which are records when sent over the network).
+ */
+module webquery{
+
+  class Query{
+  
+    model;
+    
+    new Query(model_){
+      model = model_;
+    }
+    
+    new Query(){}
+
+    val orderings = ord{map var rec;};
+    val filters = ord{map var filter;};
+    var limit := 0; // meaning no limit
+
+    def order(property, direction){
+      orderings @= {: property, direction :};
+      return this;
+    }
+  
+    def filter(property, type, value){
+      filters @= {: property, type, value :};
+      return this;
+    }
+
+    def limit(value){
+      limit := value;
+      return this;
+    }
+
+    def find_all(){
+      return model.find_all(this);
+    }
+
+    def find_one(){
+      return model.find_one(this);
+    }
+
+    def rec(){
+      return {: limit, orderings: orderings.lst(), filters:filters.lst() :};
+    }
+
+    def str(){
+      this.rec().str();
+    }
+  }
+}webquery

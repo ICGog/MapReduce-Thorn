@@ -1,0 +1,10 @@
+{
+  {
+     ~!@undef(dim)@!~  ;
+  }
+  {
+     import ADAGE.*;
+     ~!@isdef(dim)@!~  ;
+  }
+  
+}

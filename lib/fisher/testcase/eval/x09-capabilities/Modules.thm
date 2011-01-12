@@ -1,0 +1,10 @@
+module Capabilities {
+    javaly class Capability = fisher.`security`.Capability {
+        new Capability();
+        def verify(k) = verifyTh;
+    }
+    
+    javaly class CapabilityKey = fisher.`security`.CapabilityKey {
+        new CapabilityKey(cap);
+    }
+}

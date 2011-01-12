@@ -1,0 +1,5 @@
+This is a simple test of timeouts.  It has a subtlety or two: 
+At the end of the test, vampir sends timilotl a message "OK, test over". 
+Without this synchronization barrier, timilotl will just zoom past and finish
+its body.  After that (due to the ~!@sleep(100) in vampir) vampir will try to
+send to timilotl. That crashes with a "Connection refused" error.  `

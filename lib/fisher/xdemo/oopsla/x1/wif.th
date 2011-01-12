@@ -1,0 +1,106 @@
+spawn wif {
+  // Web InterFace to, um, a table thingie.
+  import HTTP.*;
+  import XML.*;
+  tome = table(k){saying; var plusVotes, minusVotes;};
+  var nWisdoms := 0;
+  
+  fun newWisdom(wisdom) {
+    nWisdoms += 1;
+    tome(nWisdoms) := {: saying: wisdom, plusVotes: 0, minusVotes: 0 :};
+    }
+  
+  fun prior_wisdom() {
+    newWisdom("I like glass!");
+    newWisdom("Do not put weasels or other sharp and pointy mammals down your pants.");
+    newWisdom("An investment in knowledge always pays the best interest.");
+    newWisdom("Oft evil will evil mar.");
+ 
+  }
+  
+  fun dealWith(req, {:say, wisdom:}) {
+      newWisdom(wisdom);     
+      req.respond(OK, "We thank you for your wisdom (#$nWisdoms).", {::});      
+    }
+    | dealWith(req, {:list:_, wisdom: keyword:}) {
+      giveList(req, keyword);
+    }
+    | dealWith(req, {:vote:pk:}) {
+      countVote(req, pk);
+    }
+    | dealWith(req, other) {
+      req.respond(OK, "I do not know what you mean by $other", {::});
+    }
+  
+  fun countVote(req, pk) {
+    // pk is a string "+ for n" or "- for n"
+    if (pk ~ "([-+]) for ([0-9]+)" / [sgn, .int(n)]) {
+      if (sgn == "+")
+        tome(n).plusVotes += 1;
+      else 
+        tome(n).minusVotes -= 1;
+      giveList(req, "");
+    }
+    else {
+      req.respond(OK, "What kind of a fluxmid vote is $pk?", {::});
+    }
+  }countVote
+
+  fun wisRow({:k, saying, plusVotes, minusVotes:}) {
+    import HTML.*;
+    tr([
+      td(k),
+      td(saying),
+      td([plusVotes, vote(true,k)]),
+      td([minusVotes, vote(false,k)])
+      ]);
+  }
+  
+  fun vote(plus, k) {
+    pk = "+ for $k" if plus else "- for $k";
+    Elem("input", {:type:"submit", name:"vote", value: pk:}, []);
+  }vote
+  
+    
+  
+  fun wisTab(keyword) {
+    Elem("form", {:method:"get", action:"http://localhost:4121":}, [
+    Elem("table", {:border:1:}, 
+     %sort[wisRow(wis) %< wis.k | for wis <- tome])
+    ]);
+  }
+  
+  fun giveList(req, keyword) {
+     import HTML.*;
+     resp = 
+     Elem("html", {::}, [
+       Elem("head", {::}, [Elem("title", {::}, ["The Listing of Wisdom"])]),
+       Elem("body", {::}, [
+          wisTab(keyword)
+       ])
+     ]);
+     text = resp.str();
+     // println("wif.giveList: text=$text");
+     req.respond(OK, text, {::});
+  }
+
+
+  body{
+    sock = HTTPSocketeer(4121);
+    var goon := true;
+    println("Wif starting");
+    prior_wisdom();
+    while(goon) {
+      recv{
+        req && HTTPRequest("GET", params, _) => {
+           println("Yow, someone wants to do $params");
+           dealWith(req, params);
+        }
+      | other => {
+          println("WTF is $other?");
+        }
+      }
+    }while
+    println("Wif quitting.");
+  }body
+}wif;

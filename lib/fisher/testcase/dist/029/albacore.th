@@ -1,0 +1,22 @@
+spawn albacore {
+  import LIAR.*;
+  body{
+     ~!@testStartLatch();
+     {:albacoreComp: albacore, blennyComp: blenny, cougarComp: cougar:} = ~!@recOfPorts();  
+     f = Frog(1,2,3);
+     ~!@eq(f.improvise(), [1,3])@!~  ;
+     ~!@eq(f.sum, {:x:1,y:2:})@!~  ;
+     ~!@eq(fstr, f.str())@!~  ;
+     blenny <<< f;
+     
+     
+     
+     recv{ "deblen" => {}};
+     recv{ "decoug" => {}};
+     ~!@checkphase(
+        {: phase:1  , bag: [f.str()]:}
+      , {: phase:2  , bag: [f.str()]:}
+      , {: phase:3  , bag: [gstr]:}
+    )@!~  ;
+  }body
+}albacore;

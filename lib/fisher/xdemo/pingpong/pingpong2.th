@@ -1,0 +1,22 @@
+{
+  fun pang(name) = spawn {
+    var other;
+
+    async volley(n) {
+      if (n == 0) 
+	println("$name misses");
+      else {
+	other <-- volley(n-1);
+	println("$name hits the ball.");
+      }
+    }volley
+
+    sync playWith(other') { other := other'; }
+
+    body { while(true) { serve; } }
+  }spawn;
+
+  ping = pang("ping"); pong = pang("pong");
+  ping <-> playWith(pong); pong <-> playWith(ping);
+  ping <-- volley(10);
+}

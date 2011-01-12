@@ -1,0 +1,18 @@
+1. There should be a control structure for %first.  The idiom 
+      if( %first(x %none null | STUFF) ~ +x)  {YES} else {NO}
+   is possible, but dorfy, and this is a pretty common case.  Why not just: 
+      %%first(STUFF) {YES} else {NO}
+   with the YES clause having the bindings from STUFF?
+
+2. "foo".file() should be replaced by File("foo"), etc.
+
+3. We should have an object -> record function (or two: one that supplies type
+   info, one that just gives a record).  We probably should have a
+   record->object one as well.  
+   - Subtle issues here: what to do with nested objects? With cycles?
+
+4. Field visibility may be a concern -- I use visible fields a fair bit.
+
+5. We need better trapping for "connection refused" and other exceptions.
+
+6. We need some way to deal with messages that can't be delivered.

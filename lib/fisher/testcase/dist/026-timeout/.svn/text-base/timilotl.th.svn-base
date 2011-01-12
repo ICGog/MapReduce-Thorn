@@ -1,0 +1,17 @@
+spawn timilotl {
+  initially{
+    ~!@testStartLatch();
+  }initially
+  body{
+//    ~!@println("timilotl: ready to tim!");
+    {: timilotlComp : timilotl, vampirComp: vampir :} = ~!@recOfPorts();
+    r = vampir <-> facilitate() 
+      timeout(1) {"regret";}
+     ;
+    ~!@eq(r, "regret")@!~  ;
+    recv{"OK, test over" => {}};
+    ~!@checkphase(
+//     {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}timilotl;

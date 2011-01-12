@@ -1,0 +1,75 @@
+{
+  {
+     s = "abc";
+     ~!@eq(s.javaChar(0), 0x61)@!~  ;
+     ~!@eq(s.javaChar(1), 0x62)@!~  ;
+     ~!@eq(s.javaChar(2), 0x63)@!~  ;
+  }
+
+  {
+     n = 0b10110;
+     ~!@eq(n.bits(0,0), 0b0)@!~  ;
+     ~!@eq(n.bits(0,1), 0b10)@!~  ;
+     ~!@eq(n.bits(0,2), 0b110)@!~  ;
+     ~!@eq(n.bits(0,3), 0b0110)@!~  ;
+     ~!@eq(n.bits(0,4), 0b10110)@!~  ;
+     ~!@eq(n.bits(1,1), 0b1)@!~  ;
+     ~!@eq(n.bits(1,2), 0b11)@!~  ;
+     ~!@eq(n.bits(1,3), 0b011)@!~  ;
+     ~!@eq(n.bits(1,4), 0b1011)@!~  ;
+  }  
+  
+  {
+    v' = 0b01010100001100100001;
+    vh = 0b0101010000;
+    vl =           0b1100100001;
+    bh = v'.bits(10,19);
+    bl = v'.bits(0,9);
+  }
+  
+   {
+   // http://en.wikipedia.org/wiki/UTF-16/UCS-2
+     fun surro(v) {
+       //  ~!@eq(v, 0x64321)@!~  ;
+       v' = v - 0x10000;
+       //  ~!@eq(v', 0x54321)@!~  ;
+       vh = v'.bits(10,19);
+       //  ~!@eq(vh, 0b0101010000)@!~  ;
+       vl = v'.bits(0,9);
+       //  ~!@eq(vl, 0b1100100001)@!~  ;
+       w1 = 0xD800 + vh;
+       //  ~!@eq(w1, 0xD950)@!~  ;
+       w2 = 0xDC00 + vl;
+       //  ~!@eq(w2, 0xDF21)@!~  ;       
+       ‹w1, w2, ch: v.char›;
+     }surro
+     
+     ‹w1: a1, w2: a2, ch: ac› =  surro(0x64321);
+     ~!@eq(a1, 0xD950)@!~  ;
+     ~!@eq(a2, 0xDF21)@!~  ;
+     
+     b1 = 0x62; 
+     bc = b1.char; 
+     ~!@eq(bc.str, "b")@!~  ;
+     
+     ‹w1: c1, w2: c2, ch: cc› = surro(0x1D11E); // G-clef
+     ~!@eq(c1, 0xD834)@!~  ;
+     ~!@eq(c2, 0xDD1E)@!~  ;
+     
+     s = ac + bc + cc;
+     ~!@eq(s.len, 3)@!~  ;
+     ~!@eq(s.javaLen, 5)@!~  ;
+     ~!@eq(s.javaChar(0), a1)@!~  ;
+     ~!@eq(s.javaChar(1), a2)@!~  ;
+     ~!@eq(s.javaChar(2), b1)@!~  ;
+     ~!@eq(s.javaChar(3), c1)@!~  ;
+     ~!@eq(s.javaChar(4), c2)@!~  ;
+     
+     
+     ~!@eq("".javaPlus([a1,a2,b1,c1,c2]), s)@!~  ;
+     
+   }
+   
+  
+ 
+}

@@ -1,0 +1,11 @@
+{
+  // Testing that some hash codes don't cause errors
+  L = [
+    [],
+    [null],
+    [1],
+    [1,null],
+    [null,1]
+    ];
+  for(x <- L) x.hashCode();
+}

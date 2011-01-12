@@ -1,0 +1,33 @@
+{
+  import ADAGE.*;
+  
+  reset();
+  
+  f = File("$tmp/scribble.tmp"); // tmp.file("scribble.tmp");
+  
+  ~!@assert(tmp.dir?())@!~  ;
+  ~!@assert(!f.dir?())@!~  ;
+  
+  ~!@assert(! f.exists?())@!~  ;
+  
+  f.writeln("yow!");
+  
+  ~!@eq(f.contents(), "yow!\n")@!~  ;
+  
+  f.writeln("cow!");
+
+  ~!@eq(f.contents(), "yow!\ncow!\n")@!~  ;
+
+  f.clear();
+  
+  ~!@eq(f.contents(), "")@!~  ;
+  
+  ~!@assert(! f.dir?())@!~  ;
+  
+    
+  
+
+//  ~!@eq(f.parent().asDir(), tmp)@!~  ;
+  
+  reset();
+}

@@ -1,0 +1,45 @@
+{
+  var isolation := 1;
+  while (isolation <= 3) {
+    ~!@hit()@!~3; 
+    isolation := isolation + 1;
+  }
+
+  while(false) {
+    ~!@hit()@!~0;
+  }
+  
+  var misery := 1;
+  do {
+    misery := misery + 1;
+    ~!@hit()@!~;
+  } while (false)
+
+  var woe := 1;
+  do {
+    woe := woe + 1;
+    ~!@hit()@!~7;
+  }
+  while (woe <= 7)
+
+  var suffering := 1; 
+  until (suffering == 5) { 
+    suffering := suffering + 1;
+    ~!@hit()@!~4; 
+  }
+
+  until(true) {
+    ~!@hit()@!~0;
+  }
+  
+  var sorrow := 1;
+  do {
+     sorrow := sorrow + 1;
+     ~!@hit()@!~4;
+  } until (sorrow == 5)
+  
+  do {
+      ~!@hit()@!~1;
+  } until (true)
+
+} 

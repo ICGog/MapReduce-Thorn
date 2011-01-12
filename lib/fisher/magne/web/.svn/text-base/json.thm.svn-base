@@ -1,0 +1,265 @@
+/** (de-)encode JSON */
+module json{
+  
+  fun encode(value){
+    match(value){
+      e:table => {
+        props = ord();
+        for(keyrec <- e.keys()){
+          props @= '"' + keyrec.k + '"' + ":" + encode(e[keyrec.k]);
+        }
+        return "{" + ",".join(props.lst()) + "}";
+      }
+      | el:list => { 
+        result = %[encode(e) | for e <- el];
+        return "[" + ",".join(result) + "]"; 
+      }
+      | e:string => {return '"$e"';}
+      | e:int => { return e.str(); }
+      | e:bool => { return e.str();}
+      | e => {throw "JSON: $e not of supported type"; }
+    }
+  }
+
+  fun decode(s:string){
+    return parse(s);
+  }
+
+  SENTINEL = 65533.char().str(); // unicode replacement character
+
+  /**
+   * Split a JSON string up into tokens.
+   * {"foo":10} -> operator string operator number operator
+   */
+  fun tokenize(source:string){
+
+    result = ord();
+
+    var s := source + SENTINEL;
+    var c;
+    var index := 0;
+    var index_from;
+    var str_val;
+    var quote;
+
+    fun next(){
+      index := index + 1;
+      c := s(index);
+    }
+
+    fun eat(re){
+      while(true){
+        if(c.matchRE?(re)){
+          str_val := str_val + c;
+          next();
+        }
+        else{
+          break;
+        }
+      }
+    }
+
+    fun add_token(type, value){
+      result @= {: 
+                 type,
+                 value,
+                 index_from,
+                 index_to: index
+                 :};
+    }
+
+    eat_digits = fn() = eat('[0-9]');
+    eat_chars = fn() = eat('[a-z]');
+
+
+    fun eat_stringcontent(){
+      while(true){
+        if(c == '\\'){
+          next();
+          var escape_char;
+          match(c){
+            'b' || 'f' || 'n' || 'r' || 't' || "\\" => {
+              escape_char := "\\$c";
+            }
+            | '"' => {
+              escape_char := '"';
+            }
+            | 'u' => {
+              // e.g. \\u00f8
+              var hex_value := "";
+              for(i <- 0..3){
+                next();
+                hex_value := hex_value + c;  
+              }
+              // from "00f8" -> 248 -> ø
+              escape_char := hex_value.intHex().char();
+            }
+            | foo => { throw "Illegal escape char: \\$c";}
+          }
+          str_val := str_val + escape_char;
+          next();
+        }
+        // http://www.json.org/
+        // char any-Unicode-character-except-"-or-\-or-control-character
+        // FIXME: not sure what control character is!
+        else if(c.matchRE?('[^"]')){
+          str_val := str_val + c;
+          next();
+        }
+
+        else{
+          break;
+        }
+      }
+    }
+    
+
+    c := s(0);
+
+    while(true){
+      index_from := index;
+      
+      match(c){
+        // skip space
+        ' ' => {
+          next();
+        }
+
+        // true, false, null
+        | '[a-z]' / +_ => {
+          str_val := c;
+          next();
+          eat_chars();
+          
+          match(str_val){
+              "true"  => {add_token('value', true);}
+            | "false" => {add_token('value', false);}
+            | "null"  => {add_token('value', null);}
+            | v => { throw "Expected true, false, or null, but was: $v";}
+          }
+        }
+
+        // number
+        | '[-0-9]' / +m => {
+          if(c == "-"){
+            str_val := "-";
+            next();
+          }
+          else{
+            str_val := "";
+          }
+          eat_digits();
+
+          if(c == '.'){
+            str_val := str_val + c;
+            next();
+            eat_digits();
+          }
+          else if(c == "e" || c == "E"){
+            throw "json.thm: exponents are not handled!"; 
+          }
+          
+          add_token('number', str_val.int());
+        }
+
+        // string
+        | '"' => {
+          str_val := '';
+          q = c;
+          next();    // skip "
+          eat_stringcontent();
+          next();    // skip "
+          add_token('string', str_val);
+        }
+ 
+        // everything else
+        | operator => {
+          next();
+          add_token('operator', operator);
+        }
+      }// end of match stm
+
+      if(c == SENTINEL){
+        break;
+      }
+    }// end of while
+
+    return result;
+  }
+
+
+  fun parse(text){
+    tokens = tokenize(text);
+    var token;
+    var token_num := 0;
+
+    fun get_value(){
+      match([token.type,token.value]){
+        ["operator","{"] => {
+          return object_literal();
+        }
+        | ["operator", "["] => {
+          return array_literal();
+        }
+        | ["string",v] => {
+          return v;
+        }
+        | ["number",v] => {
+          return v;
+        }
+        | ["value", v] => {
+          return v;
+        }
+        | [t,v] => { throw "Shouldn't happen type:$t value:$v";}
+      }
+    }
+    
+    fun object_literal(){
+      values = map();
+      while(true){
+        if(token.value == "}"){
+          break;
+        }
+        next();         // key
+        k = token.value;
+        next(":");      // :
+        next();         // value
+        v = get_value();
+        values[k] := v;
+        next();
+      }
+      return values;
+    }
+
+    fun array_literal(){
+      values = ord();
+      next();
+      if(token.value != "]"){
+        while(true){
+          v = get_value();
+          values @= v;
+          next();// "]" or ","
+          if(token.value != ","){
+            break;
+          }
+          next();// skip ","
+        }
+      }
+      return values.lst();
+    }
+
+    fun next(){
+      token := tokens[token_num];
+      token_num := token_num + 1;
+    }
+    | next(expected){
+      next();
+      if(token.value != expected){
+        throw "Expected value $expected but was " + token.value;
+      }
+    }
+
+    next();
+    return get_value();
+  }
+}

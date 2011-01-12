@@ -1,0 +1,26 @@
+List functions: 
+  * RowTh.toString() isn't very good (?)
+  * L.without(e) == L.remove([e])
+
+
+Bug:
+  * If Q defines a sync sy(x), and P sends sy(1,2), Q crashes. 
+
+Secretary / SiteImpl: 
+  * Have some way to deal with "I can't deliver message" 
+    (when the Site gets a message that's not to anyone currently running.)
+    --> Send error to secretary, I guess.
+
+Enhancements: 
+  * Produce error trace in nicer way than Java stack trace!
+
+
+
+------------------------------------------------------------------------------
+
+serve; -- prints exceptions and continues.
+
+serve 
+catch {
+  catch-clauses
+}

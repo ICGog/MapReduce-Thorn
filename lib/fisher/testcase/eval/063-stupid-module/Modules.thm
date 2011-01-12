@@ -1,0 +1,5 @@
+module `I don't like this syntax but people are sitting on me to allow it, so here it is`;
+
+fun `Would you like a corned beef and sliced beets sandwich??`() = true;
+
+

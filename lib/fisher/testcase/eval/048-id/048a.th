@@ -1,0 +1,18 @@
+{
+  import ID.Identity;
+  class A extends Identity {
+    new A(){new@Identity();}
+  }A
+  class B extends Identity {
+    new B(){new@Identity();}
+  }B
+  
+  a1 = A();
+  a2 = A();
+  b1 = B();
+  b2 = B();
+  ~!@eq(a1,a1)@!~  ;
+  ~!@ne(a1,a2)@!~  ;
+  ~!@ne(a1,b1)@!~  ;
+  ~!@ne(a1,b2)@!~  ;
+}

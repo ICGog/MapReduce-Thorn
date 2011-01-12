@@ -1,0 +1,6 @@
+//FAIL: Must override multiply-inherited def
+{
+  import RAT.*;
+  class Silence extends Doily{}
+  class Flyswatter extends Silence, Paper{}  
+}

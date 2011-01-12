@@ -1,0 +1,6 @@
+module FRUITYBRUISE {
+   var strawberry : string;
+   var blueberry : bool;
+   var lemon : list;
+   var icecream : int;
+}

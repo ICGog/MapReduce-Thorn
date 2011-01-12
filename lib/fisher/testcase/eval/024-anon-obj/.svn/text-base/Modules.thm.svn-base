@@ -1,0 +1,9 @@
+module OCTOPUS {
+   class Hinge {
+     val faucet = "faucet";
+     val guru = object{g = 1; def m()=[g, faucet];};
+     def pacify() {
+        object{p = 2; def m()=[p, faucet];};
+     }                  
+   }
+}

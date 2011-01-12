@@ -1,0 +1,11 @@
+{
+  class StoneAgeBush{
+     def bring(1) = 111;
+          | bring(2) = 222;
+          | bring(x) = 333;
+  }class
+  ruttingmicrowave = StoneAgeBush();
+  ~!@eq(ruttingmicrowave.bring(1), 111)@!~;
+  ~!@eq(ruttingmicrowave.bring(2), 222)@!~;
+  ~!@eq(ruttingmicrowave.bring(3), 333)@!~;
+}

@@ -1,0 +1,20 @@
+spawn bot {
+  var c := 0;
+  initially{ ~!@testStartLatch(); }
+  body{
+     {: bit, bat, bot :} = valof{recv{r && {: bit,bat,bot :} = {r;} timeout(300)  {{ ~!@hit()@!~ 0 ; }}}};
+     recv{"hao"=>{}};
+     // phase 1
+     ~!@phase(1, "hao")  ;
+     
+     // phase 2
+     recv{x => {~!@phase(2, x)  ;}};
+
+     // phase 3
+     for(i <- 1..5) { bat <<< i; }
+     bat <<< "go3";
+
+     // finishing
+     bit <<< "donebot";
+  }body
+}bot;

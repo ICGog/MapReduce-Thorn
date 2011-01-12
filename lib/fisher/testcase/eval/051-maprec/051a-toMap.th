@@ -1,0 +1,27 @@
+{
+  {        
+    r = {::};
+    m = map();
+    ~!@eq( r.toMap().rows(), m.rows() )@!~  ;
+  }
+  
+  
+  {        
+    r = {:a:1:};
+    m = map();
+    m["a"] := 1;
+    ~!@eq( r.toMap().rows(), m.rows() )@!~  ;
+  }
+  
+  {        
+    r = {:a:1, b:2, c:2, ``:2:};
+    m = map();
+    m["a"] := 1;
+    m["b"] := 2;
+    m["c"] := 2;
+    m[""] := 2;
+    ~!@assert( r.toMap().rows().setEq( m.rows() ) )@!~  ;
+  }
+  
+  
+}

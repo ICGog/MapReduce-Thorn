@@ -1,0 +1,22 @@
+spawn Doomie {
+  class Doomsome(x) {
+     def doomopop = x+1;
+  }
+  body{
+    v = 0;
+    doomie = thisComp();
+    r = spawn Moodie{
+      body{
+        ~!@phase(1, v)@!~  ;
+        doomie <<< "done";
+      }
+    }Moodie
+    ;
+    recv{_={}}
+    ~!@checkphase(
+    {: phase: 1, bag: [0]:}
+    )@!~  ;
+    dd = Doomsome(4);
+    ~!@eq(dd.doomopop, 5)@!~  ;
+  }body
+}Doomie;

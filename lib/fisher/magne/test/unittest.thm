@@ -1,0 +1,46 @@
+module unittest{
+
+  var errors := 0;
+
+  fun add(result, actual, expected, message){
+     if(!result){
+         println("FAIL $message: Expected $expected, but was $actual");    
+         errors += 1;
+     }
+  }
+    
+  fun test(callback){
+    callback();
+    if(errors == 0){
+      println("OK");
+    }
+    else{
+      println("Errors in " + callback.str().subx(0, callback.str().index("=")));
+    }
+    errors := 0;
+  }
+  
+  fun assertEquals(actual, expected, message){
+     add(actual == expected, actual, expected, message);    
+  }
+  | assertEquals(actual, expected){
+      assertEquals(actual, expected, "");
+  }
+
+  
+  fun assertTrue(condition, message){
+     add(condition, condition, true, message);
+  }
+  | assertTrue(condition){
+      assertTrue(condition, "");
+  }
+
+  
+  fun assertFalse(condition, message){
+     add(!condition, condition, false, message);
+  }
+  | assertFalse(condition){
+      assertFalse(condition, "");
+  }
+
+}

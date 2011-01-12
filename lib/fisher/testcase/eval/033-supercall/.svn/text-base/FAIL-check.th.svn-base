@@ -1,0 +1,8 @@
+//FAIL
+//FAIL Enc
+//FAIL:Was expecting
+
+{
+  // doesn't fail.
+  doom.
+}

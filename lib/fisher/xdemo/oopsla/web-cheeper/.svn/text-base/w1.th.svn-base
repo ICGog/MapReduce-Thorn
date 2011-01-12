@@ -1,0 +1,105 @@
+spawn wif {
+  // Web InterFace to, um, a table thingie.
+  import HTTP.*;
+  import XML.*;
+  host = "codu.org";
+  tome = table(k){saying; var plusVotes, minusVotes;};
+  var nWisdoms := 0;
+  
+  fun newWisdom(wisdom) {
+    nWisdoms += 1;
+    tome(nWisdoms) := {: saying: wisdom, plusVotes: 0, minusVotes: 0 :};
+    }
+  
+  fun prior_wisdom() {
+    newWisdom("I like glass!");
+    newWisdom("Do not put weasels or other sharp and pointy mammals down your pants.");
+    newWisdom("An investment in knowledge always pays the best interest.");
+    newWisdom("Oft evil will evil mar.");
+ 
+  }
+  
+  fun dealWith(req, {:say, wisdom:}) {
+      newWisdom(wisdom);     
+      req.respond(OK, "We thank you for your wisdom (#$nWisdoms).", {::});      
+    }
+    | dealWith(req, {:list:_, wisdom: keyword:}) {
+      giveList(req, keyword);
+    }
+    | dealWith(req && HTTPRequest(_,_,s), {: vote: sgn :}) {
+      "/vote/([0-9]+).*" / [.int(n)] = s;
+      countVote(req, n, sgn == "+");
+    }
+    | dealWith(req, other) {
+      say = "web-cheeper-home-page.html".file.contents.replace("localhost", host);
+      req.respond(OK, say, {::});
+    }
+  
+
+  fun countVote(req, n, plus) {
+      if(tome(n) ~ +_) {
+        if (plus)
+          tome(n).plusVotes += 1;
+        else 
+          tome(n).minusVotes -= 1;
+        }
+      giveList(req, "");
+  }countVote
+
+  fun wisRow({:k, saying, plusVotes, minusVotes:}) {
+    import HTML.*;
+    tr([
+      td(k),
+      td(saying),
+      td([plusVotes, vote(true,k)]),
+      td([minusVotes, vote(false,k)])
+      ]);
+  }
+  
+  fun vote(plus, k) {
+    pk = "+" if plus else "-";
+    Elem("form", {:method:"get", action:"http://$host:4121/vote/$k":}, [
+      Elem("input", {:type:"submit", name:"vote", value: pk:}, [])
+      ]);
+  }vote
+  
+  fun love({:plusVotes, minusVotes:}) = plusVotes + minusVotes;
+  
+  fun wisTab(keyword) {
+    Elem("table", {:border:1:}, 
+     %sort[wisRow(wis) %> love(wis) %< wis.k | for wis <- tome]);     
+  }
+  
+  fun giveList(req, keyword) {
+     import HTML.*;
+     resp = 
+     Elem("html", {::}, [
+       Elem("head", {::}, [Elem("title", {::}, ["The Listing of Wisdom"])]),
+       Elem("body", {::}, [
+          wisTab(keyword)
+       ])
+     ]);
+     text = resp.str();
+     req.respond(OK, text, {::});
+  }
+
+
+  body{
+    sock = HTTPSocketeer(4121);
+    var goon := true;
+    println("Wif starting");
+    prior_wisdom();
+    while(goon) {
+      recv{
+        req && HTTPRequest("GET", params, _) => {
+           println("Yow, someone wants to do $params");
+           dealWith(req, params);
+        }
+      | other => {
+          println("WTF is $other?");
+        }
+      }
+    }while
+    println("Wif quitting.");
+  }body
+}wif;

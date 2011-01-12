@@ -1,0 +1,37 @@
+sync_was##     < 
+   sync baseline_sync(a,b) from FROM envelope ENVELOPE prio 1 = {'baseline_sync_body';}
+sync_becomes## > 
+   fun ¬©1s_baseline_sync¬©(FROM,msg,nonce,[a, b],letter) = {'baseline_sync_body';}
+
+async## < 
+   async baseline_async(a,b) from FROM envelope ENVELOPE prio 2 = {'baseline_async_body';}
+async## > 
+  fun ¬©2a_baseline_async¬©(FROM,msg,[a, b]) = {'baseline_async_body';}
+
+serve = 
+fun ¬©0serve¬©(¬©3before¬©,¬©4after¬©,¬©5timeoutN¬©,¬©6timeoutCmd¬©) = 
+   recv{
+     ¬©9msg¬© && ‚Äπsync:baseline_sync, args:¬©7args¬©, nonce:¬©8nonce¬©‚Ä∫ 
+     from ¬©10sender¬© && FROM 
+     envelope ¬©11envelope¬© && ENVELOPE 
+     prio 1 = 
+     {
+        {¬©12letter¬© = lastLetter(); 
+        if (¬©3before¬© == null){} else ¬©3before¬©(¬©9msg¬©, ¬©10sender¬©); 
+        ¬©13syncRes¬© = ¬©1s_baseline_sync¬©(¬©10sender¬©, ¬©9msg¬©, ¬©8nonce¬©, ¬©7args¬©, ¬©12letter¬©); 
+        if (¬©13syncRes¬© ~ +¬©14r¬©)syncReply(¬©12letter¬©, ¬©14r¬©); 
+        if (¬©4after¬© == null){} else ¬©4after¬©(¬©9msg¬©, ¬©10sender¬©);}} 
+   | 
+      ¬©17msg¬© && ‚Äπasync:baseline_async, args:¬©15args¬©‚Ä∫ 
+      from ¬©18sender¬© && FROM 
+      envelope ¬©19envelope¬© && ENVELOPE 
+      prio 2 = 
+      {
+         {if (¬©3before¬© == null){} else ¬©3before¬©(¬©17msg¬©, ¬©18sender¬©); 
+         ¬©2a_baseline_async¬©(¬©18sender¬©, ¬©17msg¬©, ¬©15args¬©); 
+         if (¬©4after¬© == null){} else ¬©4after¬©(¬©17msg¬©, ¬©18sender¬©);
+         }
+       } 
+    timeout(¬©5timeoutN¬©)=
+      {if (¬©6timeoutCmd¬© == null)null; else ¬©6timeoutCmd¬©();}
+    }

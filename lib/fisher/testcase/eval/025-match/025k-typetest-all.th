@@ -1,0 +1,39 @@
+{
+// Checking the type tests of the built-in types we have at the moment.
+
+  oneOfEverything = 
+    [
+      true,                    // bool
+      (fn x = x),              // fn
+      "/tmp".dir(),            // dir
+      "/tmp/glurd".file(),     // file
+      1.234,                   // float
+      1..8,                    // range
+      321,                     // int
+      [1, 'and a half'],       // list
+      +null,                   // nullity
+      null,                    // 
+      ord(),                   // ord
+      {: a:1  :},              // record
+      "the Unholy Scroll",     // string
+      table(x){y;}             // table
+    ];
+    
+   fun testulize(x) {
+     ~!@eq(x ~ _:int, ~!@kind(x) == "int" )  ;
+     ~!@eq(x ~ _:dir, ~!@kind(x) == "dir" )  ;
+     ~!@eq(x ~ _:file, ~!@kind(x) in ["file", "dir"] )  ;
+     ~!@eq(x ~ _:range, ~!@kind(x) == "range" )  ;
+     ~!@eq(x ~ _:int, ~!@kind(x) == "int" )  ;
+     ~!@eq(x ~ _:list, ~!@kind(x) == "list" )  ;
+     ~!@eq(x ~ _:ord, ~!@kind(x) == "ord" )  ;
+     ~!@eq(x ~ _:record, ~!@kind(x) == "record" )  ;
+     ~!@eq(x ~ _:string, ~!@kind(x) == "string" )  ;
+     ~!@eq(x ~ _:table, ~!@kind(x) == "table" )  ;
+     ~!@eq(x ~ _:nullity, ~!@kind(x) == "nullity" )  ;
+     ~!@eq(x ~ _:fn, ~!@kind(x) == "fn" )  ;
+   }testulize
+
+   for(x <- oneOfEverything) testulize(x);
+
+}

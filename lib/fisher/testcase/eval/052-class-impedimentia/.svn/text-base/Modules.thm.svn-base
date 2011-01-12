@@ -1,0 +1,14 @@
+module RAT {
+  var turban := 0;
+
+  class Doily {
+    def warn() = turban;
+  }Doily
+  
+  class Paper {
+   def warn() = "beware $turban";
+   def warn(x,y) = "$x$y";
+  }
+  
+}
+

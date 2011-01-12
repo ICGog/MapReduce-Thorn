@@ -1,0 +1,52 @@
+// File: tut04/client.th
+spawn client {
+   
+  import CHEEPER.*;                                             //
+   
+  server = site("localhost", 4260);                             //
+  var goon := true;                                             // 
+  var identity;                                                 //
+  
+  fun login() {                                                 //
+    name = readln("Name: ");
+    password = readln("Password: ");
+    identity := {: name:name, password:password :};             //
+    loginRes = server <-> login(identity);
+    if(loginRes == null) {                                    
+        println("I'm sorry, but that didn't work for some reason.");
+    }
+    else {
+        println(loginRes);
+    }
+  }login
+      
+  fun doUserCommand() {
+     cmd = readln("Chirp: ");
+     match(cmd) {                                               //
+        "quit"    => {goon := false;}                           //
+     |  "list"    => doList()                                
+     |  _         => {doChirp(cmd);}                            //
+     }match
+  }doUserCommand
+  
+  
+  fun doList() {
+     chirps = server <-> listChirps(identity);                  //
+     for( ch <- chirps ) {                                      //
+       println(ch);                                             //
+     }
+  }doList
+  
+  fun doChirp(wisdom) {
+     response = server <-> doChirp(identity, wisdom);
+     println(response);
+  }doChirp
+   
+  body{
+    println("Talk is cheap. Wisdom is Cheeper.");
+    login();
+    while(goon) {
+       doUserCommand();
+    }
+  }body
+}client;

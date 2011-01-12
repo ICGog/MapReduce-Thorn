@@ -1,0 +1,5 @@
+module PILL {
+  class Heartache(x,y):pure {
+    def juxtapose()="$x$y";
+  }
+}

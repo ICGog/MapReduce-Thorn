@@ -1,0 +1,33 @@
+module MATH {
+  fun sum([]) = 0;
+    | sum([x,y...]) = x + sum(y);
+}
+
+module DATER {
+class Profile(interests, pickiness) {
+     // interests is  [{: topic:_:string, weight:_:int :}...],
+   def compatible?(other:Profile){
+     import MATH.sum;
+     othInt = other.interests;
+     matchTotal = sum(%[weight 
+       | for {:topic, weight:} <- interests,
+         if %exists(true | for {:topic:$(topic):} <~ othInt)
+       ]);
+     matchTotal >= pickiness;
+   }compatible?
+}Profile
+
+}
+
+module OW {
+  class C:pure { 
+    def sum3np1(f, n) { 
+      var sum := 0; var i := n; 
+      while(i != 1) { 
+        sum += f(i); 
+        if (i mod 2 == 0) i := i div 2; 
+        else i := 3*i+1; 
+      }
+      sum; }sum3np1 
+  }C 
+}

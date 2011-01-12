@@ -1,0 +1,25 @@
+spawn cat {
+  initially{ ~!@testStartLatch(); }
+  body{
+     import EX10.*;
+     {: catComp: cat, dogComp: dog, elkComp: elk :} = ~!@recOfPorts();
+     // phase 1
+     // Test goal here: confirm that each component has a separate module instance.
+     ~!@phase(1, poke());
+     // phase 2
+     ~!@phase(2, poke());
+     // phase 3
+     dog <<< [3,1];
+     recv{ [3,3] from $(elk) => {~!@phase(3, 32);}};
+     
+     // final phase
+     recv{ "done" from $(dog) => {}};
+     recv{ "done" from $(elk) => {}};
+     ~!@checkphase(
+    {: phase: 1, bag: [1,1,1]:},
+    {: phase: 2, bag: [2,2,2]:},
+    {: phase: 3, bag: [32]:},
+    {: phase: "final", bag: [1,2]:}
+    )@!~  ;
+  }body
+}cat;

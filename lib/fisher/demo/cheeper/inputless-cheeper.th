@@ -1,0 +1,118 @@
+/*
+  This is an inputless version of the Cheeper demo.
+  It spawns a client and server process, charges the client with 
+  the commands it will send to the server, and sets them going.
+  
+  You can modify the 'inputStream' variable at the beginning of the file.
+
+  For politeness to the web server, I have added a "die" signal,
+  allowing a client to kill the server when it's done.    
+*/
+
+inputStream =  [
+  "I like numbers",
+  "I like words",
+  "I like spices",
+  "/",
+  "+1",
+  "/",
+  ];
+
+module CHEEPER {
+  class Chirp(text, phil, n):pure{
+    def str = '($n) "$text" -- $phil';
+    def hashCode = text.hashCode;
+  }
+}module
+
+client = spawn chclient {
+  
+  fun help() {
+    println("? = help");
+    println("/ = read");
+    println("+N = vote for");
+    println("-N = vote against");
+    println("other = chirp that");
+    }
+
+  fun read(server) {
+    import CHEEPER.*;
+    c's = server <-> read();
+    for({:chirp, plus, minus:} <- c's) {
+      println("$chirp [+$plus/-$minus]");
+      }
+    }
+
+  body{
+    println("Welcome to Cheeper!");
+    println("? for help");
+
+    {: server, phil, inputs :} = (receive{x => x});
+    println("Hi, $phil.");
+
+    for (s <- inputs) {
+      //s = readln("Chirp: ");
+      println("Chirp: $s");
+      match(s) {
+        "?" => help()
+      | "/" => read(server)
+      | "\\+([0-9]+)" / [.int(n)] => 
+        println(server <-> vote(n, true))
+      | "\\-([0-9]+)" / [.int(n)] => 
+        println(server <-> vote(n, false))
+      | _ => 
+        println(server <-> chirp!(s, phil))
+      }
+    }for
+    server <-- die();
+  }body
+  }chclient;
+
+server = spawn chserver {
+  import CHEEPER.*;
+
+  phils = table(phil){var chirps;};
+  chirps = table(n){chirp; var plus, minus;};
+  var goon := true;
+
+  sync chirp!(text, phil){
+    n = chirps.num;
+    c = Chirp(text,phil,n);
+    chirps(n) := {: chirp:c, plus:0, minus:0 :};
+    if (phils.has?(phil)) 
+      phils(phil).chirps ::= c;
+    else 
+      phils(phil) := {: chirps:[c] :};
+    "You chirped '$c'";
+    }chirp!
+
+  fun love({: plus, minus :}) = plus - minus;
+
+  sync read() = 
+    %sort[row
+      %> love(row)
+      %< chirp.n  
+      | for row && {: chirp :} <- chirps] ;
+
+  sync vote(n, plus?) {
+    if (plus?) 
+       chirps(n).plus += 1;
+    else 
+       chirps(n).minus += 1;
+    "Thanks";
+    }
+  
+  async die() {
+    goon := false;
+  }
+
+  body{
+    println("Cheeper server here!");
+    while(goon) {
+      println("Server ready...");
+      serve;
+    }
+  }body
+  }chserver;
+
+client <<< {: server, phil: "Bard", inputs: inputStream :};

@@ -1,0 +1,10 @@
+{
+  import PET.*;
+  class Poker extends Neutrino {
+    val religion = 4;
+  }
+  p = Poker();
+  ~!@obj_local_struct(p, "religion=4,shield=1,")@!~;
+  
+
+} 

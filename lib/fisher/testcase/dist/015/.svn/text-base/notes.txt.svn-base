@@ -1,0 +1,14 @@
+This test is mostly about pattern matching on 'from'.
+whiff is a server process (an accumulator server, insofar as it 
+has any actual point.)  The whiff protocol: 
+  * grab whiff's attention with a snag(ph) sync.  ph is a number
+    which a zapper will transmit on every message, to provide an additional  
+    check that the conversation goes on with the same zapper 'til done.
+  * Send sizzle(ph', n) messages, which (a) confirm the ph identity tag, and 
+    (b) increment the accumulator by n, and (c) send back the new value.
+  * Send a done(ph') message, relinquishing the attention of the server. 
+
+ferny spawns three zapper processes, each of which tries to grab whiff's
+attention, add 0,1,2 to it, and relinquish it.  They have some delays in the
+middle of that, increasing chances that other zappers will try to snag the 
+ferny -- thereby, we hope, testing that they can't.

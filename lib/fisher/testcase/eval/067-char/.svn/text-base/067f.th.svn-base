@@ -1,0 +1,32 @@
+{
+  fun whomg(L) {
+    S = L.joined("");
+    for(i <- 0 .. L.num-1 ){
+      for(j <- i .. L.num-1){
+        M = L.sub(i,j);
+        s = M.joined("");
+        Sij = S.sub(i,j);
+        if (Sij != s) {
+          println("i=$i j=$j s='$s' Sij='$Sij'");
+        }
+        for(k <- 0 .. M.len-1) {
+          ~!@eq(s(k), M(k))  ;
+        }for
+        ~!@eq(s.len, M.len, j-i+1)  ;
+      }for
+    }for
+  }
+  
+  lots = "FFFF".intHex() + 1;
+  // Some surrogate-pair chars
+  Ł = (lots+100).char.str;
+  Ņ = (lots+200).char.str;
+  Ĵ = (lots+300).char.str;
+  A = "A";
+  B = "B";
+  C = "C";
+  
+  whomg([A]);
+  whomg([A,B ]);
+  whomg([A,B,C ]);
+}

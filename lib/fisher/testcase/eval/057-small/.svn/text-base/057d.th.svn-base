@@ -1,0 +1,24 @@
+// Try default arguments in various permutations too.
+{
+  class A(ax){};
+  a = A(1);
+  ~!@eq(a.ax, a.ax(), 1)@!~  ;
+  
+  class B(ax,bx) extends A(ax){};
+  b = B(1,2);
+  ~!@eq(b.ax, b.ax(), 1)@!~  ;
+  ~!@eq(b.bx, b.bx(), 2)@!~  ;
+  
+  class C extends B {
+    val cx;
+    new C(aa,bb,cc) { 
+      new@B(aa,bb);
+      cx = cc;
+    }
+  }
+  c = C(1,2,3);
+  ~!@eq(c.ax, c.ax(), 1)@!~  ;
+  ~!@eq(c.bx, c.bx(), 2)@!~  ;
+  ~!@eq(c.cx, c.cx(), 3)@!~  ;
+  
+}

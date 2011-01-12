@@ -1,0 +1,23 @@
+{
+  fun covet(r) {
+    var L := [];
+    if (r ~ <a>) L := ['a', a, L...];
+    if (r ~ <b>) L := ['b', b, L...];
+    if (r ~ <c>) L := ['c', c, L...];
+    L;    
+  }
+   
+  ~!@eq(covet(<>), [])@!~  ;
+  ~!@eq(covet(<filthy= 1, prison= 2>), [])@!~  ;
+  ~!@eq(covet(<a= 1>), ['a', 1])@!~  ;
+  ~!@eq(covet(<a= 1, b= 2>), ['b', 2, 'a', 1])@!~  ;
+  ~!@eq(covet(<c= 3, a= 1, b= 2>), ['c', 3, 'b', 2, 'a', 1])@!~  ;
+  ~!@eq(covet(<c= 3, redneck= 0, a= 1, b= 2>), ['c', 3, 'b', 2, 'a', 1])@!~  ;
+  jar = 1;
+  ~!@eq(covet(<c= 3, a= 1, b= 2, jar>), ['c', 3, 'b', 2, 'a', 1])@!~  ;
+  a = 'sophistry';
+  ~!@eq(covet(<c= 3, a, b= 2>), ['c', 3, 'b', 2, 'a', 'sophistry'])@!~  ;
+
+  
+
+}

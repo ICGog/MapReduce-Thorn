@@ -1,0 +1,15 @@
+{
+  class C(x,y) : pure {def sum() = x+y; def diff()=x-y;}
+  cq = C(1,2);
+  ~!@eq(cq.sum(), 3)@!~  ;
+  ~!@eq(cq.diff(), -1)@!~  ;
+  
+  voombah = table(a){b;};// Impure!
+  ~!@bad(C(1, voombah))@!~  ;
+  
+  homicide = [voombah];
+  ~!@bad(C(1, [homicide]))@!~  ;
+  
+  manacle = {: tentacle: homicide, mush: 1 :};
+  ~!@bad(C(1, manacle))@!~  ;
+} 

@@ -1,0 +1,39 @@
+{
+  import OCTOPUS.*;
+  
+  {
+    h = Hinge();
+    ~!@eq(h.faucet, "faucet")@!~  ;
+    ~!@eq(h.guru.g, 1)@!~  ;
+    ~!@eq(h.guru.m(), [1, "faucet"])@!~  ;
+    p = h.pacify();
+    ~!@eq(p.p, 2)@!~  ;
+    ~!@eq(p.m(), [2, "faucet"])@!~  ;
+  }
+
+  {
+    h = object extends Hinge{};
+    ~!@eq(h.faucet, "faucet")@!~  ;
+    ~!@eq(h.guru.g, 1)@!~  ;
+    ~!@eq(h.guru.m(), [1, "faucet"])@!~  ;
+    p = h.pacify();
+    ~!@eq(p.p, 2)@!~  ;
+    ~!@eq(p.m(), [2, "faucet"])@!~  ;
+  }
+
+  {
+    h = object extends Hinge{
+          closet = 3;
+          def pacify() = [closet, super@Hinge.pacify()];
+        };
+    ~!@eq(h.faucet, "faucet")@!~  ;
+    ~!@eq(h.guru.g, 1)@!~  ;
+    ~!@eq(h.guru.m(), [1, "faucet"])@!~  ;
+    [3, p] = h.pacify();
+    ~!@eq(p.p, 2)@!~  ;
+    ~!@eq(p.m(),  [2, "faucet"])@!~  ;
+  }
+
+
+  
+}

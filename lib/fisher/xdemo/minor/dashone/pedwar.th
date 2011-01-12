@@ -1,0 +1,3 @@
+module TWADDLE { haunch = 1; }
+
+println( ({ import TWADDLE.*; haunch; }) );

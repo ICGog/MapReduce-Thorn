@@ -1,0 +1,60 @@
+module SECURITYPROVIDER {
+  javaly fun make_token(msg, k, c, spRef) = fisher.runtime.`security`.SecurityProviderModule.makeToken;
+  javaly fun grant(k, c, spRef) = fisher.runtime.`security`.SecurityProviderModule.grantCapability;
+  javaly fun init_sp(spRef) = fisher.runtime.`security`.SecurityProviderModule.initSecurityProvider;
+  javaly fun gen_new_cap(spRef) = fisher.runtime.`security`.SecurityProviderModule.generateNewCapability;
+  javaly fun gen_and_grant(c, spRef) = fisher.runtime.`security`.SecurityProviderModule.generateAndGrantNewCapability;
+  javaly fun grant_new_cap(k, c, spRef) = fisher.runtime.`security`.SecurityProviderModule.grantNewCapability;
+}module
+
+spawn full_security_provider_02 {
+  body {
+    sp = spawn sp {
+      body {
+        import SECURITYPROVIDER.*;
+        init_sp(thisComp());
+        try {
+          while (true) {
+            recv {
+              {: login:"login" :} from y => {
+                k = gen_and_grant(y, thisComp());
+	            y <<< k;
+	          }
+	          | {: login2:"login" :} from y => {
+	            k = "write_cap";
+	            grant(k, y, thisComp());
+	            y <<< k;
+	          }
+	          | {: make_token:"make_token", msg, capability :} from y => {
+	             t = make_token(msg, capability, y, thisComp());
+	             println("Going to write: $msg");
+	          }
+	        }recv
+	      }while
+        }try
+        catch {
+          Z => {println("Security Violation! $Z!");}
+        }catch
+      }body
+    }sp;
+    
+    A = spawn A {
+      body {
+        sp <<< {: login2:"login" :};
+        recv {
+          k from y1 => {
+            message = "do something";
+            sp <<< {: make_token:"make_token", msg:message, capability:k :};
+          }
+        }recv
+      }body
+    }A;
+    
+    C = spawn C {
+      body {
+        message = "do something evil";
+        sp <<< {: make_token:"make_token", msg:message, capability:"write_cap" :};
+      }body
+    }C;
+  }body
+};

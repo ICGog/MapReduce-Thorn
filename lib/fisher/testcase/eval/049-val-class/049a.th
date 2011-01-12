@@ -1,0 +1,7 @@
+//FAIL:A val class cannot have a var field
+{
+  class val C {
+    val x;
+    var y;
+  }
+}

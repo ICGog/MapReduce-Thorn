@@ -1,0 +1,18 @@
+//FAIL
+{
+   import Ear = COS.Mildew; // Shared Mildew
+   
+   import own HANDCUFFS = COS;
+   import Chippy = HANDCUFFS.Mildew; // separate copy.
+   
+   
+    class EarChip extends Ear, Chippy {
+    def lop() { 
+         super@Ear.lop();
+         super@Ear.lop();
+         super@Chippy.lop();
+         [super@Ear.notify(), super@Chippy.notify()];
+     }
+   }
+
+}

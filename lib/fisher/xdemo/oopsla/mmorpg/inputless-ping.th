@@ -1,0 +1,54 @@
+/* This isn't exactly the code of the OOPSLA demo.
+   It has been modified so that the players' inputs
+   are coded as part of the program, and so that the 
+   players are spawned by the same process rather than 
+   independently.
+ */
+
+kimInputs = ["nicely", "quietly", "handily", "dizzily"];
+patInputs = ["insidiously", "wickedly", "on a tray"];
+
+
+fun pingAndInput(name, start, initialInputs) = spawn ping {
+  var done := false;
+  var other; 
+  var inputs := initialInputs;
+  body{ 
+    fun play(hit) {
+       if (inputs ~ [next, rest...]) {
+         inputs := rest;
+         other <<< "$name $`hit`s the ball $next.";
+         }
+       else {
+         println("$name misses!");
+         println("$name loses!");
+         done := true;
+         other <<< null;
+       }
+    }play
+
+    do {
+       receive{
+         {: play: o :}  => {
+           other := o;
+           println("$name knows that the other player is $other"); 
+           if (start) play("serve");
+           }
+        | msg:string => {
+            println(msg);
+            play("return");
+            }
+        | null => {
+            println("$name wins!");
+            done := true;
+            }
+       }receive
+    } until(done);
+
+  }body
+  }ping;
+
+p = pingAndInput("Kim", true, kimInputs);
+q = pingAndInput("Pat", false, patInputs);
+p <<< {: play: q :};
+q <<< {: play: p :};

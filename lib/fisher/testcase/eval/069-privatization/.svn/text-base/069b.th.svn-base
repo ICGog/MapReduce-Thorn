@@ -1,0 +1,25 @@
+/*{
+
+class Radium(var a) {}
+
+class Anklet extends Radium {
+   var a;
+   new Anklet(x,y) { new@Radium(y); a := x;}
+   def getra = super.a();
+   def setra(x) {super.`x:=`(a);}
+}
+
+ak = Anklet(1,2);
+~!@eq(ak.a, 1)@!~  ;
+~!@eq(ak.getra, 2)@!~  ;
+ak.a := 3;
+~!@eq(ak.a, 3)@!~  ;
+~!@eq(ak.getra, 2)@!~  ;
+ak.setra(4);
+~!@eq(ak.a, 3)@!~  ;
+~!@eq(ak.getra, 4)@!~  ;
+
+
+}
+*/
+{}

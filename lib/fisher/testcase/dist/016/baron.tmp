@@ -1,0 +1,47 @@
+spawn baron {
+  baron = thisComp();
+  
+  fun make_serf(L) {
+     spawn serf {
+        body{
+           {: accumComp: accum :} = ~!@recOfPorts();
+           for(cmd <- L) {
+             match(cmd){
+                ‚Äπreg:_, res:b‚Ä∫ => {
+                  r = accum <-> register();
+                  ~!@eq(r,b);
+                }
+             |
+                ‚Äπh:x, res: b‚Ä∫ => {
+                  r = accum <-> here's(x);
+                  ~!@eq(r,b);
+                  }
+             |
+                ‚Äπa:x, res: b‚Ä∫ => {
+                  r = accum <-> alt'here's(x);
+                  ~!@eq(r,b);
+                  }
+             |  
+                ‚Äπg:s‚Ä∫ => {
+                  r = accum <-> gimme();
+                  ~!@eq(r,s);
+                  }
+             }match
+           }for
+           baron <<< "done";
+        }body
+     }serf
+  }make_serf
+  
+  initially{~!@testStartLatch();}
+  body{
+    s1 = make_serf([]);
+    // Wait for them all to finish.
+    recv{ "done" from s1 => {}}
+    {: accumComp: accum :} = ~!@recOfPorts();    
+    accum <-- plzDie();
+    ~!@checkphase(
+//    {: phase: , bag: []:},
+    )@!~  ;
+  }body
+}baron;

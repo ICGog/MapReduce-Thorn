@@ -1,0 +1,25 @@
+// Test XML parsing and deconstruction.
+{
+  import XML.*;
+ 
+
+  x1 = parseXML("<a  >bee</a>");
+  
+  ~!@eq(x1.str(), "<a>bee</a>\n")@!~  ;
+  
+  x2 = Elem("bah", {::}, []);
+  ~!@eq(x2.str(), "<bah/>\n")@!~  ;
+  
+  x3 = parseXML('<a><pig>pog</pig><lurg glud="voik"/></a>');
+  x3pig = x3.children()(0);
+  ~!@eq(x3pig.tag(), "pig")@!~  ;
+  ~!@eq(x3pig.children(), ["pog"])@!~  ;
+  
+  ~!@assert(x3 ~ {: tag:'a' :})@!~  ;
+  x3lurg = x3.children()(1);
+  ~!@assert(x3lurg ~ {: attrs: {:glud:'voik':}:})@!~  ;
+  ~!@eq(x3lurg, (x3.children)(1))@!~  ;
+  
+  ~!@assert(x3 ~ Elem(_,_,_))@!~  ;
+  ~!@assert(x3 ~ Elem("a", _, [_,_]))@!~  ;
+}

@@ -1,0 +1,19 @@
+//FAIL: Collision importing
+{
+  import own POT = RAT;
+  import Pdoily = POT.Doily;
+  import Ppaper = POT.Paper;
+  import RAT.*;
+  
+  class Radio extends Pdoily, Doily {
+    def warn() = [super@Pdoily.warn(), super@Doily.warn()];
+  }
+  
+  r = Radio();
+  ~!@eq(r.warn(), [0,0])@!~  ;
+  POT.turban := "fez";
+  ~!@eq(r.warn(), ["fez",0])@!~  ;
+  
+  
+
+}

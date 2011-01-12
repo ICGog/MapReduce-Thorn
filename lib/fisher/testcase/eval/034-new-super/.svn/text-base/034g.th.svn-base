@@ -1,0 +1,13 @@
+{
+  class Pastor {
+    def hail() = 1;
+  }
+  
+  class Freeway extends Pastor {
+    def deal() = [super.hail()];
+  }
+
+  f = Freeway();
+  ~!@eq(f.deal(),[1])@!~  ;
+
+}

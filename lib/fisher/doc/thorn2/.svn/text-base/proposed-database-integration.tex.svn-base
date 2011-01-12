@@ -1,0 +1,68 @@
+\section{Database Integration}
+
+\subsection{Version 1}
+Handling queries on remote tables is a prerequisite to backing Thorn tables by database tables.
+
+Recall that the basic proposals for remote table access are (a) transmitting closures containing the desired query to the component containing the remote table (\S\ref{sec:transmit-closures}); (b) putting the query code in a module (\S\ref{sec:transmit-modules}), defining some kind of ``module handle'' datatype whichs points to the module thus defined, starting up a component on the same site as the remote table which runs the module pointed to by the handle, and which communicates via some kind of non-query API (e.g., one which conceptually copies the table, runs the query, and then updates the shared table) to the component containing the shared table.  The plumbing connecting the query code to the table/row copying code in (b) could either be encapsulated in a library or baked into the language.  The objection to (a) is that it requires defining some notion of pure closure, and can serve as a vector for security problems.  The objection to (b) is that it seems kind of complicated and kludgy.
+
+Some thoughts: On reflection, (b) is not that different from the way real databases work: queries are run in distinct processes and (conceptually) access the shared relations one row at a time via something like a concurrent B-tree.  Also, (b) has the advantage of allowing us to use the work-in-progress security model for Thorn to control access to distinct relations or even rows (since relation/row access would go through the lower level API).  So (b) is certainly defensible semantically.  Moreover, the principle of disallowing ``injection'' of new code into running components is semantically simple and justified pragmatically by the desire to statically compile modules (in addition to security concerns).  The question is how to realize (b) in a way that allows access to remote tables with only slightly higher syntactic overhead than local tables.
+
+Here's a slightly fuzzy idea of how this might work:
+\begin{itemize}\renewcommand{\labelitemi}{--}
+\item Define a RemoteTable library (module)
+\item RemoteTable contains a function (say runQuery) which takes as arguments a closure containing the query, a component reference to the component containing the remote table, and a list of remote table names that will be accessed by the query.
+\item So, e.g., you might do: 
+\begin{lstlisting}
+import RemoteTable; 
+runQuery( fn (t1, t2) = 
+ %first{ p | for r1 <- t1, for r2 <- t2 }, 
+ someRemoteComponent, 
+ ["realTable1", "realTable2"] ).
+\end{lstlisting}
+\end{itemize}
+RemoteTable would do the work of (a) generating a module and module handle containing the query code, (b) spawning the module handle as a new component at someRemoteComponent, (c) copying the contents of each remote table accessed into the new component (conceptually), (d) running the query, (e) returing the result to the caller.
+
+\paragraph{Issue 1:} the names of the remote tables are strings and we don't allow reflection, so there is currently no way to map the table-names-as-strings to the corresponding table names in the remote component automatically.  You could do this indirectly by defining a map from string names to table values on the remote site, or we could allow limited reflection.  It would be nice.
+ 
+\paragraph{Issue 2:} you obviously don't want to implement this by literally copying the entire table to the query component.  You could instead translate the query to row-at-a-time access to the table component, but this would require magic to dynamically deconstruct the query into appropriate row access messages.  Alternatively, the implementation could use magic which directly accesses the table (with appropriate concurrency control), rather than copying it.  But then, if we have to have pattern-specific code generation magic for remote tables, it would be nice for it to be an instance of more "general magic" which that can be applied to various code patterns.
+
+\paragraph{Final thought:} maybe the remote table pattern is sufficiently important that it should just be 100\% baked into the language, i.e., a remote table is a hybrid of a local table and a component reference, in the sense that you can query it directly just like a local table, but has failure modes similar to normal communication.  But then what happens if a query accesses multiple remote tables?  Do you need distributed transactions?  Things get messy quickly...
+
+\subsection{Version 2}
+\lstset{%
+    morekeywords={query}
+}
+
+Like the proposal above, the following is based on the module transmittal mechanism described in \S\ref{sec:transmit-modules}.  We propose introducing the \kw{query} keyword to help with forming table queries, in a way that lets us execute them easily on all remote tables (native-Thorn and database-backed alike).
+
+To run a Thorn query on a (database) table, we would write
+\begin{lstlisting}
+ABC = SqlDb("sql://there.ibm.com/db/abc");
+q1 = query(({ a, b, c:31 } && a < b) = +a | (_) = null);
+q2 = query("SELECT...")
+ABC <-> run(q1);
+\end{lstlisting}
+
+Each \kw{query} call generates a handle to a fresh module with two functions, `query' and 'sql':
+\begin{lstlisting}
+module autogen_q1 {
+  import ...
+  fun 'query'({ a, b, c:31 } && a < b) = +a | (_) = null;
+  fun 'sql' = "...";
+}
+module autogen_q2 {
+  import ...
+  fun 'query'(...) = ...;
+  fun 'sql' = "SELECT...";
+}
+\end{lstlisting}
+
+The function `query' contains the body as the query as given.  The function `sql' contains an SQL encoding of the query.  
+
+When the remote component (e.g., SqlDb) spawns a local component initialized with a query-generated module handle, that component calls the appropriate function, depending on whether the underlying table is a Thorn table or a database.  A runtime error occurs if the underlying table is a database and the Thorn query sent by the client cannot be translated to SQL.  Similarly, a runtime error occurs if the underlying table is a Thorn table and the SQL query sent by the client cannot be interpreted as a Thorn query.
+
+\paragraph*{Q1:}  Can the component such as SqlDb contain more than one table?  If so, how does one specify which table(s) the query should be applied to?  Where within the auto-generated module are we importing remote table names (and is this necessary)?
+
+\paragraph*{Q2:}  If there is only one table per component, how does one express a join operation on two tables in two different components?
+
+\paragraph*{Q3:}  How do we modify remote tables (i.e., how do we add/delete rows/columns, change entries, etc.)?

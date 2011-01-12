@@ -1,0 +1,98 @@
+import unittest.*;
+import webdict.*;
+
+/* QueryDict */
+println("webdict Test");
+
+fun should_getall_values_from_querydict(){
+  q = QueryDict();
+  q.add("key", "value1");
+  q.add("key", "value2");
+  v = q.getone("key");
+  assertEquals("value1", v);
+}
+
+test(should_getall_values_from_querydict);
+
+fun should_getone_value_from_querydict(){
+  q = QueryDict();
+  q.add("key", "value1");
+  q.add("key", "value2");
+  v = q.getone("key");
+  assertEquals("value1", v);
+
+  values = q.getall("key");
+  assertEquals(values(0), "value1");
+  assertEquals(values(1), "value2");
+}
+
+test(should_getone_value_from_querydict);
+
+fun should_create_query_dict_by_parsing_in_query_string(){
+  qs = "key=value1&key2=value2";
+  q = QueryDict(qs);
+  assertEquals(q.getone("key"), "value1");
+  assertEquals(q.getone("key2"), "value2");
+}
+
+test(should_create_query_dict_by_parsing_in_query_string);
+
+fun should_not_care_about_case_of_keys(){
+  content = "Name=fads&Password=&Bla=Bla+Bla";
+  q = QueryDict(content);
+  assertEquals(q.getone("name"), "fads");
+  assertEquals(q.getone("password"), "");
+  assertEquals(q.getone("bla"), "Bla Bla", "Conversion of + to ' ' failed");
+}
+
+test(should_not_care_about_case_of_keys);
+
+
+
+fun http_headers_should_parse_string_header(){
+  s = "set-cookie: userkey=10\r\nset-cookie: twitter=on";
+  headers = HttpHeadersDict(s);
+
+  assertEquals(headers.str(), s);
+}
+
+test(http_headers_should_parse_string_header);
+
+fun http_header_string_value_should_be_the_same_after_parsing(){
+  hv = HeaderValueDict("userkey=10");
+  assertEquals(hv.str(), "userkey=10");
+}
+
+test(http_header_string_value_should_be_the_same_after_parsing);
+
+
+fun http_header_value_string_should_parse(){
+  h = HeaderValueDict('/');
+  assertEquals(h.str(), '/');
+}
+
+test(http_header_value_string_should_parse);
+
+/** Cookie Dict */
+fun http_headers_should_return_as_list_of_records(){
+  dict = CookieDict();
+  dict.add("userkey", "10");
+  headers = dict.list(); 
+
+  assertEquals(headers(0).header, "set-cookie");
+  assertEquals(headers(0).value, "userkey=10");
+}
+
+test(http_headers_should_return_as_list_of_records);
+
+fun http_headers_dict_should_handle_same_headers_with_different_values(){
+  dict = CookieDict();
+  dict.add("userkey", "10");
+  dict.add("twitter", "on");
+  assertTrue(
+             dict.str() == "set-cookie: userkey=10\r\nset-cookie: twitter=on" || 
+             dict.str() == "set-cookie: twitter=on\r\nset-cookie: userkey=10"
+             );
+}
+
+test(http_headers_dict_should_handle_same_headers_with_different_values);

@@ -1,0 +1,17 @@
+{
+  g = %group(k = i+j) {
+    map f = %list
+          %group(x = (i'+j' == i+j)) {
+               map y = %list [i',j'];
+               |
+               for i' <- 1 .. 3, for j' <- 1..3
+          };
+    |
+    for i <- 1 .. 3, for j <- 1..3
+  };
+  ~!@eq(g[4].len(), 3)@!~  ;
+  xy = g[4](0);
+  ~!@eq(xy[true], [[1,3], [2,2], [3,1]])@!~  ;
+  
+ 
+}

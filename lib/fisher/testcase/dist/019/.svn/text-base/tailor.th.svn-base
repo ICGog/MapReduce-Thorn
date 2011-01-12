@@ -1,0 +1,19 @@
+spawn tailor {
+  body{
+  ~!@testStartLatch();
+  {: pastaComp: pasta :} = ~!@recOfPorts();
+  ~!@eq((pasta<->trek(true)), [1, "heckle"])@!~  ;
+  ~!@eq((pasta<->trek(false)), [2, "heckle"])@!~  ;
+  for(_ <- 1 .. 4) {
+     recv{
+       [n, m] => {
+         ~!@phase(n, m);
+       }
+     }recv
+  }
+  ~!@checkphase(
+    {: phase: 1, bag: ["forbode", "force"]:},
+    {: phase: 2, bag: ["forbode", "force"]:}
+    )@!~  ;
+  }body
+}tailor;

@@ -1,0 +1,12 @@
+module wcmodels{
+
+  import wcmodelusers.UsersModel;
+  import wcmodelmessages.MessagesModel;
+  import wcmodelimages.ImagesModel;
+
+  db = object:pure{
+    messages = MessagesModel();
+    users = UsersModel();
+    images = ImagesModel();
+  };
+}

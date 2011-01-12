@@ -1,0 +1,35 @@
+{
+  import Relaxation =  `film projector`.Coffin;
+  
+  class Scholar extends Relaxation {
+     val fabulousFork;
+     var butter := 0;
+     new Scholar(ff) = {fabulousFork = ff;}
+
+     def orchestrate() = [super@Relaxation.orchestrate()..., butter, fabulousFork];
+     def glitter() { this.hateful := this.hateful + butter; butter := butter + fabulousFork; this.hateful; }
+  }
+
+  r = Relaxation();
+  ~!@eq(r.hateful, 0)@!~  ;
+  ~!@eq(r.glitter(), 1)@!~  ;
+  ~!@eq(r.orchestrate(), [1])@!~  ;
+  ~!@eq(r.glitter(), 2)@!~  ;
+  ~!@eq(r.orchestrate(), [2])@!~  ;
+  ~!@bad(r.fabulousFork)@!~  ;
+  ~!@bad(r.butter)@!~  ;
+
+  s = Scholar(10);
+  ~!@eq(s.hateful, 0)@!~  ;
+  ~!@eq(s.butter, 0)@!~  ;
+  ~!@eq(s.glitter(),0)@!~  ; 
+  ~!@eq(s.butter, 10)@!~  ;
+  ~!@eq(s.fabulousFork,10)@!~  ;
+  ~!@eq(s.orchestrate(), [0, 10, 10])@!~  ;
+  ~!@eq(s.glitter(), 10)@!~  ; // butter := 20
+  ~!@eq(s.orchestrate(), [10, 20, 10])@!~  ;
+  ~!@eq(s.glitter(), 30)@!~  ;
+  ~!@eq(s.orchestrate(), [30, 30, 10])@!~  ;
+  
+  
+}

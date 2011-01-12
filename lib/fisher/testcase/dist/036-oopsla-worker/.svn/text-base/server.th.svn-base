@@ -1,0 +1,15 @@
+spawn server {
+  var datesvc;
+  sync dateServicePlz() = datesvc;
+  sync registerDateSvc(datesvc') { 
+     datesvc := datesvc'; 
+     # Regrettable...
+     {: kimComp : kim :} = ~!@recOfPorts();
+     kim <<< "go";
+  }
+body{
+  ~!@testStartLatch();
+  serve;
+  serve;
+}body
+}server;

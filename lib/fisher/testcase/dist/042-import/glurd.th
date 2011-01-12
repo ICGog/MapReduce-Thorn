@@ -1,0 +1,29 @@
+
+spawn glurd {
+  import ARDORÕ.refereeõ;
+  
+body{
+  ~!@testStartLatch();        
+  {:coordinatorComp: coord :} = ~!@recOfPorts();
+
+//  rovoroi = refereeõ;
+//  ~!@eq(2, refereeõ, 2)@!~  ;
+  tc = thisComp();
+  p = spawn Peefle {
+//     import ARDORÕ.*;
+     import VILEREVIVAL.*;
+     body{
+//       ~!@eq(rovoroi, 2)@!~  ;
+       ~!@eq(refereeõ, 2)@!~  ;
+       ~!@eq(rival, 8)@!~  ;
+       tc <<< "go";
+     }
+  }Peefle;
+  
+  
+  recv{"go" => {}};
+  coord <<< "glurd ok";
+
+}body
+}glurd;
+

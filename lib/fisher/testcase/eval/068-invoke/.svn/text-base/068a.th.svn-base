@@ -1,0 +1,79 @@
+{
+// Class
+  class `a +2 Legendary Echoing Scroll Of The Drooping Evocation Of The Lost`{
+  }
+
+  ~!@eq(`a +2 Legendary Echoing Scroll Of The Drooping Evocation Of The Lost`.invoke("str",[]), "a +2 Legendary Echoing Scroll Of The Drooping Evocation Of The Lost")@!~  ;
+
+// boolean
+
+  ~!@eq(true.invoke("str",[]), "true")@!~  ;
+
+// closure
+  f = fn(x) = x;
+  ~!@eq(f.invoke("str", []), f.str)@!~  ;
+
+// float
+ 
+  ~!@eq((1.8).invoke("floor", []), 1)@!~  ;
+
+// ints
+
+  ~!@eq(11.invoke("prime?", []), true)@!~  ;
+
+// List
+  
+  ~!@eq([].invoke("len",[]), 0)@!~  ;
+  ~!@eq([1].invoke("setEq?", [[1]]), true)@!~  ;
+
+// table
+   t = map();
+   t.invoke("ins!", [{:k:1,v:11:}]);
+   ~!@eq(t[1], 11)@!~  ;
+
+// ord
+ 
+   o = ord();
+   o.invoke("add!", [{:v:123:}]);
+   ~!@eq(o.lst, [123])@!~  ;
+
+// range
+   
+   r = 1..5;
+   ~!@eq(r.invoke("empty?", []), false)@!~  ;
+
+// Record   
+
+   e = {: idol: 1, foible: 2 :};
+   
+   ~!@eq(e.invoke("idol",[]), 1 )@!~  ;
+   ~!@eq(e.invoke("foible",[]), 2 )@!~  ;
+   et = e.invoke("toMap", []);
+   ~!@eq(et["idol"], 1)@!~  ;
+
+// String
+   
+   ~!@eq("You should put a toothbrush in your pituitary gland.".invoke("index", ["too"]), 17) @!~  ;
+   
+// site
+
+   ~!@eq(site("ow", 1234).invoke("port", []), 1234)@!~  ;
+
+// file
+
+  fi = "rash.txt";
+  ~!@eq(fi.invoke("str", []), "rash.txt")@!~  ;
+
+// char
+
+  ch = 123.char;
+  ~!@eq(ch.invoke("defined?", []), true)@!~  ;
+
+// bytes
+
+  bye = [1,2,34].asBytes;
+  ~!@eq(bye.invoke("len", []), 3)@!~  ;
+
+
+
+}

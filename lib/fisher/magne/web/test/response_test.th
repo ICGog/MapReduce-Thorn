@@ -1,0 +1,29 @@
+import unittest.*;
+import webresponse.*;
+
+/** Response */
+println("webresponse Test");
+
+fun should_create_default_response(){
+  r = Response({: :});
+  assertEquals(r.status, 200, "Default should be HTTP 200");
+  assertEquals(r.headers.get("content-type").str(), "text/html; charset=utf-8", "Content-Type should default to text/html");
+}
+
+test(should_create_default_response);
+
+
+fun should_create_response_according_to_arguments(){
+  r = Response({:
+                `content`: "body", 
+                `content-type`: "text/javascript",
+                `status`: 404 
+                :});
+
+  assertEquals(r.status, 404, "Default should be HTTP 200");
+  assertEquals(r.headers.get("Content-Type").str(), "text/javascript", "Content-Type should default to text/html");
+}
+
+test(should_create_response_according_to_arguments);
+
+

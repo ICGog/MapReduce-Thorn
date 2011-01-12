@@ -1,0 +1,30 @@
+http://www.rubyquiz.com/quiz76.html
+
+Text Munger (#76)
+
+by Matthew Moss
+
+Now terhe is a fnial rseaon I thnik that Jsues syas, "Lvoe your
+emneies." It is tihs: taht love has wtiihn it a remvpidtee pewor. And
+three is a pwoer three taht eellvtanuy tfranrmsos idvlinaidus. Taht's
+why Juess syas, "Love your emeeins." Bsceaue if you hate your
+enmeies, you have no way to reedem and to tarfnrsom your eenmeis. But
+if you love yuor emienes, you wlil decsiovr that at the vrey root of
+love is the pwoer of rdoemptein. You just keep loinvg pepole and keep
+lnivog tehm, even tgouhh they're mteitnsiarg you. Hree's the porsen
+who is a nhoeigbr, and tihs psoren is dnoig simhoetng wrong to you and
+all of that. Just keep being fnrdliey to that preosn. Keep liovng
+them. Don't do atnynhig to earsmrbas tehm. Just keep lvonig them, and
+they can't stand it too long. Oh, they raect in mnay ways in the
+bineningg. They react wtih brnetitess beucase they're mad bauesce you
+lvoe them like that. Tehy raect wtih gluit flegines, and setioemms
+they'll hate you a lltite more at that tinoiasrtn piroed, but just
+keep lvniog them. And by the poewr of your love tehy will beark down
+uendr the load. That's lvoe, you see. It is retpmevide, and tihs is
+why Juess says love. Trehe's shimeotng aubot love that blidus up and
+is cavrtiee. Trehe is stmeonihg aubot hate that tares dwon and is
+disettvrcue. So lvoe your eenmeis.
+
+On first glance, the above may appear to be gibberish, but you may find that you can actually read this portion of a speech from Dr Martin Luther King Jr. The brain has an amazing capacity to compensate for things that aren't quite right, and one study has shown that when the first and last letters of words are left alone but those in the middle are scrambled, the text is often still quite comprehensible.
+
+Your task for this quiz, then, is to take a text as input and output the text in this fashion. Scramble each word's center (leaving the first and last letters of each word intact). Whitespace, punctuation, numbers -- anything that isn't a word -- should also remain unchanged.

@@ -1,0 +1,9 @@
+{
+  p = ord();
+  p @= map();
+  ~!@assert(p :? `ord` )@!~  ;
+  ~!@assert(p[0] :? `table`)@!~  ;
+  p[0]["ow"] := "kokko";
+  ~!@eq(p[0]["ow"], "kokko")@!~  ;
+
+}

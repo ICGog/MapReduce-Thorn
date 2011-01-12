@@ -1,0 +1,23 @@
+{
+  a = [];
+  b = 1;
+  c = true;
+  d = "junk bond";
+  
+//println("32a`1");
+  ~!@eq('$a,$b,$c,$d', "[],1,true,junk bond")@!~  ;
+
+//println("32a`2");
+  e = null;
+  ~!@eq("$e", "null")@!~;
+ 
+  var f := 1;
+//println("32a`3");
+
+  ~!@eq("$f", "1")@!~;
+  f := f + 123;
+    ~!@eq("$f", "124")@!~;
+//println("32a`done");
+
+  
+}

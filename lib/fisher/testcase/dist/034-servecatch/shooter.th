@@ -1,0 +1,25 @@
+spawn shooter {
+
+body{
+   ~!@testStartLatch();
+   {:targetComp: target:} = ~!@recOfPorts();
+   
+   target <-- plink(1, 111);
+   
+   target <-- plink(2); // too few.
+   
+   target <-- plink(true, "no"); // wrong type -- doesn't match
+   
+   target <-- plink("ping", "poing", "too", "many");
+   
+   target <-- thisJustGetsLost();
+
+   recv{"done" => {}}
+   ~!@checkphase(
+    {: phase: 1, bag: [111]:},
+    {: phase: 2, bag: [222]:},
+    {: phase: 4, bag: [444]:},
+    {: phase: 3, bag: [333]:}
+    )@!~  ;
+}body
+}shooter;

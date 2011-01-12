@@ -1,0 +1,231 @@
+{
+  oneToNine = [1,2,3,4,5,6,7,8,9];  
+  points = %[ [x,y] | for x <- 1..9, for y<- 1..9 ];
+  rows = %[ %[ [x,y] | for x <- 1 .. 9] | for y <- 1..9];
+  cols = %[ %[ [x,y] | for y <- 1 .. 9] | for x <- 1..9];
+  blks = %[ %[ [x+x',y+y'] | for x <- 1..3, for y <- 1..3] 
+            | for x' <- [0,3,6], for y' <- [0,3,6]];
+            
+  regions = rows @ cols @ blks;  
+  
+
+  fun row([x,y]) = %[ [x', y] | for x' <- 1 .. 9];
+  fun col([x,y]) = %[ [x, y'] | for y' <- 1 .. 9];
+  fun blk([x,y]) = {
+    xl = ((x-1) div 3) * 3;
+    yl = ((y-1) div 3) * 3;
+
+    %[ [xl + x', yl + y'] | for x' <- 1..3, for y' <- 1..3 ];
+  }blk            
+  
+  fun related(point) = [row(point), col(point), blk(point) ];
+  
+  // Sanity test of regions
+  for(p <- points) {
+    rel = related(p);
+    for (b <- rel) {
+      if (! (p in b)) {
+        throw "No doom!  Unsane! $p $b!";
+      }
+    }
+  }
+  
+  fun readProblem(f:string){
+    lines = f.file.contents.split("\n");
+    pr = %table(x=x,y=y){var yes := null; var no := []; | for [x,y] <- points};
+    
+    fun xlate(".") = null;
+      | xlate("([1-9])" / [.int(n)] ) = n;
+      | xlate(z) {
+          println("WTF in xlate($z) - " + (z :? string));
+          null;
+          }
+
+    var y := 1;
+    for ( v <- lines ) {
+      if (v ~ "###########") {
+        // this is OK -- a separator line
+      }
+      else if (v ~ "([1-9.])([1-9.])([1-9.])#([1-9.])([1-9.])([1-9.])#([1-9.])([1-9.])([1-9.]) *" / [x1,x2,x3,x4,x5,x6,x7,x8,x9]) {
+         pr(1,y).yes := xlate(x1);
+         pr(2,y).yes := xlate(x2);
+         pr(3,y).yes := xlate(x3);
+         pr(4,y).yes := xlate(x4);
+         pr(5,y).yes := xlate(x5);
+         pr(6,y).yes := xlate(x6);
+         pr(7,y).yes := xlate(x7);
+         pr(8,y).yes := xlate(x8);
+         pr(9,y).yes := xlate(x9);
+         y += 1;
+      }
+      else {
+        println("Format doom: line is $v");
+      }
+    }for
+    pr;
+  }readProblem
+  
+    
+  fun sepLine?(n) = n in [3,6];
+  
+  fun printsu(title, pr) {
+    println(title);
+    for(y <- 1..9) {
+      line = ord();
+      for(x <- 1..9) {
+         line @= (yss if pr(x,y).yes ~ +yss else ".");
+         if (sepLine?(x)) line @= "#";
+      }for
+      println(line.lst.joined(""));
+      if (sepLine?(y)) println("###########");
+    }for
+  }printsu
+  
+  fun printno(title, pr) {
+    println(title);
+    for(y <- 1..9) {
+      line = ord();
+      for(x <- 1..9) {
+          sno = %sort[n %< n | for n <- pr(x,y).no].joined("");
+          s = sno + "            ".sublen(0,9-sno.len);
+          line @= s;
+          if (sepLine?(x)) line @= " # "; else line @= "|";
+      }for
+      println(line.lst.joined(""));
+      if (sepLine?(y)) println("#############################################################################################|");
+    }for
+  }printno
+  
+  
+  
+  fun establishNoFromScratch(problem) {
+    // clear any prior no-ness.
+    for( [x,y] <- points) {
+       problem(x,y).no := [];
+    }
+    for( p && [x,y] <- points) {
+       if(problem(x,y).yes ~ +v) {
+          for (region <- related(p)) {
+             for(p' && [x', y'] <- region) {
+                if(p' != p) {
+                    prevno = problem(x',y').no;
+                    newno = prevno.union([v]);
+                    problem(x',y').no := newno;
+                }
+             }
+          }
+       }if
+    }for
+  }establishNoFromScratch
+  
+        
+  fun dup(problem) {
+    d = table(x,y){var yes; var no;};
+    d.insAll!(problem.rows);
+    d;
+  }
+
+  fun regionsAreConsistent?(problem) {
+     fun consistent?(region) {
+       stuffInRegion = %[yes | for [x,y] <- region, yes = problem(x,y).yes, if yes != null];
+       stuffInRegion.len == stuffInRegion.unique.len;
+       }
+     %all(consistent?(region) | for region <- regions);
+  }
+     
+
+  fun solve(problem) {
+    //printsu("I refuse to solve this", problem);  
+    //printno("But here is the no: ", problem);
+    
+    if (!regionsAreConsistent?(problem)) {
+      printsu("Regions are inconsistent!", problem);
+      return null;
+    }
+    
+    var nChanged;
+    var nFilledIn;
+    var cellWithFewestChoices;
+    var nChoicesOfFewest := 10;
+    do {
+      nChanged := 0;
+      nFilledIn := 0;
+      for(p && [x,y] <- points) {
+         r = problem(x,y);
+         if (r.yes ~ +_) {
+            nFilledIn += 1;
+         }
+         else if (r.no.len == 8) {
+            nChanged += 1;
+            nFilledIn += 1;
+            newVal = oneToNine.minus(r.no)(0);
+            //println("Filling in $r as $newVal!");
+            problem(x,y).yes := newVal;
+            if (!regionsAreConsistent?(problem)) {
+              return null;
+            }
+         }
+         else if (r.no.len == 9) {
+            return null; // can't be solved.
+         }
+         else if (r.no.len < nChoicesOfFewest) {
+            nChoicesOfFewest := r.no.len;
+            cellWithFewestChoices := p;
+         }
+      }
+      establishNoFromScratch(problem); // This is overkill -- could be done incrementally
+      //printsu("Now the problem is (nFilledIn=$nFilledIn, nChanged=$nChanged)", problem);
+    } until (nFilledIn == 81 || nChanged == 0);
+    
+    if (nFilledIn == 81) {
+      return problem;
+    }
+    else {
+      [x,y] = cellWithFewestChoices;
+      noOfFewestCell = problem(x,y).no;
+      choicesForFewestCell = oneToNine.minus(noOfFewestCell);
+//      println("Oh nose! Gotta guess! [$x,$y], no: $noOfFewestCell, choices: $choicesForFewestCell");
+      for(guess <- choicesForFewestCell) {
+//        println("Guessing ($x,$y) is $guess");
+        p2 = dup(problem);
+        p2(x,y).yes := guess;
+        if (solve(p2) ~ +soln) return soln;
+      }
+      return null; // Couldn't find answer.
+    }
+    
+        
+  }solve
+
+  
+  fun checkSolution(soln) {
+    for ([x,y] <- points) {
+      if (soln(x,y).yes == null) {
+         throw "Position $x,$y is not filled in!";
+      }
+    }
+    for(reg <- regions) {
+       contents = %sort[yes %< yes | for [x,y] <- reg, yes = soln(x,y).yes];
+       if (contents != oneToNine) {
+          throw("The contents of region $reg are $contents!");
+       }
+    }
+    //printsu("This solution is correct!", soln);
+  }checkSolution
+
+  fun solveFile(f:string) {
+    problem = readProblem(f);
+    printsu("Here is problem!", problem);
+    establishNoFromScratch(problem);
+    if (solve(problem) ~ +soln) {
+      printsu("Here is my the answer!", soln);
+      checkSolution(soln);
+    }
+    else printsu("I don't think there's a solution to: ", problem);
+  }solveFile
+  
+//  solveFile("1.sudoku");
+  solveFile("2.sudoku");
+  
+  
+}

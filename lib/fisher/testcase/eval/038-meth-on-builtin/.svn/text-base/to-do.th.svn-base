@@ -1,0 +1,22 @@
+/*
+ * list.range()
+ * int -- shifts; logical operations.
+ * record: <-> table
+ * record: treatment as finite function.
+ * list -- treatment as set.
+ * range -- toList()
+ * int -- bit masking operations
+ * list: 
+    - head(), tail()
+    - patterns Nil(), Cons(a,b)
+    - length()
+    - indices() = range()
+    - flatten()
+    - join(seperator)
+ * string: 
+    - crib from Java.lang.string
+    
+*/
+
+{
+}

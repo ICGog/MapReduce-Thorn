@@ -1,0 +1,44 @@
+spawn kim {
+  import PROFILE.*;
+body{
+
+  server = site("localhost", 5555); // magic number
+  
+  datesvc = server <-> dateServicePlz();
+  
+  porpoise = Profile([
+        {: topic: "swimming",           weight: 15:},
+        {: topic: "sushi",              weight: 12:},
+        {: topic: "moon",               weight: 7:},
+        {: topic: "watersports",        weight: 10:}],
+        1);
+  cat = Profile([
+        {: topic: "mice", weight: 8 :},
+        {: topic: "sushi", weight: 8 :},
+        {: topic: "moon", weight: 3 :},
+        {: topic: "naps", weight: 6:}], 
+        12);
+  whale = Profile([
+        {: topic: "swimming",           weight: 15:},
+        {: topic: "sushi",              weight: 12:},
+        {: topic: "singing",            weight: 10:},
+        {: topic: "watersports",        weight: 3:}],
+        1);
+        
+  
+  rporp = datesvc <-> register("Porpoise", porpoise);
+  println("Registering porpoise: $rporp");
+  rcat  = datesvc <-> register("Cat", cat);
+  rwhale = datesvc <-> register("Whale", whale);
+        
+  date4porp = datesvc <-> makeMeAMatch("Porpoise");
+  println("Date for porpoise: $date4porp");
+  date24porp =datesvc <-> makeMeAMatch("Porpoise");
+  println("Date for porpoise: $date24porp");
+
+  
+  datesvc <-- stop();  
+
+
+}body
+}kim;

@@ -1,0 +1,40 @@
+/*
+This tests that a function can return an object whose *class* 
+captures local and global variables of the function.
+*/
+{
+  var overview := 0;
+  fun ignore(){
+     var perfume := 1;
+     class Relaxation{
+        var stove:= 2;
+        def scratch() {
+           overview := overview + perfume + stove;
+        }scratch
+        def seep() = [overview, perfume, stove];
+        def mosey(x) { perfume := x; }
+     }Relaxation
+     Relaxation();
+  }fun
+  
+  tail = ignore();
+  radium = ignore();
+  ~!@eq(tail.seep(), [0, 1, 2])@!~;    ~!@eq(radium.seep(), [0, 1, 2])@!~;
+  tail.scratch();
+  ~!@eq(tail.seep(), [3, 1, 2])@!~;    ~!@eq(radium.seep(), [3, 1, 2])@!~;
+  radium.stove := 4;
+  ~!@eq(tail.seep(), [3, 1, 2])@!~;    ~!@eq(radium.seep(), [3, 1, 4])@!~;
+  radium.mosey(5);
+  ~!@eq(tail.seep(), [3, 1, 2])@!~;    ~!@eq(radium.seep(), [3, 5, 4])@!~;
+  radium.scratch();
+  ~!@eq(tail.seep(), [12,1, 2])@!~;    ~!@eq(radium.seep(), [12,5, 4])@!~;
+  tail.mosey(6);
+  ~!@eq(tail.seep(), [12,6, 2])@!~;    ~!@eq(radium.seep(), [12,5, 4])@!~;
+  tail.scratch();
+  ~!@eq(tail.seep(), [20,6, 2])@!~;    ~!@eq(radium.seep(), [20,5, 4])@!~;
+  tail.stove := 7;
+  ~!@eq(tail.seep(), [20,6, 7])@!~;    ~!@eq(radium.seep(), [20,5, 4])@!~;
+  tail.scratch();
+  ~!@eq(tail.seep(), [33,6, 7])@!~;    ~!@eq(radium.seep(), [33,5, 4])@!~;
+
+}  

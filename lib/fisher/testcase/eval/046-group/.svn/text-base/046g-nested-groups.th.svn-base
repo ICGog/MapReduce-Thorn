@@ -1,0 +1,19 @@
+// Trying to test a %group with a %group in the keys.  
+// The inner %group will always hold 1, though in a complicated way.
+
+{
+a = %group(
+      one = ({ g = %group(gi = n mod 3)
+                 {map gc = %count; gv = %list n; | if true};
+             g[n mod 3]; // always returns 1
+          })
+      )
+    {
+    map count = %count;
+    | for n <- 1 .. 100
+    };
+
+~!@eq(a.num, 1)@!~  ;
+~!@eq(a[1], 100)@!~  ;
+
+}

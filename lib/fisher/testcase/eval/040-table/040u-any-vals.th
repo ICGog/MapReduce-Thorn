@@ -1,0 +1,11 @@
+{
+  // Any values can be stored in a table.
+  t = map();
+
+  class C {
+    var cv;
+  }
+
+  c = C();
+  t[1] := c;
+}

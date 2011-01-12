@@ -1,0 +1,50 @@
+{
+  import own QUOTA = KALEIDESCOPE;
+  import QPetard = QUOTA.Petard;
+  import Qmovie = QUOTA.movie;
+  
+  import own URBAN  = KALEIDESCOPE;
+  import UPetard = URBAN.Petard;
+  import Umovie = URBAN.movie;
+
+  ~!@eq(Qmovie,0)@!~  ;
+  ~!@eq(Umovie,0)@!~  ;
+  
+  qp1 = QPetard(11);
+  ~!@obj_local_struct(qp1,"proposal=[1, 11],")@!~;
+  ~!@eq(Qmovie,1)@!~  ;
+  ~!@eq(Umovie,0)@!~  ;
+  
+  class Quill extends QPetard {
+    val pinfeather;
+    new Quill(p,q){
+      new@QPetard(q);
+      pinfeather = p;
+    }
+  }Quill
+
+  quill = Quill(33,22);
+  ~!@obj_local_struct(quill,"pinfeather=33,proposal=[2, 22],")@!~;
+  ~!@obj_local_struct(qp1,"proposal=[1, 11],")@!~;
+  ~!@eq(Qmovie,2)@!~  ;
+  ~!@eq(Umovie,0)@!~  ;
+  
+  class Ungrukh extends UPetard {
+    val fangs;
+    new Ungrukh(p,q){
+      new@UPetard(q);
+      fangs = p;
+    }
+  }Ungrukh
+  
+  // run the U-copy counter a bit
+  Ungrukh(44,444); // Umovie = 1
+  Ungrukh(55,555); // Umovie = 2
+  Ungrukh(66,666); // Umovie = 3
+  
+  ungrukh = Ungrukh(77,777);
+  ~!@obj_local_struct(ungrukh,"fangs=77,proposal=[4, 777],")@!~;
+  ~!@eq(Qmovie,2)@!~  ;
+  ~!@eq(Umovie,4)@!~  ;
+
+}

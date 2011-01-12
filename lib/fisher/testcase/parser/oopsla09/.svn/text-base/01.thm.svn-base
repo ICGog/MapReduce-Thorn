@@ -1,0 +1,138 @@
+//MODS
+
+module DATER {
+
+  date_service = spawn {
+     customers = table(pos) {
+        val sender;
+        val name;
+        val music;
+        val food; 
+        val literature;
+        val matcher;
+        var customersAlreadyPicked := [];
+     }table;
+     var maxPos := 0;
+
+     waitingResponses = table (k) {
+        val sender;
+     }table;
+     
+     sync register(name, music, food, literature, matcher) {
+        maxPos += 1;
+        customers @= {: pos:maxPos, sender, name, music, food, literature, matcher :};
+        // Notes: 
+        // Unlike Erlang, say, the order doesn't matter; these are named fields
+        // sender is an implicit variable (like 'this') in signals and rpcs.
+        "You have been registered!";
+     }register
+
+     async makeMeAMatch() {
+        record = %first(r   
+                    %none 'none'
+                    | for r <- customers, if r.sender == sender);
+        if (record == 'none') {
+          sender <-- notRegistered("Sorry!  You're not registered!");
+        }
+        else {
+          worker = spawnWorker(record);
+        }
+     }makeMeAMatch
+     
+     async foundMatch(senderPos, matchPos) {
+        x = customers(senderPos); // the one who asked for the date.
+        y = customers(matchPos);  // the one who we picked.
+        x.sender <-- youHaveADate(
+             "We've found an excellent date for you!",
+             y.name
+          );
+        xname = x.name;
+        y.sender <-- youHaveADate(
+             "Congratulations!  The wonderful $xname wants to date you!",
+             x.name
+          );
+        // Oh, and write down that we've done it.
+        x.customersAlreadyPicked := [x.customersAlreadyPicked, y.pos];
+        y.customersAlreadyPicked := [y.customersAlreadyPicked, x.pos];
+     }
+     
+     async noMatch(senderPos) {
+        x = customers(senderPos);
+        x.sender <<< NoDate("Sorry, nobody in the database meets your discriminating standards.");
+     }
+
+     sync recordFor(pos) = customers(pos); // returns null if no such key.
+
+     body {
+       // A bigger example might have a way to turn the server off.
+       while (true) {
+          serve;
+       }
+     }body
+  }spawn;
+  
+  fun spawnWorker(seeker) {
+     spawn {
+        body{
+           var i := 0;
+           var r; 
+           seek: while (true) {
+             i += 1;
+             r := recordFor(i);
+             // Have we come to the end of the table?
+             if (r == null) break seek;
+             // Pick out the components we'll need
+             {: pos, music, food, literature, matcher, customersAlreadyPicked :} = r;
+             // Seekers don't want to date themselves: 
+             if (pos == seeker.pos) continue seek;
+             // Check for already dated.
+             if (seeker.pos in customersAlreadyPicked) continue seek;
+             // Compatibility checks 
+             if (  matcher(seeker.music, seeker.food, seeker.literature)
+                && seeker.matcher(music, food, literature)
+                ) {
+                // We found one!  Tell the mother ship.
+                date_service <-- foundMatch(seeker.pos, pos);
+                break seek;
+                }
+             // Not compatible, so keep trying.
+           }seek
+           date_service <-- noMatch(seeker.pos);
+        }body
+     };
+  }spawnWorker
+}DATER
+
+
+// Here's a basic user, who just wants to have two or more interests in common
+module GET_KIM_A_DATE {
+  import DATER.date_service;
+  `Kim Geep` = spawn {
+     var happiness := 0;
+     async NoDate(msg) {
+        happiness -= 1;
+        // Or whatever behavior is desired when no date is found.
+     }
+     async youHaveADate(msg, name) {
+        happiness += 1;
+        // And whatever to get in contact with the person
+     }youHaveADate
+
+     body{
+        // Sign up...
+        myMusic = ["hip-hop", "j-pop", "klezmer"];
+        myFood = ["Thai", "sushi", "bacon"];
+        myLit = ["self-help", "romantic crime fiction", "folk tales", "steampunk"];
+        fun matchMe(music, food, lit) {
+          commonInterests = 
+             myMusic.intersect(music) @ myFood.intersect(food) @ myLit.intersect(lit);
+          commonInterests.len() > 1;
+        }
+        date_service <-> register("Kim Geep",  myMusic, myFood, myLit, matchMe);
+        // try to get a date!
+        date_service <-- makeMeAMatch();
+        // Wait for an answer, which will come as a signal.
+        serve; 
+     }
+  }spawn;
+}GET_KIM_A_DATE

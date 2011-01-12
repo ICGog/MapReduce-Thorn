@@ -1,0 +1,56 @@
+module NET {
+  val UseHTTP = "HTTP";
+  val UseLINE = "LINE";
+  class Protocol {
+     def encode(msg) = (throw "Protocol.encode is abstract! Can't encode $msg";);
+     def decode(msg) = (throw "Protocol.encode is abstract! Can't decode $msg";);
+     val pleaseEndWithNewline = true;   
+     def input() = UseHTTP;
+  }Protocol
+
+  javaly class ListenOn = fisher.runtime.lib.sox.ListenOn {
+     new ListenOn(port, protocol);
+  }
+  javaly class NetSite = fisher.runtime.lib.sox.NetSite {
+     new NetSite(nodeName, port, protocol);
+  }
+  
+
+
+  javaly class HTTPResponse = fisher.runtime.lib.http.HTTPResponse {
+    new HTTPResponse(responseCode, meaning, extraHeaders, content);
+    def headers() = headers;
+    def content() = content;
+    def protocolVersion() = protocolVersion;
+    def responseCode() = responseCode;
+    def meaning() = meaning;
+  }
+
+  javaly class HTTPRequest = fisher.runtime.lib.http.HTTPRequest {
+    new HTTPRequest(verb, resource, params, headers, content);
+    def headers() = headers;
+    def params() = params;
+    def verb() = verb;
+    def content() = content;
+    def resource() = resource;
+    def protocolVersion() = protocolVersion;
+  }
+  
+  PORT = 4596;
+  
+  m1 = {:
+    verb : "GET",
+    resource: "/doozle",
+    params: {: grok:1, pick: "The doom":},
+    headers: {: scum: "I like ice", doom: 10:},
+    content: "May Better Homes and Gardens publish the truth about your sex life!"  :};
+
+  y1 = {:
+    responseCode: "404",
+    meaning: "File Not Flounder",
+    headers: {: star: "*", dishwasher: "#" :},
+    content: "The Mathematician's Blessing\nMighty Stir Up Lightning\nNexus Of Animals"
+    :};
+
+
+}

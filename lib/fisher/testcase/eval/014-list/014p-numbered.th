@@ -1,0 +1,7 @@
+{
+  ~!@eq([].numbered, [])@!~  ;
+  ~!@eq([true].numbered, [{:k:0, v:true:}])@!~  ;
+  ~!@eq([true, []].numbered, [{:k:0, v:true:}, {:k:1, v:[]:}])@!~  ;
+  ~!@eq([true, [], "ow"].numbered, [{:k:0, v:true:}, {:k:1, v:[]:}, {:k:2, v:"ow":}])@!~  ;
+
+}
