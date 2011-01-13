@@ -1,5 +1,5 @@
 function convertDate(json) {	
-	if(json == "undefined")
+	if(json == undefined || json == 'undefined')
 		return "";
 	
 	var date = eval(json);
@@ -29,47 +29,23 @@ function convertDate(json) {
 }
 
 function prepareCode(code) {
+	if (code == undefined) 
+		return '';
+	
 	code = code.replace('<', '&lt;');
 	code = code.replace('>', '&gt;');
 	return code;
 }
 
 function nameToID(name){
-    return name.replace('@', '-at-');
+    if( name != undefined)
+	 	return name.replace('@', '-at-');
+	else return '';
 }
 
 function idToName(id){
-    return id.replace('-at-', '@');
+	if( id != undefined)
+    	return id.replace('-at-', '@');
+	else return '';
 }
 
-// (c) linkibol.com - http://blog.linkibol.com/2010/05/07/
-//	did-you-know-that-jquery-leaks-memory-like-a-fountain/
-
-
-
-var xhr = new XMLHttpRequest();
-var url = 'index.php';
-
-function openXHR(locator){
-	url = locator;
-	xhr.open('POST',url, false);
-	xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
-	xhr.setRequestHeader('Accept', 'text/javascript, text/html, application/xml, text/xml, */*');
-	xhr.onreadystatechange = readyStateChanged;
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	xhr.send('');
-}
-
-function nill(){}
-function readyStateChanged(){
-	var counter = 0;
-	
-	if(xhr.readyState === 4){
-			if(counter>10000){ return; }
-			var theDiv = document.getElementById('TestDiv');
-			if(theDiv){ theDiv.innerHTML = (counter++);	}
-			xhr.onreadystatechange = nill;
-			xhr.abort();
-			setTimeout(openXHR,1);
-	}
-}

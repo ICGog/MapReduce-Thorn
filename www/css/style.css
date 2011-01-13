@@ -85,6 +85,10 @@ body a {
 	 background: #3A7532;
 }
 
+.dead {
+	background: #B51F1F;
+}
+
 .val {
 	width: 70px;
 	float: left;

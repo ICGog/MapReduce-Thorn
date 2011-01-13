@@ -15,7 +15,7 @@ function getWorkers(){
     ws.mostFailing = 'none';
     
     $.ajax({
-		url: "smr/smr_http:get_workers",
+		url: "smr/smr_http:get_workers",		
 		dataType: 'json',
 		async: false,
 		success: function(data){
