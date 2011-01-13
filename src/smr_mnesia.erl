@@ -91,7 +91,7 @@ get_output_chunk(LookupHash, OutputTable, Props) ->
 %------------------------------------------------------------------------------
 
 purge_chunks_with_prev_hash_internal(PrevHash, Table) ->
-    lists:foreach(fun (R) -> mnesia:delete_object(R, Table, write) end,
+    lists:foreach(fun (R) -> mnesia:delete_object(Table, R, write) end,
                   mnesia:match_object(Table,
                                       #smr_data{prev_hash = PrevHash, _='_'},
                                       write)).
