@@ -8,7 +8,7 @@ function drawJob(job){
     innerHTML += "<div style='display:none;'>Ended: <span id='ended_on'></span></div>";
     innerHTML += "<div class='button ui-button' id='mapBtn'>View map code</div>";
     innerHTML += "<div class='button ui-button' id='redBtn'>View reduce code</div>";
-    innerHTML += "<div class='button ui-button' id='killBtn'>Terminate job</div>";
+    //innerHTML += "<div class='button ui-button' id='killBtn'>Terminate job</div>";
     innerHTML += "</div>";
     
     if (job.has_ended) {
